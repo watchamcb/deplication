@@ -1,54 +1,180 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<!-- Beautiful Jekyll 6.0.1 | Copyright Dean Attali 2023 -->
+<head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>AWS Tip of the day: Tagging EC2 reserved instances | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
-<meta property="og:title" content="AWS Tip of the day: Tagging EC2 reserved instances" />
-<meta name="author" content="Craig Watcham" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance was purchased and what component it was intended for. Of course the reservation itself is not actually tied to a running instance in any way, it is merely a billing construct that is applied to any matching instances running in your account but if you are making architectural changes or considering different instance types for specific workloads or components the tags allow you (and your team) to see why the reservation was originally purchased. So for example if you are scaling up the instance sizes of a specific component, lets say from m4.large to m4.xlarge, you can check your reserved instance tags and modify the reservations associated with the component to ensure you continue to benefit from the purchase. The tagging of reserved instances works the same as tagging other EC2 resources through the AWS CLI’s ec2 create-tags command and specifying the reserved instances ID as the resource ID. You can find the reserved instance ID using the CLI’s ec2 describe-reserved-instances command. Using an actual example, lets start off finding a reservation: $ aws ec2 describe-reserved-instances { &nbsp; &nbsp; &quot;ReservedInstances&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ReservedInstancesId&quot;: &quot;3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;OfferingType&quot;: &quot;No Upfront&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;AvailabilityZone&quot;: &quot;eu-west-1c&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;End&quot;: &quot;2017-08-12T04:48:58.000Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ProductDescription&quot;: &quot;Linux/UNIX&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;UsagePrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;RecurringCharges&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Amount&quot;: 0.01,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Frequency&quot;: &quot;Hourly&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Start&quot;: &quot;2016-08-12T04:48:59.763Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;State&quot;: &quot;active&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;FixedPrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;CurrencyCode&quot;: &quot;USD&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Duration&quot;: 31536000,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceTenancy&quot;: &quot;default&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceType&quot;: &quot;t2.micro&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceCount&quot;: 1 &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; ] } Next, lets add a tag indicating that this reservation is intended for the &quot;production&quot; stack.: $ aws ec2 create-tags --resources 3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab --tags Key=Stack,Value=production Checking the result: $ aws ec2 describe-reserved-instances { &nbsp; &nbsp; &quot;ReservedInstances&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ReservedInstancesId&quot;: &quot;3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;OfferingType&quot;: &quot;No Upfront&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;AvailabilityZone&quot;: &quot;eu-west-1c&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;End&quot;: &quot;2017-08-12T04:48:58.000Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ProductDescription&quot;: &quot;Linux/UNIX&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Tags&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Value&quot;: &quot;production&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Key&quot;: &quot;Stack&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;UsagePrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;RecurringCharges&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Amount&quot;: 0.01,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Frequency&quot;: &quot;Hourly&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Start&quot;: &quot;2016-08-12T04:48:59.763Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;State&quot;: &quot;active&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;FixedPrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;CurrencyCode&quot;: &quot;USD&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Duration&quot;: 31536000,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceTenancy&quot;: &quot;default&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceType&quot;: &quot;t2.micro&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceCount&quot;: 1 &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; ] } Great we have a tag but what if we have hundreds of reservations, a long list of reservations is not particularly useful for quickly identifying the reservations related to a component or stack. The CLI&#39;s query and output functionality can help here: $ aws ec2 describe-reserved-instances --query &#39;ReservedInstances[*].{AZ:&lt;/wbr&gt;AvailabilityZone,Type:&lt;/wbr&gt;InstanceType,Expiry:End,stack:&lt;/wbr&gt;Tags[?Key==`Stack`][?Value==`&lt;/wbr&gt;production`]}&#39; --output=table------------------------------&lt;/wbr&gt;--------------------------|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DescribeReservedInstances&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/wbr&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |+-------------+---------------&lt;/wbr&gt;-------------+-----------+|&nbsp;&nbsp;&nbsp;&nbsp; AZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Expiry&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; Type&nbsp;&nbsp;&nbsp; |+-------------+---------------&lt;/wbr&gt;-------------+-----------+|&nbsp; eu-west-1c |&nbsp; 2017-08-12T04:48:58.000Z&nbsp; |&nbsp; t2.micro |+-------------+---------------&lt;/wbr&gt;-------------+-----------+Not quite the console view but easy enough to see that we have one reservation for the &quot;production&quot; Stack." />
-<meta property="og:description" content="A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance was purchased and what component it was intended for. Of course the reservation itself is not actually tied to a running instance in any way, it is merely a billing construct that is applied to any matching instances running in your account but if you are making architectural changes or considering different instance types for specific workloads or components the tags allow you (and your team) to see why the reservation was originally purchased. So for example if you are scaling up the instance sizes of a specific component, lets say from m4.large to m4.xlarge, you can check your reserved instance tags and modify the reservations associated with the component to ensure you continue to benefit from the purchase. The tagging of reserved instances works the same as tagging other EC2 resources through the AWS CLI’s ec2 create-tags command and specifying the reserved instances ID as the resource ID. You can find the reserved instance ID using the CLI’s ec2 describe-reserved-instances command. Using an actual example, lets start off finding a reservation: $ aws ec2 describe-reserved-instances { &nbsp; &nbsp; &quot;ReservedInstances&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ReservedInstancesId&quot;: &quot;3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;OfferingType&quot;: &quot;No Upfront&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;AvailabilityZone&quot;: &quot;eu-west-1c&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;End&quot;: &quot;2017-08-12T04:48:58.000Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ProductDescription&quot;: &quot;Linux/UNIX&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;UsagePrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;RecurringCharges&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Amount&quot;: 0.01,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Frequency&quot;: &quot;Hourly&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Start&quot;: &quot;2016-08-12T04:48:59.763Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;State&quot;: &quot;active&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;FixedPrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;CurrencyCode&quot;: &quot;USD&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Duration&quot;: 31536000,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceTenancy&quot;: &quot;default&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceType&quot;: &quot;t2.micro&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceCount&quot;: 1 &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; ] } Next, lets add a tag indicating that this reservation is intended for the &quot;production&quot; stack.: $ aws ec2 create-tags --resources 3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab --tags Key=Stack,Value=production Checking the result: $ aws ec2 describe-reserved-instances { &nbsp; &nbsp; &quot;ReservedInstances&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ReservedInstancesId&quot;: &quot;3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;OfferingType&quot;: &quot;No Upfront&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;AvailabilityZone&quot;: &quot;eu-west-1c&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;End&quot;: &quot;2017-08-12T04:48:58.000Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ProductDescription&quot;: &quot;Linux/UNIX&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Tags&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Value&quot;: &quot;production&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Key&quot;: &quot;Stack&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;UsagePrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;RecurringCharges&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Amount&quot;: 0.01,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Frequency&quot;: &quot;Hourly&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Start&quot;: &quot;2016-08-12T04:48:59.763Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;State&quot;: &quot;active&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;FixedPrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;CurrencyCode&quot;: &quot;USD&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Duration&quot;: 31536000,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceTenancy&quot;: &quot;default&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceType&quot;: &quot;t2.micro&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceCount&quot;: 1 &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; ] } Great we have a tag but what if we have hundreds of reservations, a long list of reservations is not particularly useful for quickly identifying the reservations related to a component or stack. The CLI&#39;s query and output functionality can help here: $ aws ec2 describe-reserved-instances --query &#39;ReservedInstances[*].{AZ:&lt;/wbr&gt;AvailabilityZone,Type:&lt;/wbr&gt;InstanceType,Expiry:End,stack:&lt;/wbr&gt;Tags[?Key==`Stack`][?Value==`&lt;/wbr&gt;production`]}&#39; --output=table------------------------------&lt;/wbr&gt;--------------------------|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DescribeReservedInstances&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/wbr&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |+-------------+---------------&lt;/wbr&gt;-------------+-----------+|&nbsp;&nbsp;&nbsp;&nbsp; AZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Expiry&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; Type&nbsp;&nbsp;&nbsp; |+-------------+---------------&lt;/wbr&gt;-------------+-----------+|&nbsp; eu-west-1c |&nbsp; 2017-08-12T04:48:58.000Z&nbsp; |&nbsp; t2.micro |+-------------+---------------&lt;/wbr&gt;-------------+-----------+Not quite the console view but easy enough to see that we have one reservation for the &quot;production&quot; Stack." />
-<link rel="canonical" href="http://localhost:4000/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html" />
-<meta property="og:url" content="http://localhost:4000/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html" />
-<meta property="og:site_name" content="Deplication" />
-<meta property="og:type" content="article" />
-<meta property="article:published_time" content="2016-08-12T18:26:00+01:00" />
-<meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="AWS Tip of the day: Tagging EC2 reserved instances" />
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2016-08-12T18:26:00+01:00","datePublished":"2016-08-12T18:26:00+01:00","description":"A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance was purchased and what component it was intended for. Of course the reservation itself is not actually tied to a running instance in any way, it is merely a billing construct that is applied to any matching instances running in your account but if you are making architectural changes or considering different instance types for specific workloads or components the tags allow you (and your team) to see why the reservation was originally purchased. So for example if you are scaling up the instance sizes of a specific component, lets say from m4.large to m4.xlarge, you can check your reserved instance tags and modify the reservations associated with the component to ensure you continue to benefit from the purchase. The tagging of reserved instances works the same as tagging other EC2 resources through the AWS CLI’s ec2 create-tags command and specifying the reserved instances ID as the resource ID. You can find the reserved instance ID using the CLI’s ec2 describe-reserved-instances command. Using an actual example, lets start off finding a reservation: $ aws ec2 describe-reserved-instances { &nbsp; &nbsp; &quot;ReservedInstances&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ReservedInstancesId&quot;: &quot;3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;OfferingType&quot;: &quot;No Upfront&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;AvailabilityZone&quot;: &quot;eu-west-1c&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;End&quot;: &quot;2017-08-12T04:48:58.000Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ProductDescription&quot;: &quot;Linux/UNIX&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;UsagePrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;RecurringCharges&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Amount&quot;: 0.01,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Frequency&quot;: &quot;Hourly&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Start&quot;: &quot;2016-08-12T04:48:59.763Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;State&quot;: &quot;active&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;FixedPrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;CurrencyCode&quot;: &quot;USD&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Duration&quot;: 31536000,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceTenancy&quot;: &quot;default&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceType&quot;: &quot;t2.micro&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceCount&quot;: 1 &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; ] } Next, lets add a tag indicating that this reservation is intended for the &quot;production&quot; stack.: $ aws ec2 create-tags --resources 3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab --tags Key=Stack,Value=production Checking the result: $ aws ec2 describe-reserved-instances { &nbsp; &nbsp; &quot;ReservedInstances&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ReservedInstancesId&quot;: &quot;3d092b71-5243-4e5e-b409-&lt;/wbr&gt;86df342282ab&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;OfferingType&quot;: &quot;No Upfront&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;AvailabilityZone&quot;: &quot;eu-west-1c&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;End&quot;: &quot;2017-08-12T04:48:58.000Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;ProductDescription&quot;: &quot;Linux/UNIX&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Tags&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Value&quot;: &quot;production&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Key&quot;: &quot;Stack&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;UsagePrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;RecurringCharges&quot;: [ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; { &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Amount&quot;: 0.01,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Frequency&quot;: &quot;Hourly&quot; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Start&quot;: &quot;2016-08-12T04:48:59.763Z&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;State&quot;: &quot;active&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;FixedPrice&quot;: 0.0,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;CurrencyCode&quot;: &quot;USD&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;Duration&quot;: 31536000,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceTenancy&quot;: &quot;default&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceType&quot;: &quot;t2.micro&quot;,&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &quot;InstanceCount&quot;: 1 &nbsp; &nbsp; &nbsp; &nbsp; } &nbsp; &nbsp; ] } Great we have a tag but what if we have hundreds of reservations, a long list of reservations is not particularly useful for quickly identifying the reservations related to a component or stack. The CLI&#39;s query and output functionality can help here: $ aws ec2 describe-reserved-instances --query &#39;ReservedInstances[*].{AZ:&lt;/wbr&gt;AvailabilityZone,Type:&lt;/wbr&gt;InstanceType,Expiry:End,stack:&lt;/wbr&gt;Tags[?Key==`Stack`][?Value==`&lt;/wbr&gt;production`]}&#39; --output=table------------------------------&lt;/wbr&gt;--------------------------|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DescribeReservedInstances&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;/wbr&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |+-------------+---------------&lt;/wbr&gt;-------------+-----------+|&nbsp;&nbsp;&nbsp;&nbsp; AZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Expiry&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; Type&nbsp;&nbsp;&nbsp; |+-------------+---------------&lt;/wbr&gt;-------------+-----------+|&nbsp; eu-west-1c |&nbsp; 2017-08-12T04:48:58.000Z&nbsp; |&nbsp; t2.micro |+-------------+---------------&lt;/wbr&gt;-------------+-----------+Not quite the console view but easy enough to see that we have one reservation for the &quot;production&quot; Stack.","headline":"AWS Tip of the day: Tagging EC2 reserved instances","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html"},"url":"http://localhost:4000/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html"}</script>
-<!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
-        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
-        <label for="nav-trigger">
-          <span class="menu-icon">
-            <svg viewBox="0 0 18 15" width="18px" height="15px">
-              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
-            </svg>
-          </span>
-        </label>
+  
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
-      </nav></div>
+  
+
+  <title>AWS Tip of the day: Tagging EC2 reserved instances</title>
+
+  
+  <meta name="author" content="Craig Watcham">
+  
+
+  <meta name="description" content="A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance...">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+      
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+
+    
+      
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+
+
+    
+      
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
+
+
+    
+      
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800">
+
+
+    
+  
+
+  
+    
+      <link rel="stylesheet" href="/assets/css/bootstrap-social.css">
+    
+      <link rel="stylesheet" href="/assets/css/beautifuljekyll.css">
+    
+  
+
+  
+
+  
+  
+  
+
+  
+
+  
+  <meta property="og:site_name" content="Deplication">
+  <meta property="og:title" content="AWS Tip of the day: Tagging EC2 reserved instances">
+  <meta property="og:description" content="A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance...">
+
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:article:author" content="Craig Watcham">
+  <meta property="og:article:published_time" content="2016-08-12T18:26:00+01:00">
+  <meta property="og:url" content="http://localhost:4000/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html">
+  <link rel="canonical" href="http://localhost:4000/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html">
+  
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:creator" content="@">
+
+  <meta property="twitter:title" content="AWS Tip of the day: Tagging EC2 reserved instances">
+  <meta property="twitter:description" content="A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance...">
+
+  
+
+  
+
+
+  
+
+  
+
+</head>
+
+
+<body>
+
+  
+
+
+  <nav class="navbar navbar-expand-xl navbar-light fixed-top navbar-custom top-nav-regular"><a class="navbar-brand" href="http://localhost:4000/">Deplication</a><button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="main-navbar">
+    <ul class="navbar-nav ml-auto"></ul>
+  </div>
+
+  
+
+  
+
+</nav>
+
+
+
+
+
+  <!-- TODO this file has become a mess, refactor it -->
+
+
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container-md">
+    <div class="row">
+      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+        <div class="post-heading">
+          <h1>AWS Tip of the day: Tagging EC2 reserved instances</h1>
+          
+
+          
+            <span class="post-meta">Posted on August 12, 2016</span>
+            
+            
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </header>
-<main class="page-content" aria-label="Content">
-      <div class="wrapper">
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
-  <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">AWS Tip of the day: Tagging EC2 reserved instances</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2016-08-12T18:26:00+01:00" itemprop="datePublished">Aug 12, 2016
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
-  </header>
 
-  <div class="post-content e-content" itemprop="articleBody">
-    A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance was purchased and what component it was intended for. Of course the reservation itself is not actually tied to a running instance in any way, it is merely a billing construct that is applied to any matching instances running in your account but if you are making architectural changes or considering different instance types for specific workloads or components the tags allow you (and your team) to see why the reservation was originally purchased. So for example if you are scaling up the instance sizes of a specific component, lets say from m4.large to m4.xlarge, you can check your reserved instance tags and modify the reservations associated with the component to ensure you continue to benefit from the purchase.<br />
+
+
+
+<div class=" container-md ">
+  <div class="row">
+    <div class=" col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 ">
+
+      
+
+      
+
+      <article role="main" class="blog-post">
+        A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance was purchased and what component it was intended for. Of course the reservation itself is not actually tied to a running instance in any way, it is merely a billing construct that is applied to any matching instances running in your account but if you are making architectural changes or considering different instance types for specific workloads or components the tags allow you (and your team) to see why the reservation was originally purchased. So for example if you are scaling up the instance sizes of a specific component, lets say from m4.large to m4.xlarge, you can check your reserved instance tags and modify the reservations associated with the component to ensure you continue to benefit from the purchase.<br />
 <br />
 The tagging of reserved instances works the same as tagging other <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html">EC2 resources</a>&nbsp;through the AWS CLI's ec2 <a href="http://docs.aws.amazon.com/cli/latest/reference/ec2/create-tags.html">create-tags</a> command and specifying the reserved instances ID as the resource ID. You can find the reserved instance ID using the CLI's ec2 <a href="http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-reserved-instances.html">describe-reserved-instances</a> command. Using an actual example, lets start off finding a reservation:<br />
 <br />
@@ -192,34 +318,114 @@ $ aws ec2 describe-reserved-instances</div>
 <div style="background-color: white; color: #222222;">
 <span style="font-family: arial, sans-serif; font-size: 13.3333px;">$ aws ec2 describe-reserved-instances --query 'ReservedInstances[*].{AZ:</span><wbr style="font-size: 13.3333px;"></wbr><span style="font-family: arial, sans-serif; font-size: 13.3333px;">AvailabilityZone,Type:</span><wbr style="font-size: 13.3333px;"></wbr><span style="font-family: arial, sans-serif; font-size: 13.3333px;">InstanceType,Expiry:End,stack:</span><wbr style="font-size: 13.3333px;"></wbr><span style="font-family: arial, sans-serif; font-size: 13.3333px;">Tags[?Key==`Stack`][?Value==`</span><wbr style="font-size: 13.3333px;"></wbr><span style="font-family: arial, sans-serif; font-size: 13.3333px;">production`]}' --output=table</span><br style="font-size: 13.3333px;" /><span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">------------------------------<wbr></wbr>--------------------------<br />|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DescribeReservedInstances&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<wbr></wbr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |<br />+-------------+---------------<wbr></wbr>-------------+-----------+<br />|&nbsp;&nbsp;&nbsp;&nbsp; AZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Expiry&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; Type&nbsp;&nbsp;&nbsp; |<br />+-------------+---------------<wbr></wbr>-------------+-----------+<br />|&nbsp; eu-west-1c |&nbsp; 2017-08-12T04:48:58.000Z&nbsp; |&nbsp; t2.micro |<br />+-------------+---------------<wbr></wbr>-------------+-----------+</span><br style="font-size: 13.3333px;" /><span style="color: black;">Not quite the console view but easy enough to see that we have one reservation for the "production" Stack.</span></div>
 
-  </div><a class="u-url" href="/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html" hidden></a>
-</article>
+      </article>
 
-      </div>
-    </main><footer class="site-footer h-card">
-  <data class="u-url" href="/"></data>
+      
 
-  <div class="wrapper">
+      
 
-    <h2 class="footer-heading">Deplication</h2>
+      
 
-    <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
-        <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
-      </div>
+      <ul class="pagination blog-pager">
+        
+        <li class="page-item previous">
+          <a class="page-link" href="/2016/06/07/aws-tip-save-s3-costs-with-abort.html" data-toggle="tooltip" data-placement="top" title="AWS Tip: Save S3 costs with abort multipart lifecycle policy">&larr; Previous Post</a>
+        </li>
+        
+        
+        <li class="page-item next">
+          <a class="page-link" href="/2016/08/31/aws-troubleshooting-lamba-deployment.html" data-toggle="tooltip" data-placement="top" title="AWS troubleshooting - Lamba deployment package file permissions">Next Post &rarr;</a>
+        </li>
+        
+      </ul>
+      
 
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
+    </div>
+  </div>
 </div>
 
-      <div class="footer-col footer-col-3">
-        <p>Simpler is better.</p>
+
+  <footer>
+  <div class="container-md beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+      <ul class="list-inline text-center footer-links"><li class="list-inline-item">
+    <a href="mailto:craig@deplication.net" title="Email me">
+      <span class="fa-stack fa-lg" aria-hidden="true">
+        <i class="fas fa-circle fa-stack-2x"></i>
+        <i class="fas fa-envelope fa-stack-1x fa-inverse"></i>
+      </span>
+      <span class="sr-only">Email me</span>
+   </a>
+  </li><li class="list-inline-item">
+    <a href="https://github.com/watchamcb" title="GitHub">
+      <span class="fa-stack fa-lg" aria-hidden="true">
+        <i class="fas fa-circle fa-stack-2x"></i>
+        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+      <span class="sr-only">GitHub</span>
+   </a>
+  </li></ul>
+
+      
+      <p class="copyright text-muted">
+      
+        Craig Watcham
+        &nbsp;&bull;&nbsp;
+      
+      2025
+
+      
+
+      
+
+      
+
+      </p>
+      <p class="theme-by text-muted">
+        Powered by
+        <a href="https://beautifuljekyll.com">Beautiful Jekyll</a>
+      </p>
       </div>
     </div>
-
   </div>
-
 </footer>
-</body>
 
+
+  
+  
+    
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+
+
+  
+    
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+
+  
+    
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+
+  
+
+
+
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script src="/assets/js/beautifuljekyll.js"></script>
+    
+  
+
+
+
+
+
+
+
+
+
+</body>
 </html>

@@ -1,342 +1,2999 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<!-- Beautiful Jekyll 6.0.1 | Copyright Dean Attali 2023 -->
+<head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Deplication | Simpler is better.</title>
-<meta name="generator" content="Jekyll v3.10.0" />
-<meta property="og:title" content="Deplication" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="Simpler is better." />
-<meta property="og:description" content="Simpler is better." />
-<link rel="canonical" href="http://localhost:4000/" />
-<meta property="og:url" content="http://localhost:4000/" />
-<meta property="og:site_name" content="Deplication" />
-<meta property="og:type" content="website" />
-<meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Deplication" />
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","description":"Simpler is better.","headline":"Deplication","name":"Deplication","url":"http://localhost:4000/"}</script>
-<!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
-        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
-        <label for="nav-trigger">
-          <span class="menu-icon">
-            <svg viewBox="0 0 18 15" width="18px" height="15px">
-              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
-            </svg>
-          </span>
-        </label>
+  
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
-      </nav></div>
-</header>
-<main class="page-content" aria-label="Content">
-      <div class="wrapper">
-        <div class="home"><p>In progress migration from Blogger, please excuse the chaos.</p>
-<h2 class="post-list-heading">Posts</h2>
-    <ul class="post-list"><li><span class="post-meta">Aug 8, 2021</span>
-        <h3>
-          <a class="post-link" href="/2021/08/08/reducing-vpc-interface-endpoint-costs.html">
-            Reducing VPC interface endpoint costs in dev/test environments
-          </a>
-        </h3></li><li><span class="post-meta">Jul 1, 2021</span>
-        <h3>
-          <a class="post-link" href="/2021/07/01/checking-regional-service-availability.html">
-            Checking regional service availability with the AWS CLI
-          </a>
-        </h3></li><li><span class="post-meta">Sep 7, 2019</span>
-        <h3>
-          <a class="post-link" href="/2019/09/07/aws-in-weeds-s3-cloudwatch-metrics-and.html">
-            AWS in the weeds - S3 CloudWatch metrics and lifecycle actions that are in progress
-          </a>
-        </h3></li><li><span class="post-meta">Feb 16, 2019</span>
-        <h3>
-          <a class="post-link" href="/2019/02/16/aws-tip-wildcard-characters-in-s3.html">
-            AWS tip: Wildcard characters in S3 lifecycle policy prefixes
-          </a>
-        </h3></li><li><span class="post-meta">Oct 14, 2018</span>
-        <h3>
-          <a class="post-link" href="/2018/10/14/finding-s3-api-requests-from-previous.html">
-            Finding S3 API requests from previous versions of the AWS CLI and SDKs
-          </a>
-        </h3></li><li><span class="post-meta">Aug 25, 2018</span>
-        <h3>
-          <a class="post-link" href="/2018/08/25/aws-s3-event-aggregation-with-lambda.html">
-            AWS S3 event aggregation with Lambda and DynamoDB
-          </a>
-        </h3></li><li><span class="post-meta">May 18, 2018</span>
-        <h3>
-          <a class="post-link" href="/2018/05/18/working-with-20-node-elasticache.html">
-            Working with 20+ node ElastiCache Memcached clusters
-          </a>
-        </h3></li><li><span class="post-meta">Nov 16, 2017</span>
-        <h3>
-          <a class="post-link" href="/2017/11/16/extracting-s3-bucket-sizes-using-aws-cli.html">
-            Extracting S3 bucket sizes using the AWS CLI
-          </a>
-        </h3></li><li><span class="post-meta">Aug 20, 2017</span>
-        <h3>
-          <a class="post-link" href="/2017/08/20/understanding-ec2-up-to-10-gigabit.html">
-            Understanding EC2 &quot;Up to 10 Gigabit&quot; network performance for R4 instances
-          </a>
-        </h3></li><li><span class="post-meta">Oct 21, 2016</span>
-        <h3>
-          <a class="post-link" href="/2016/10/21/aws-cli-switching-to-and-from-regional.html">
-            AWS CLI - Switching to and from regional EC2 reserved instances
-          </a>
-        </h3></li><li><span class="post-meta">Aug 31, 2016</span>
-        <h3>
-          <a class="post-link" href="/2016/08/31/aws-troubleshooting-lamba-deployment.html">
-            AWS troubleshooting - Lamba deployment package file permissions
-          </a>
-        </h3></li><li><span class="post-meta">Aug 12, 2016</span>
-        <h3>
-          <a class="post-link" href="/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html">
-            AWS Tip of the day: Tagging EC2 reserved instances
-          </a>
-        </h3></li><li><span class="post-meta">Jun 7, 2016</span>
-        <h3>
-          <a class="post-link" href="/2016/06/07/aws-tip-save-s3-costs-with-abort.html">
-            AWS Tip: Save S3 costs with abort multipart lifecycle policy
-          </a>
-        </h3></li><li><span class="post-meta">May 5, 2016</span>
-        <h3>
-          <a class="post-link" href="/2016/05/05/enabling-longer-aws-ids-in-region-using.html">
-            Enabling longer AWS IDs in a region using an IAM role
-          </a>
-        </h3></li><li><span class="post-meta">May 4, 2016</span>
-        <h3>
-          <a class="post-link" href="/2016/05/04/connection-to-s3amazonawscom-timed-out.html">
-            &#39;Connection to s3.amazonaws.com timed out&#39; using VPC S3 Endpoint
-          </a>
-        </h3></li><li><span class="post-meta">Feb 18, 2016</span>
-        <h3>
-          <a class="post-link" href="/2016/02/18/memcached-item-memory-usage.html">
-            Memcached item memory usage
-          </a>
-        </h3></li><li><span class="post-meta">Jul 13, 2015</span>
-        <h3>
-          <a class="post-link" href="/2015/07/13/c-states-and-p-states-with-ubuntu-1404.html">
-            C-states and P-states with Ubuntu 14.04 on Amazon EC2
-          </a>
-        </h3></li><li><span class="post-meta">Jun 22, 2015</span>
-        <h3>
-          <a class="post-link" href="/2015/06/22/aws-tip-terminating-instances-in-auto.html">
-            AWS Tip: Terminating instances in an Auto Scaling group
-          </a>
-        </h3></li><li><span class="post-meta">Jan 19, 2015</span>
-        <h3>
-          <a class="post-link" href="/2015/01/19/aws-tip-of-day-working-around-s3-failed.html">
-            AWS Tip of the day: Working around the S3 &quot;Failed to parse XML document&quot; exception
-          </a>
-        </h3></li><li><span class="post-meta">Oct 5, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/10/05/aws-tip-of-day-signing-requests-using.html">
-            AWS Tip of the day: Signing requests using IAM instance roles
-          </a>
-        </h3></li><li><span class="post-meta">Sep 14, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/09/14/aws-script-of-day-core-count.html">
-            AWS script of the day: Core count
-          </a>
-        </h3></li><li><span class="post-meta">Sep 13, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/09/13/aws-script-of-day-cascade-delete-of.html">
-            AWS script of the day: Cascade delete of security groups
-          </a>
-        </h3></li><li><span class="post-meta">Sep 3, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/09/03/aws-tip-upgrade-your-php-1x-sdk.html">
-            AWS Tip: Upgrade your PHP 1.x SDK
-          </a>
-        </h3></li><li><span class="post-meta">Aug 30, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/08/30/aws-tip-elmoec2sg-preventing-security.html">
-            AWS Tip: elmo.ec2sg preventing security group deletion
-          </a>
-        </h3></li><li><span class="post-meta">Jun 28, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/06/28/installing-aws-net-sdk-on-monolinux.html">
-            Installing the AWS .NET SDK on Mono/Linux using NuGet
-          </a>
-        </h3></li><li><span class="post-meta">Jun 27, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/06/27/code-snippet-adding-security-group.html">
-            Code snippet: Adding a security group egress rule in boto
-          </a>
-        </h3></li><li><span class="post-meta">May 17, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/05/17/jboss-6x-as-and-log4j.html">
-            JBoss 6.x AS and log4j
-          </a>
-        </h3></li><li><span class="post-meta">Apr 7, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/04/07/aws-net-sdk-on-monolinux.html">
-            AWS .NET SDK on Mono/Linux
-          </a>
-        </h3></li><li><span class="post-meta">Mar 26, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/03/26/data-formatting-with-vim-regular.html">
-            Data formatting with vim regular expressions
-          </a>
-        </h3></li><li><span class="post-meta">Feb 19, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/02/19/curl-with-kerberos-authentication.html">
-            Curl with Kerberos authentication
-          </a>
-        </h3></li><li><span class="post-meta">Jan 8, 2014</span>
-        <h3>
-          <a class="post-link" href="/2014/01/08/python-gotcha-bound-method.html">
-            Python gotcha: bound method
-          </a>
-        </h3></li><li><span class="post-meta">Dec 5, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/12/05/the-mweb-uncapped-adsl-myth.html">
-            The MWEB uncapped ADSL myth
-          </a>
-        </h3></li><li><span class="post-meta">Nov 28, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/11/28/java-war-deployment-options-on-aws.html">
-            Java WAR deployment options on AWS Elastic Beanstalk
-          </a>
-        </h3></li><li><span class="post-meta">Nov 27, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/11/27/self-contained-jar-file-creation-using.html">
-            Self-contained JAR file creation using Maven Shade Plugin
-          </a>
-        </h3></li><li><span class="post-meta">Nov 20, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/11/20/python-cxoracle-on-ubuntu-1204.html">
-            Python cx_Oracle on Ubuntu 12.04
-          </a>
-        </h3></li><li><span class="post-meta">Nov 14, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/11/14/fixing-compile-error-for-aws-java-sample.html">
-            Fixing compile error for AWS Java sample
-          </a>
-        </h3></li><li><span class="post-meta">Aug 16, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/08/16/ruby-devkit-compilation-errors-on.html">
-            Ruby DevKit compilation errors on Windows
-          </a>
-        </h3></li><li><span class="post-meta">Jun 26, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/06/26/yesterday-perl-script.html">
-            Yesterday Perl script
-          </a>
-        </h3></li><li><span class="post-meta">May 9, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/05/09/the-dumpstack-code-monster-alive-and.html">
-            The dumpStack code monster - alive and scary
-          </a>
-        </h3></li><li><span class="post-meta">Mar 26, 2013</span>
-        <h3>
-          <a class="post-link" href="/2013/03/26/missing-a-in-asynchronous-part-1.html">
-            Missing the A in Asynchronous - Part 1
-          </a>
-        </h3></li><li><span class="post-meta">Jul 12, 2012</span>
-        <h3>
-          <a class="post-link" href="/2012/07/12/ignored-ejb3-column-name-attribute.html">
-            Ignored EJB3 @Column name attribute
-          </a>
-        </h3></li><li><span class="post-meta">Jun 8, 2012</span>
-        <h3>
-          <a class="post-link" href="/2012/06/08/getting-intranet-website-authentication.html">
-            Getting intranet website authentication wrong
-          </a>
-        </h3></li><li><span class="post-meta">Jun 7, 2012</span>
-        <h3>
-          <a class="post-link" href="/2012/06/07/bash-script-to-extract-dependencies.html">
-            Bash script to extract dependencies from Java WebStart
-          </a>
-        </h3></li><li><span class="post-meta">Apr 12, 2012</span>
-        <h3>
-          <a class="post-link" href="/2012/04/12/calypso-v12-api-changes-disconnecting.html">
-            Calypso v12 API changes - Disconnecting a client from the DataServer
-          </a>
-        </h3></li><li><span class="post-meta">Jan 31, 2012</span>
-        <h3>
-          <a class="post-link" href="/2012/01/31/spot-defect-xml-string-manipulation.html">
-            Spot the defect - XML string manipulation
-          </a>
-        </h3></li><li><span class="post-meta">Sep 27, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/09/27/bash-script-to-extract-range-of.html">
-            Bash script to extract a range of revision diffs
-          </a>
-        </h3></li><li><span class="post-meta">Sep 8, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/09/08/generating-sql-insert-commands-using.html">
-            Generating SQL insert commands using SELECT
-          </a>
-        </h3></li><li><span class="post-meta">Jul 20, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/07/20/forcing-xstream-to-use-reflection-for.html">
-            Forcing XStream to use reflection for serialization
-          </a>
-        </h3></li><li><span class="post-meta">Jul 18, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/07/18/java-application-patch-deployment.html">
-            Java application patch deployment
-          </a>
-        </h3></li><li><span class="post-meta">Jul 16, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/07/16/bash-script-to-automate-report-checking.html">
-            Bash script to automate report checking
-          </a>
-        </h3></li><li><span class="post-meta">Jul 13, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/07/13/importance-of-choosing-right-data.html">
-            The importance of choosing the right data structure
-          </a>
-        </h3></li><li><span class="post-meta">Jul 12, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/07/12/handling-raw-type-and-type-safety.html">
-            Handling raw type and type safety warnings when using legacy code
-          </a>
-        </h3></li><li><span class="post-meta">Jul 10, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/07/10/using-ejb3-timer-service-instead-of.html">
-            Using the EJB3 timer service instead of Thread.sleep()
-          </a>
-        </h3></li><li><span class="post-meta">Jul 10, 2011</span>
-        <h3>
-          <a class="post-link" href="/2011/07/10/first-post.html">
-            First post
-          </a>
-        </h3></li></ul>
+  
 
-    <p class="rss-subscribe">subscribe <a href="/feed.xml">via RSS</a></p></div>
+  <title>Deplication</title>
 
-      </div>
-    </main><footer class="site-footer h-card">
-  <data class="u-url" href="/"></data>
+  
+  <meta name="author" content="Craig Watcham">
+  
 
-  <div class="wrapper">
+  <meta name="description" content="In progress migration from Blogger, please excuse the chaos.">
 
-    <h2 class="footer-heading">Deplication</h2>
+  
 
-    <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
-        <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
-      </div>
+  
 
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
+  
 
-      <div class="footer-col footer-col-3">
-        <p>Simpler is better.</p>
-      </div>
-    </div>
+  
 
+  
+
+  
+
+  
+
+
+  
+    
+      
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+
+    
+      
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+
+
+    
+      
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
+
+
+    
+      
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800">
+
+
+    
+  
+
+  
+    
+      <link rel="stylesheet" href="/assets/css/bootstrap-social.css">
+    
+      <link rel="stylesheet" href="/assets/css/beautifuljekyll.css">
+    
+  
+
+  
+
+  
+  
+  
+
+  
+
+  
+  <meta property="og:site_name" content="Deplication">
+  <meta property="og:title" content="Deplication">
+  <meta property="og:description" content="In progress migration from Blogger, please excuse the chaos.">
+
+  
+
+  
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://localhost:4000/">
+  <link rel="canonical" href="http://localhost:4000/">
+  
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:creator" content="@">
+
+  <meta property="twitter:title" content="Deplication">
+  <meta property="twitter:description" content="In progress migration from Blogger, please excuse the chaos.">
+
+  
+
+  
+
+
+  
+
+  
+
+</head>
+
+
+<body>
+
+  
+
+
+  <nav class="navbar navbar-expand-xl navbar-light fixed-top navbar-custom top-nav-regular"><a class="navbar-brand" href="http://localhost:4000/">Deplication</a><button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="main-navbar">
+    <ul class="navbar-nav ml-auto"></ul>
   </div>
 
-</footer>
-</body>
+  
 
+  
+
+</nav>
+
+
+
+
+
+  <!-- TODO this file has become a mess, refactor it -->
+
+
+
+
+<div class="intro-header"></div>
+
+
+
+<div class=" container-md " role="main">
+  <div class="row">
+    <div class=" col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 ">
+      
+
+      <p>In progress migration from Blogger, please excuse the chaos.</p>
+
+
+
+
+<!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+<ul class="posts-list list-unstyled" role="list">
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2021/08/08/reducing-vpc-interface-endpoint-costs.html">
+        <h2 class="post-title">Reducing VPC interface endpoint costs in dev/test environments</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on August 8, 2021
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Two quick tips for potentially reducing VPC interface endpoint costs.
+
+
+        
+        
+          <a href="http://localhost:4000/2021/08/08/reducing-vpc-interface-endpoint-costs.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#VPC Interface Endpoint">VPC Interface Endpoint</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Athena">Athena</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Cost saving">Cost saving</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2021/07/01/checking-regional-service-availability.html">
+        <h2 class="post-title">Checking regional service availability with the AWS CLI</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 1, 2021
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Using System Manager public parameters a quick CLI one liner for checking if an AWS service is available in a region:
+
+
+        
+        
+          <a href="http://localhost:4000/2021/07/01/checking-regional-service-availability.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#SSM">SSM</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#CLI">CLI</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2019/09/07/aws-in-weeds-s3-cloudwatch-metrics-and.html">
+        <h2 class="post-title">AWS in the weeds - S3 CloudWatch metrics and lifecycle actions that are in progress</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on September 7, 2019
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        I was recently working with a customer on an issue that highlighted a poorly explained side effect of the reversibility of lifecycle actions. The purpose of this post is to explain this behaviour with the hope that it will save S3 customers unexpected costs. TLDR: S3 CloudWatch metrics don't accurately...
+        
+        
+          <a href="http://localhost:4000/2019/09/07/aws-in-weeds-s3-cloudwatch-metrics-and.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#lifecycle">lifecycle</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#S3">S3</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2019/02/16/aws-tip-wildcard-characters-in-s3.html">
+        <h2 class="post-title">AWS tip: Wildcard characters in S3 lifecycle policy prefixes</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on February 16, 2019
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick word of warning regarding S3's treatment of asterisks (*) in object&nbsp;lifecycle policies. In S3 asterisks are valid 'special' characters&nbsp;and can be used in object key names, this can lead to a lifecycle action not being applied as expected when the prefix contains an asterisk. Historically an asterisk is...
+        
+        
+          <a href="http://localhost:4000/2019/02/16/aws-tip-wildcard-characters-in-s3.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#lifecycle">lifecycle</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#S3">S3</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#CLI">CLI</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2018/10/14/finding-s3-api-requests-from-previous.html">
+        <h2 class="post-title">Finding S3 API requests from previous versions of the AWS CLI and SDKs</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on October 14, 2018
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Introduction Earlier this year the S3 team announced that S3 will stop accepting API requests signed using AWS Signature Version 2 after June 24th, 2019. Customers will need to update their SDKs, CLIs, and custom implementations to make use of AWS Signature Version 4 to avoid impact after this date....
+        
+        
+          <a href="http://localhost:4000/2018/10/14/finding-s3-api-requests-from-previous.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2018/08/25/aws-s3-event-aggregation-with-lambda.html">
+        <h2 class="post-title">AWS S3 event aggregation with Lambda and DynamoDB</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on August 25, 2018
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Introduction S3 has had event notifications since 2014 and for individual object notifications&nbsp;these events work well with Lambda, allowing you to perform an action on every object event in a bucket. It is harder to use this approach when you want to perform an action a limited number of times...
+        
+        
+          <a href="http://localhost:4000/2018/08/25/aws-s3-event-aggregation-with-lambda.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Lambda">Lambda</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#DynamoDB">DynamoDB</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#S3">S3</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#CLI">CLI</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Storage Gateway">Storage Gateway</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#SQS">SQS</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2018/05/18/working-with-20-node-elasticache.html">
+        <h2 class="post-title">Working with 20+ node ElastiCache Memcached clusters</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on May 18, 2018
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        ElastiCache Memcached limits the number of nodes in a cluster to 20 by default. This limit can be increased&nbsp;with ElastiCache recommending against clusters larger than 50 nodes. The increased cluster node limits don't reflect in the console so even after the limit has been increased the maximum number of nodes...
+        
+        
+          <a href="http://localhost:4000/2018/05/18/working-with-20-node-elasticache.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2017/11/16/extracting-s3-bucket-sizes-using-aws-cli.html">
+        <h2 class="post-title">Extracting S3 bucket sizes using the AWS CLI</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on November 16, 2017
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick one liner for printing out the size (in bytes) of S3 StandardStorage buckets in your account (using bash): for name in $(aws s3api list-buckets --query 'Buckets[*].Name' --output text); do size=$(aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --start-time $(date --date="yesterday" +%Y-%m-%d) --end-time $(date +%Y-%m-%d) --period 86400 --statistics Maximum --dimensions...
+        
+        
+          <a href="http://localhost:4000/2017/11/16/extracting-s3-bucket-sizes-using-aws-cli.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#CloudWatch">CloudWatch</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#S3">S3</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#CLI">CLI</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2017/08/20/understanding-ec2-up-to-10-gigabit.html">
+        <h2 class="post-title">Understanding EC2 "Up to 10 Gigabit" network performance for R4 instances</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on August 20, 2017
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        This post investigates the network performance of AWS R4 instances with a focus on the "Up to 10 Gigabit" networking expected from smaller (r4.large - r4.4xlarge) instance types.&nbsp;Before starting it should be noted that this post is based on observation and as such is prone to imprecision and variance, it...
+        
+        
+          <a href="http://localhost:4000/2017/08/20/understanding-ec2-up-to-10-gigabit.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#R4">R4</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#EC2 networking">EC2 networking</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2016/10/21/aws-cli-switching-to-and-from-regional.html">
+        <h2 class="post-title">AWS CLI - Switching to and from regional EC2 reserved instances</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on October 21, 2016
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        AWS recently announced the availability of regional reserved instances, this post explains how to switch a reservation from AZ specific to regional (and back) using the AWS CLI. Step 1, find the reservation to modify $ aws ec2 describe-reserved-instances --filters Name=state,Values=active { &nbsp; &nbsp; "ReservedInstances": [ &nbsp; &nbsp; &nbsp; &nbsp;...
+        
+        
+          <a href="http://localhost:4000/2016/10/21/aws-cli-switching-to-and-from-regional.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#reserved instance">reserved instance</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#regional">regional</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#EC2">EC2</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2016/08/31/aws-troubleshooting-lamba-deployment.html">
+        <h2 class="post-title">AWS troubleshooting - Lamba deployment package file permissions</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on August 31, 2016
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        When creating your own Lambda deployment packages be aware of the permissions on the files before zipping them. Lambda requires the files to have read access for all users, particularly "other", if this is missing you will receive a non-obvious error when trying to call the function. The fix is...
+        
+        
+          <a href="http://localhost:4000/2016/08/31/aws-troubleshooting-lamba-deployment.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Lambda">Lambda</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#deployment">deployment</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html">
+        <h2 class="post-title">AWS Tip of the day: Tagging EC2 reserved instances</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on August 12, 2016
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance...
+        
+        
+          <a href="http://localhost:4000/2016/08/12/aws-tip-of-day-tagging-ec2-reserved.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2016/06/07/aws-tip-save-s3-costs-with-abort.html">
+        <h2 class="post-title">AWS Tip: Save S3 costs with abort multipart lifecycle policy</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on June 7, 2016
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Introduction S3 multipart uploads provide a number of benefits&nbsp;--&nbsp;better throughput, recovery from network errors -- and a number of tools will automatically use multipart uploads for larger uploads. The AWS CLI cp, mv, and sync commands all make use of multipart uploads and make a&nbsp;note&nbsp;that "If the process is interrupted...
+        
+        
+          <a href="http://localhost:4000/2016/06/07/aws-tip-save-s3-costs-with-abort.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#multipart upload">multipart upload</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#S3">S3</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2016/05/05/enabling-longer-aws-ids-in-region-using.html">
+        <h2 class="post-title">Enabling longer AWS IDs in a region using an IAM role</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on May 5, 2016
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        AWS is moving towards longer EC2 and EBS IDs and you can enable them for an IAM user or at an account level using the root credentials. You can avoid using the root credentials by using an IAM role instead. This is a quick post to explain the steps needed...
+        
+        
+          <a href="http://localhost:4000/2016/05/05/enabling-longer-aws-ids-in-region-using.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#longer IDs">longer IDs</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#CLI">CLI</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2016/05/04/connection-to-s3amazonawscom-timed-out.html">
+        <h2 class="post-title">'Connection to s3.amazonaws.com timed out' using VPC S3 Endpoint</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on May 4, 2016
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick post to point you in the right direction if you are getting connection time out errors using the AWS CLI or Boto with AWS S3 VPC Endpoints in a private subnet. The two most likely causes of this are: 1. Your bucket name contains dots. To work around...
+        
+        
+          <a href="http://localhost:4000/2016/05/04/connection-to-s3amazonawscom-timed-out.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2016/02/18/memcached-item-memory-usage.html">
+        <h2 class="post-title">Memcached item memory usage</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on February 18, 2016
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Introduction I was recently involved with an investigation into a Memcached cluster running on AWS ElastiCache and discovered a few interesting details about Memcached. This post looks at the memory overhead of storing items in Memcached and demonstrates the impact of disabling CAS (check and set) on memory utilisation. Background...
+        
+        
+          <a href="http://localhost:4000/2016/02/18/memcached-item-memory-usage.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#memcached">memcached</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2015/07/13/c-states-and-p-states-with-ubuntu-1404.html">
+        <h2 class="post-title">C-states and P-states with Ubuntu 14.04 on Amazon EC2</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 13, 2015
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Introduction The largest new generation EC2 instance types now expose C-state and P-state control to the operating system, unfortunately additional complexity is introduced with the added control and this post will discuss some of the issues related to this on&nbsp;Ubuntu 14.04. For comparison I am going to be using a...
+        
+        
+          <a href="http://localhost:4000/2015/07/13/c-states-and-p-states-with-ubuntu-1404.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#C-state">C-state</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Ubuntu">Ubuntu</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#EC2">EC2</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#P-State">P-State</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2015/06/22/aws-tip-terminating-instances-in-auto.html">
+        <h2 class="post-title">AWS Tip: Terminating instances in an Auto Scaling group</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on June 22, 2015
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        EC2 instances launched by Auto Scaling really should not be terminated outside of Auto Scaling but if for some reason you (really, really) need to terminate a number of instances you may see some unexpected behaviour if you terminate them using the EC2 console. Instead of all the instances being...
+        
+        
+          <a href="http://localhost:4000/2015/06/22/aws-tip-terminating-instances-in-auto.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Auto Scaling">Auto Scaling</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#CLI">CLI</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2015/01/19/aws-tip-of-day-working-around-s3-failed.html">
+        <h2 class="post-title">AWS Tip of the day: Working around the S3 "Failed to parse XML document" exception</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on January 19, 2015
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        If you have S3 objects with Unicode characters that aren't supported by XML 1.0 you are likely to see an exception when calling listObjects in the AWS Java SDK: Failed to parse XML document with handler class com.amazonaws.services.s3.model.transform.XmlResponsesSaxParser$ListBucketHandler The quick and simple solution to fix this is to set the...
+        
+        
+          <a href="http://localhost:4000/2015/01/19/aws-tip-of-day-working-around-s3-failed.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#S3">S3</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/10/05/aws-tip-of-day-signing-requests-using.html">
+        <h2 class="post-title">AWS Tip of the day: Signing requests using IAM instance roles</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on October 5, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        If you are averse to having the AWS SDKs conveniently manage&nbsp;IAM instance role&nbsp;permissions and service requests (including&nbsp;Signature V4) then knowing that you need to include the IAM role token in the request header is quite important. This post describes the steps needed to sign an API request using an instance...
+        
+        
+          <a href="http://localhost:4000/2014/10/05/aws-tip-of-day-signing-requests-using.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Signature V4">Signature V4</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#python">python</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#IAM">IAM</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/09/14/aws-script-of-day-core-count.html">
+        <h2 class="post-title">AWS script of the day: Core count</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on September 14, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        In case you are curious or just want to know how close you are to being a super computer, here is a quick script to count the number of cores an AWS account is currently running:&nbsp;core_count.py
+
+Make sure you have boto setup up first.
+        
+        
+          <a href="http://localhost:4000/2014/09/14/aws-script-of-day-core-count.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/09/13/aws-script-of-day-cascade-delete-of.html">
+        <h2 class="post-title">AWS script of the day: Cascade delete of security groups</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on September 13, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A common bug bear of AWS security groups is having to delete all references to a security group before deleting the group itself.&nbsp;Here&nbsp;is a quick boto script to simplify this process, you will need to have configured boto as per these&nbsp;instructions. After which 'python sg_cascade_delete -h' will give you: usage:...
+        
+        
+          <a href="http://localhost:4000/2014/09/13/aws-script-of-day-cascade-delete-of.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/09/03/aws-tip-upgrade-your-php-1x-sdk.html">
+        <h2 class="post-title">AWS Tip: Upgrade your PHP 1.x SDK</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on September 3, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        If you are still using 1.6.2 of the&nbsp;AWS PHP SDK&nbsp;you can expect some strange issues, for example:
+
+$ec2-&gt;describe_instances();
+
+Will not list T2 instance types. Save yourself some hassle and upgrade to the latest&nbsp;version with the help of this&nbsp;migration guide.
+
+        
+        
+          <a href="http://localhost:4000/2014/09/03/aws-tip-upgrade-your-php-1x-sdk.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/08/30/aws-tip-elmoec2sg-preventing-security.html">
+        <h2 class="post-title">AWS Tip: elmo.ec2sg preventing security group deletion</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on August 30, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        If you are trying to delete an EC2 security group and get an error something like: sg-12345678: Group 111222333444:My SG Name is used by groups: 123412341234:elmo.ec2sg.887766 Save yourself some time and check that your ElastiCache and RDS security groups don't reference (by name) the group you are trying to delete.&nbsp;See...
+        
+        
+          <a href="http://localhost:4000/2014/08/30/aws-tip-elmoec2sg-preventing-security.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/06/28/installing-aws-net-sdk-on-monolinux.html">
+        <h2 class="post-title">Installing the AWS .NET SDK on Mono/Linux using NuGet</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on June 28, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Following a previous post about compiling the AWS .NET SDK on Mono/Linux +David Fevre asked whether it was possible to use NuGet to install the SDK. It turns out that this is actually quite a bit simpler if you are running Mono 3.2+. Below are the steps required to get...
+        
+        
+          <a href="http://localhost:4000/2014/06/28/installing-aws-net-sdk-on-monolinux.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/06/27/code-snippet-adding-security-group.html">
+        <h2 class="post-title">Code snippet: Adding a security group egress rule in boto</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on June 27, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Quick example of adding an egress rule to an existing security group (turns out cidr_ip is actually required). Assumes you have&nbsp;boto&nbsp;installed and your AWS credentials configured:
+
+import boto
+c = boto.connect_ec2()
+c.authorize_security_group_egress('sg-xxxxxxx', 'tcp', from_port=1024, to_port=1024, cidr_ip='0.0.0.0/0')
+
+
+
+        
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#python">python</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#boto">boto</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/05/17/jboss-6x-as-and-log4j.html">
+        <h2 class="post-title">JBoss 6.x AS and log4j</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on May 17, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        This post is a result of spending quite a bit of time working on trying to get a custom log4j (1.2) appender to work on JBoss 6.x. The purpose of this article is not to explain how to get log4j working in a WAR/JAR/EAR, if that is what you are...
+        
+        
+          <a href="http://localhost:4000/2014/05/17/jboss-6x-as-and-log4j.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#JBoss">JBoss</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#log4j">log4j</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/04/07/aws-net-sdk-on-monolinux.html">
+        <h2 class="post-title">AWS .NET SDK on Mono/Linux</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on April 7, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick guide to getting an AWS .NET console program running on Linux. Starting with the hard part, compiling the SDK from source. Update: NuGet can also be used if you are running Mono 3.2+, see&nbsp;this post 1. Install mono and associated tools (on Ubuntu/Debian), mozroots downloads root certificates to...
+        
+        
+          <a href="http://localhost:4000/2014/04/07/aws-net-sdk-on-monolinux.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/03/26/data-formatting-with-vim-regular.html">
+        <h2 class="post-title">Data formatting with vim regular expressions</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on March 26, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Using the right tool for a job can save massive amounts of time. This is a quick post to demonstrate a practical application of the power of regular expressions in vim. The problem is transforming the output from a SQL query into a wiki ready table format. Starting with the...
+        
+        
+          <a href="http://localhost:4000/2014/03/26/data-formatting-with-vim-regular.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html">
+        <h2 class="post-title">Curl with Kerberos authentication</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on February 19, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don't have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next...
+        
+        
+          <a href="http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Kerberos">Kerberos</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#python">python</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Curl">Curl</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#PHP">PHP</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2014/01/08/python-gotcha-bound-method.html">
+        <h2 class="post-title">Python gotcha: bound method</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on January 8, 2014
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick Python observation that will hopefully save somebody some time. Given the following Python code: class Example:&nbsp;&nbsp;&nbsp; X = 5&nbsp;&nbsp;&nbsp; def __init__(self, value):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.some_value = value&nbsp;&nbsp;&nbsp; def method(self, value):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if value &gt; Example.X:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 'Yup'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 'Nope'&nbsp;&nbsp;&nbsp; def another_method(self):&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return self.method(self.some_value) e = Example(2) print e.some_value This code defines...
+        
+        
+          <a href="http://localhost:4000/2014/01/08/python-gotcha-bound-method.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#python">python</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/12/05/the-mweb-uncapped-adsl-myth.html">
+        <h2 class="post-title">The MWEB uncapped ADSL myth</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on December 5, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        I was the unlucky recipient of an acceptable usage notification email from MWEB last night. It turns out that their 10Mbs uncapped account is actually a 125GB capped account and that R749 (my last MWEB bill) every month only actually buys a 1.5Mbps line. I can't say that I am...
+        
+        
+          <a href="http://localhost:4000/2013/12/05/the-mweb-uncapped-adsl-myth.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#MWEB">MWEB</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#broadband">broadband</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#South Africa">South Africa</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#ADSL">ADSL</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/11/28/java-war-deployment-options-on-aws.html">
+        <h2 class="post-title">Java WAR deployment options on AWS Elastic Beanstalk</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on November 28, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Introduction Elastic Beanstalk deployment is pretty cool for interpreted languages like Python, Ruby, or PHP where all you need to do is a "git aws.push" to deploy the latest version of your application. The AWS Toolkit for Eclipse is also great for Java deployments but what if you want to...
+        
+        
+          <a href="http://localhost:4000/2013/11/28/java-war-deployment-options-on-aws.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Elastic Beanstalk">Elastic Beanstalk</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#git">git</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/11/27/self-contained-jar-file-creation-using.html">
+        <h2 class="post-title">Self-contained JAR file creation using Maven Shade Plugin</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on November 27, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Trick for the day. Adding the Maven Shade Plugin (as described here) to your pom.xml allows you to generate a self-contained executable JAR file including all libraries and dependencies. "mvn package" to generate the JAR and then "java -jar mypackage.jar" to run. Useful for creating self-contained artifacts for offline distribution...
+        
+        
+          <a href="http://localhost:4000/2013/11/27/self-contained-jar-file-creation-using.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#maven">maven</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/11/20/python-cxoracle-on-ubuntu-1204.html">
+        <h2 class="post-title">Python cx_Oracle on Ubuntu 12.04</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on November 20, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        There are some older articles on getting cx_Oracle working using RPMs and alien but it seems Oracle are now providing non-RPM downloads. Below are the (quick and dirty) steps I followed to get it installed on Ubuntu 12.04 x64. Download both the "Instant Client Package - Basic Lite" and "Instant...
+        
+        
+          <a href="http://localhost:4000/2013/11/20/python-cxoracle-on-ubuntu-1204.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#python">python</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#oracle">oracle</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/11/14/fixing-compile-error-for-aws-java-sample.html">
+        <h2 class="post-title">Fixing compile error for AWS Java sample</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on November 14, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        If you are getting an error like: ~/aws-java-sample/src/main/java/com/amazonaws/samples/S3Sample.java:[94,31] error: for-each loops are not supported in -source 1.3 When trying to build the aws-java-sample from GitHub you can fix it by adding the maven compile source and target (see link). Something like: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;plugin&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;version&gt;3.1&lt;/version&gt; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...
+        
+        
+          <a href="http://localhost:4000/2013/11/14/fixing-compile-error-for-aws-java-sample.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#maven">maven</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#aws">aws</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/08/16/ruby-devkit-compilation-errors-on.html">
+        <h2 class="post-title">Ruby DevKit compilation errors on Windows</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on August 16, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Lesson for the day, when installing Ruby DevKit&nbsp;on Windows ensure that the Ruby installation architecture matches the DevKit architecture. ruby --version ruby 2.0.0p247 (2013-06-27) [x64-mingw32] Note the [x64-mingw32], you will get some strange compilation errors trying to install gems using the 32 bit DevKit with 64 bit Ruby (and vice-versa)....
+        
+        
+          <a href="http://localhost:4000/2013/08/16/ruby-devkit-compilation-errors-on.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#devkit">devkit</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#ruby">ruby</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#windows">windows</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/06/26/yesterday-perl-script.html">
+        <h2 class="post-title">Yesterday Perl script</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on June 26, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick script to display yesterday's date in a specified date format:
+
+#!/bin/perl -w
+
+use strict;
+use POSIX qw(strftime);
+use Time::Local;
+
+{
+&nbsp; &nbsp;my $yesterday=time() - (24 * 60 * 60);
+&nbsp; &nbsp;print strftime("%d%m%Y", localtime($yesterday));
+}
+
+
+
+        
+        
+          <a href="http://localhost:4000/2013/06/26/yesterday-perl-script.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#perl">perl</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/05/09/the-dumpstack-code-monster-alive-and.html">
+        <h2 class="post-title">The dumpStack code monster - alive and scary</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on May 9, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Tracing through some critical code in a core application I stumbled across the following: &nbsp; &nbsp; public boolean process(PSEvent event) { &nbsp; &nbsp; &nbsp; &nbsp; Thread.dumpStack(); &nbsp; &nbsp; &nbsp; &nbsp; return process(event, true); &nbsp; &nbsp; } &nbsp; &nbsp; public boolean process(PSEvent event, boolean markAsProcessed) { &nbsp; &nbsp; &nbsp; &nbsp; boolean...
+        
+        
+          <a href="http://localhost:4000/2013/05/09/the-dumpstack-code-monster-alive-and.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2013/03/26/missing-a-in-asynchronous-part-1.html">
+        <h2 class="post-title">Missing the A in Asynchronous - Part 1</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on March 26, 2013
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Few things are more irritating in software development than when people use a&nbsp;kludge&nbsp;rather than taking the time to implement a properly designed and robust solution. The peeve I am exercising today relates to the code snippet that follows: &nbsp; &nbsp; private BOTransfer getTransferInefficiently(Trade trade) throws RemoteException { &nbsp; // There...
+        
+        
+          <a href="http://localhost:4000/2013/03/26/missing-a-in-asynchronous-part-1.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2012/07/12/ignored-ejb3-column-name-attribute.html">
+        <h2 class="post-title">Ignored EJB3 @Column name attribute</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 12, 2012
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        I am working on an EJB3 project after a few months on other work and I ran into a small issue with the EJB3 @Column name attribute. The attribute is meant to allow the mapping of a column to a different name in an entity. If your database table has...
+        
+        
+          <a href="http://localhost:4000/2012/07/12/ignored-ejb3-column-name-attribute.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#JBoss">JBoss</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#EJB3">EJB3</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Hibernate">Hibernate</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#annotation">annotation</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2012/06/08/getting-intranet-website-authentication.html">
+        <h2 class="post-title">Getting intranet website authentication wrong</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on June 8, 2012
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        Website usability is as important for internal sites as for publicly accessible sites, yet for some reason the corporate whip-crackers are willing to accept substandard implementations when only their employees are being forced to use a service. The points below are problems in a leave management system provided by a...
+        
+        
+          <a href="http://localhost:4000/2012/06/08/getting-intranet-website-authentication.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2012/06/07/bash-script-to-extract-dependencies.html">
+        <h2 class="post-title">Bash script to extract dependencies from Java WebStart</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on June 7, 2012
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath: #!/bin/bash SERVER=http://server:8082/e-calypso/ wget -Nrq -nd $SERVER/html/jaws/calypso.jnlp CP="" for jar in `cat calypso.jnlp | grep jar | cut -d"\"" -f 2` do &nbsp; &nbsp; &nbsp; &nbsp; CP="$CP:./lib/"`echo $jar | cut -d"/" -f 3`...
+        
+        
+          <a href="http://localhost:4000/2012/06/07/bash-script-to-extract-dependencies.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2012/04/12/calypso-v12-api-changes-disconnecting.html">
+        <h2 class="post-title">Calypso v12 API changes - Disconnecting a client from the DataServer</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on April 12, 2012
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        In previous versions of Calypso the following code would have worked as expected: DSConnection ds = ConnectionUtil.connect(username, password, appName, environmentName);// Do some stuff ...ds.disconnect(); In the v12 API (SP5) the disconnect() method has been deprecated and unfortunately the JavaDocs were not updated to specify that the DSConnection.logout() method must be...
+        
+        
+          <a href="http://localhost:4000/2012/04/12/calypso-v12-api-changes-disconnecting.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2012/01/31/spot-defect-xml-string-manipulation.html">
+        <h2 class="post-title">Spot the defect - XML string manipulation</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on January 31, 2012
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        So I have been a bit lazy about posting recently, time to look at a defect found in some production code: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; String details = XPathReader.getValueAt(detailPath, xml); &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (details != null &amp;&amp; details.length() &gt; 0) { &nbsp; &nbsp; &nbsp;...
+        
+        
+          <a href="http://localhost:4000/2012/01/31/spot-defect-xml-string-manipulation.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/09/27/bash-script-to-extract-range-of.html">
+        <h2 class="post-title">Bash script to extract a range of revision diffs</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on September 27, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick Bash script hack to extract all CVS/SVN diffs from a range of revisions: for start_ver in {1..25}; do end_ver=`echo "$start_ver + 1" | bc`; cvs diff -kk -c -r 1.$start_ver -r 1.$end_ver source.file &gt;&gt; diff_output.txt; done; This script will incrementally extract all differences between version 1.1 and 1.26...
+        
+        
+          <a href="http://localhost:4000/2011/09/27/bash-script-to-extract-range-of.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#bash">bash</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#CVS">CVS</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/09/08/generating-sql-insert-commands-using.html">
+        <h2 class="post-title">Generating SQL insert commands using SELECT</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on September 8, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A quick hack for generating a list of SQL insert commands from an existing data set. Useful for copying specific data between databases/tables. select 'insert into DestTable values(''' + Value1 + ''',''' + Value2 + ''')' from SourceTable This query will return a result set in the format: insert into...
+        
+        
+          <a href="http://localhost:4000/2011/09/08/generating-sql-insert-commands-using.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/07/20/forcing-xstream-to-use-reflection-for.html">
+        <h2 class="post-title">Forcing XStream to use reflection for serialization</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 20, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        XStream is a fantastic library for serialising objects to XML, this (very short) post explains how to force reflection on classes implementing the Externalizable interface. The code below is the typical usage of XStream to serialise an object XStream xstream = new XStream(); System.out.println(xstream.toXML(someObject); Unfortunately if someObject implements Externalizable then...
+        
+        
+          <a href="http://localhost:4000/2011/07/20/forcing-xstream-to-use-reflection-for.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#XStream">XStream</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/07/18/java-application-patch-deployment.html">
+        <h2 class="post-title">Java application patch deployment</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 18, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact. Class path update The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of...
+        
+        
+          <a href="http://localhost:4000/2011/07/18/java-application-patch-deployment.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#patch">patch</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#deployment">deployment</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/07/16/bash-script-to-automate-report-checking.html">
+        <h2 class="post-title">Bash script to automate report checking</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 16, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        The script below is a convenient hack to automate manual report checking. It requires uuencode and mailx (or equivalents) to be installed and uses the regular expression provided on the command line to check if the occurrences are greater than the specified number. This allows for a number of convenient...
+        
+        
+          <a href="http://localhost:4000/2011/07/16/bash-script-to-automate-report-checking.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Linux">Linux</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#script">script</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#bash">bash</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html">
+        <h2 class="post-title">The importance of choosing the right data structure</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 13, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post&nbsp;demonstrates the importance of data structure selection&nbsp;with a contrived problem posed in...
+        
+        
+          <a href="http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#data structure">data structure</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Set">Set</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/07/12/handling-raw-type-and-type-safety.html">
+        <h2 class="post-title">Handling raw type and type safety warnings when using legacy code</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 12, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        The addition of generics to Java 5 enabled type checking at compile time. This assists in preventing a ClassCastException at runtime but to maintain backward compatibility generics also came with Type Erasure: Type erasure exists so that new code may continue to interface with legacy code. Using a raw type...
+        
+        
+          <a href="http://localhost:4000/2011/07/12/handling-raw-type-and-type-safety.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#Java">Java</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#generics">generics</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#raw types">raw types</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/07/10/using-ejb3-timer-service-instead-of.html">
+        <h2 class="post-title">Using the EJB3 timer service instead of Thread.sleep()</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 10, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        As with most software development a large amount of effort is spent testing, be it functional or regression. The effort required to coordinate testing increases significantly when integration with external systems is required, particularly if those systems are not part of the same division or organisation. I recently volunteered to...
+        
+        
+          <a href="http://localhost:4000/2011/07/10/using-ejb3-timer-service-instead-of.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+      <div class="blog-tags">
+        <span>Tags:</span>
+        <!-- role="list" needed so that `list-style: none` in Safari doesn't remove the list semantics -->
+        <ul class="d-inline list-inline" role="list">
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#JBoss">JBoss</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#EJB3">EJB3</a>
+          </li>
+          
+          <li class="list-inline-item">
+            <a href="http://localhost:4000/tags#TimerService">TimerService</a>
+          </li>
+          
+        </ul>
+      </div>
+      
+
+    </article>
+  </li>
+  
+  <li class="post-preview">
+    <article>
+      
+
+      
+
+      <a href="http://localhost:4000/2011/07/10/first-post.html">
+        <h2 class="post-title">First post</h2>
+
+        
+      </a>
+
+      <p class="post-meta">
+        
+        Posted on July 10, 2011
+      </p>
+
+      
+
+      
+      
+
+      <div class="post-entry">
+        
+        The purpose of this blog is to share information I have found to be useful. Some of the information may be available elsewhere on the net but possibly not in the context it is presented here. The idea for this blog was realised (UK spelling) when considering the focus on...
+        
+        
+          <a href="http://localhost:4000/2011/07/10/first-post.html" class="post-read-more">[Read&nbsp;More]</a>
+        
+      </div>
+      
+
+      
+
+    </article>
+  </li>
+  
+</ul>
+
+
+
+
+      
+
+      
+
+    </div>
+  </div>
+</div>
+
+
+  <footer>
+  <div class="container-md beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+      <ul class="list-inline text-center footer-links"><li class="list-inline-item">
+    <a href="mailto:craig@deplication.net" title="Email me">
+      <span class="fa-stack fa-lg" aria-hidden="true">
+        <i class="fas fa-circle fa-stack-2x"></i>
+        <i class="fas fa-envelope fa-stack-1x fa-inverse"></i>
+      </span>
+      <span class="sr-only">Email me</span>
+   </a>
+  </li><li class="list-inline-item">
+    <a href="https://github.com/watchamcb" title="GitHub">
+      <span class="fa-stack fa-lg" aria-hidden="true">
+        <i class="fas fa-circle fa-stack-2x"></i>
+        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+      <span class="sr-only">GitHub</span>
+   </a>
+  </li></ul>
+
+      
+      <p class="copyright text-muted">
+      
+        Craig Watcham
+        &nbsp;&bull;&nbsp;
+      
+      2025
+
+      
+
+      
+
+      
+
+      </p>
+      <p class="theme-by text-muted">
+        Powered by
+        <a href="https://beautifuljekyll.com">Beautiful Jekyll</a>
+      </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+  
+  
+    
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+
+
+  
+    
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+
+  
+    
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+
+  
+
+
+
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script src="/assets/js/beautifuljekyll.js"></script>
+    
+  
+
+
+
+
+
+
+
+
+
+</body>
 </html>

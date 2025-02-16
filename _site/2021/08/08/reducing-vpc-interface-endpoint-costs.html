@@ -1,84 +1,299 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<!-- Beautiful Jekyll 6.0.1 | Copyright Dean Attali 2023 -->
+<head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Reducing VPC interface endpoint costs in dev/test environments | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
-<meta property="og:title" content="Reducing VPC interface endpoint costs in dev/test environments" />
-<meta name="author" content="Craig Watcham" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="Two quick tips for potentially reducing VPC interface endpoint costs." />
-<meta property="og:description" content="Two quick tips for potentially reducing VPC interface endpoint costs." />
-<link rel="canonical" href="http://localhost:4000/2021/08/08/reducing-vpc-interface-endpoint-costs.html" />
-<meta property="og:url" content="http://localhost:4000/2021/08/08/reducing-vpc-interface-endpoint-costs.html" />
-<meta property="og:site_name" content="Deplication" />
-<meta property="og:type" content="article" />
-<meta property="article:published_time" content="2021-08-08T10:44:00+01:00" />
-<meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Reducing VPC interface endpoint costs in dev/test environments" />
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2021-08-08T10:44:00+01:00","datePublished":"2021-08-08T10:44:00+01:00","description":"Two quick tips for potentially reducing VPC interface endpoint costs.","headline":"Reducing VPC interface endpoint costs in dev/test environments","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2021/08/08/reducing-vpc-interface-endpoint-costs.html"},"url":"http://localhost:4000/2021/08/08/reducing-vpc-interface-endpoint-costs.html"}</script>
-<!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
-        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
-        <label for="nav-trigger">
-          <span class="menu-icon">
-            <svg viewBox="0 0 18 15" width="18px" height="15px">
-              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
-            </svg>
-          </span>
-        </label>
+  
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
-      </nav></div>
-</header>
-<main class="page-content" aria-label="Content">
-      <div class="wrapper">
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  
 
-  <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">Reducing VPC interface endpoint costs in dev/test environments</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2021-08-08T10:44:00+01:00" itemprop="datePublished">Aug 8, 2021
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
-  </header>
+  <title>Reducing VPC interface endpoint costs in dev/test environments</title>
 
-  <div class="post-content e-content" itemprop="articleBody">
-    <p>Two quick tips for potentially reducing VPC interface endpoint costs.</p>
+  
+  <meta name="author" content="Craig Watcham">
+  
 
-<p>Firstly an Athena query for finding unused VPC interface endpoints in cost and usage report data. This requires you to have <a href="https://docs.aws.amazon.com/cur/latest/userguide/what-is-cur.html">cost and usage reporting</a> enabled (you should already) and configured for querying in Athena, see <a href="https://docs.aws.amazon.com/cur/latest/userguide/cur-query-athena.html">this guide</a>. The query searches for all VPC interface endpoints that have not accrued any data transfer charges during the query period. VPC endpoints incur both hourly and data transfer <a href="https://aws.amazon.com/privatelink/pricing/">charges</a>, if you are not transferring any data it is very likely the endpoint is not being used and can be deleted. This will save around $7 a month ($0.01 x 24hours x 30 days) in each availability zone configured for the unused endpoint (by default all AZs). Annual cost saving potential of around $260 for each (3 AZ) endpoint removed in each account.</p><div style="text-align: left;">Query:<br /><div>select line_item_usage_account_id, line_item_resource_id</div>from cur<br />where line_item_usage_type like '%VpcEndpoint-Hour%'<br />and year='2021'<br />and month in ('7','07')<br />and line_item_resource_id not in&nbsp;<br />&nbsp;(select distinct(line_item_resource_id)&nbsp;<br />&nbsp; from cur<br />&nbsp; where line_item_usage_type like '%VpcEndpoint-Byte%'<br />&nbsp; and year='2021'<br />&nbsp; and month in ('7','07'))</div><div style="text-align: left;">group by line_item_usage_account_id, line_item_resource_id</div><p>The second approach is only recommended for dev/test environments where availability zone fault tolerance is not a requirement. When you create a VPC interface endpoint an ENI is created in each subnet (availability zone)&nbsp; unless you explicitly deselect the subnets. This is a best practice for interface endpoints as it provides continued availability in the case of an AZ failure - as long as you are using the (default) regional interface endpoint DNS name with&nbsp;<a href="https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-private-dns">private DNS</a>. When using private DNS the regional endpoint DNS name,&nbsp;ec2.eu-west-1.amazonaws.com for example, is resolved to the private IP of the VPC interface endpoint ENI rather than the public IP of the service. In the case where one AZ is not reachable the request will be routed to an interface endpoint ENI in a different AZ, allowing your client applications to continue functioning. The down side of this is that you will incur intra-region data transfer charges (of $0.01/GB) for sending requests to the ENI in a different AZ. The potential cost saving opportunity is to remove this availability mechanism to reduce the hourly interface endpoint charges.&nbsp;</p><p>As long as the data transferred to and from the interface endpoint is around 1GB/hour it is cheaper to configure the VPC interface endpoint to only be available in one (or two) availability zones. This makes sense for any API specific endpoints (EC2 for example) but may not make sense for high throughput data intensive endpoints (such as S3/Kinesis/Cloudwatch Logs). The cost and usage report data can once again be used to help identify interface endpoints where the data transfer is low enough to justify exposing the endpoint in only one availability zone. Note that the endpoint data charges are aggregated across all ENIs so the query will not correctly identify cases where traffic is not more or less equally balanced across AZs. The query assumes that the cost and usage report is configured for hourly granularity, the line_item_usage_amount would need to be modified for daily/monthly reports and would be less accurate. Annual cost saving potential would depend on data transfer and number of AZs provisioned but should be around $175 for API endpoints reduced from 3 AZs to 1 AZ.</p><div style="text-align: left;">Query:<br />select line_item_usage_account_id, line_item_resource_id<br />from cur<br />where line_item_usage_type like '%VpcEndpoint-Byte%'<br />&nbsp; and year='2021'<br />&nbsp; and month in ('7','07')<br />&nbsp; and line_item_usage_amount &lt; 1.0<br />&nbsp; and line_item_resource_id not in&nbsp;<br />&nbsp; &nbsp;(select distinct(line_item_resource_id)&nbsp;<br />&nbsp; &nbsp; from cur<br />&nbsp; &nbsp; where line_item_usage_type like '%VpcEndpoint-Byte%'<br />&nbsp; &nbsp; &nbsp; and year='2021'<br />&nbsp; &nbsp; &nbsp; and month in ('7','07')<br />&nbsp; &nbsp; &nbsp; and line_item_usage_amount &gt; 1.0)<br />group by line_item_usage_account_id, line_item_resource_id</div>
-  </div><a class="u-url" href="/2021/08/08/reducing-vpc-interface-endpoint-costs.html" hidden></a>
-</article>
+  <meta name="description" content="Two quick tips for potentially reducing VPC interface endpoint costs. Firstly an Athena query for finding unused VPC interface endpoints in cost and usage report data. This requires you to have cost and usage reporting enabled (you should already) and configured for querying in Athena, see this guide. The query...">
 
-      </div>
-    </main><footer class="site-footer h-card">
-  <data class="u-url" href="/"></data>
+  
 
-  <div class="wrapper">
+  
 
-    <h2 class="footer-heading">Deplication</h2>
+  
 
-    <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
-        <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
-      </div>
+  
 
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
+  
 
-      <div class="footer-col footer-col-3">
-        <p>Simpler is better.</p>
-      </div>
-    </div>
+  
 
+  
+
+
+  
+    
+      
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+
+    
+      
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+
+
+    
+      
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
+
+
+    
+      
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800">
+
+
+    
+  
+
+  
+    
+      <link rel="stylesheet" href="/assets/css/bootstrap-social.css">
+    
+      <link rel="stylesheet" href="/assets/css/beautifuljekyll.css">
+    
+  
+
+  
+
+  
+  
+  
+
+  
+
+  
+  <meta property="og:site_name" content="Deplication">
+  <meta property="og:title" content="Reducing VPC interface endpoint costs in dev/test environments">
+  <meta property="og:description" content="Two quick tips for potentially reducing VPC interface endpoint costs. Firstly an Athena query for finding unused VPC interface endpoints in cost and usage report data. This requires you to have cost and usage reporting enabled (you should already) and configured for querying in Athena, see this guide. The query...">
+
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:article:author" content="Craig Watcham">
+  <meta property="og:article:published_time" content="2021-08-08T10:44:00+01:00">
+  <meta property="og:url" content="http://localhost:4000/2021/08/08/reducing-vpc-interface-endpoint-costs.html">
+  <link rel="canonical" href="http://localhost:4000/2021/08/08/reducing-vpc-interface-endpoint-costs.html">
+  
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:creator" content="@">
+
+  <meta property="twitter:title" content="Reducing VPC interface endpoint costs in dev/test environments">
+  <meta property="twitter:description" content="Two quick tips for potentially reducing VPC interface endpoint costs. Firstly an Athena query for finding unused VPC interface endpoints in cost and usage report data. This requires you to have cost and usage reporting enabled (you should already) and configured for querying in Athena, see this guide. The query...">
+
+  
+
+  
+
+
+  
+
+  
+
+</head>
+
+
+<body>
+
+  
+
+
+  <nav class="navbar navbar-expand-xl navbar-light fixed-top navbar-custom top-nav-regular"><a class="navbar-brand" href="http://localhost:4000/">Deplication</a><button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="main-navbar">
+    <ul class="navbar-nav ml-auto"></ul>
   </div>
 
-</footer>
-</body>
+  
 
+  
+
+</nav>
+
+
+
+
+
+  <!-- TODO this file has become a mess, refactor it -->
+
+
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container-md">
+    <div class="row">
+      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+        <div class="post-heading">
+          <h1>Reducing VPC interface endpoint costs in dev/test environments</h1>
+          
+
+          
+            <span class="post-meta">Posted on August 8, 2021</span>
+            
+            
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</header>
+
+
+
+
+
+<div class=" container-md ">
+  <div class="row">
+    <div class=" col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 ">
+
+      
+
+      
+
+      <article role="main" class="blog-post">
+        <p>Two quick tips for potentially reducing VPC interface endpoint costs.</p>
+
+<p>Firstly an Athena query for finding unused VPC interface endpoints in cost and usage report data. This requires you to have <a href="https://docs.aws.amazon.com/cur/latest/userguide/what-is-cur.html">cost and usage reporting</a> enabled (you should already) and configured for querying in Athena, see <a href="https://docs.aws.amazon.com/cur/latest/userguide/cur-query-athena.html">this guide</a>. The query searches for all VPC interface endpoints that have not accrued any data transfer charges during the query period. VPC endpoints incur both hourly and data transfer <a href="https://aws.amazon.com/privatelink/pricing/">charges</a>, if you are not transferring any data it is very likely the endpoint is not being used and can be deleted. This will save around $7 a month ($0.01 x 24hours x 30 days) in each availability zone configured for the unused endpoint (by default all AZs). Annual cost saving potential of around $260 for each (3 AZ) endpoint removed in each account.</p><div style="text-align: left;">Query:<br /><div>select line_item_usage_account_id, line_item_resource_id</div>from cur<br />where line_item_usage_type like '%VpcEndpoint-Hour%'<br />and year='2021'<br />and month in ('7','07')<br />and line_item_resource_id not in&nbsp;<br />&nbsp;(select distinct(line_item_resource_id)&nbsp;<br />&nbsp; from cur<br />&nbsp; where line_item_usage_type like '%VpcEndpoint-Byte%'<br />&nbsp; and year='2021'<br />&nbsp; and month in ('7','07'))</div><div style="text-align: left;">group by line_item_usage_account_id, line_item_resource_id</div><p>The second approach is only recommended for dev/test environments where availability zone fault tolerance is not a requirement. When you create a VPC interface endpoint an ENI is created in each subnet (availability zone)&nbsp; unless you explicitly deselect the subnets. This is a best practice for interface endpoints as it provides continued availability in the case of an AZ failure - as long as you are using the (default) regional interface endpoint DNS name with&nbsp;<a href="https://docs.aws.amazon.com/vpc/latest/privatelink/vpce-interface.html#vpce-private-dns">private DNS</a>. When using private DNS the regional endpoint DNS name,&nbsp;ec2.eu-west-1.amazonaws.com for example, is resolved to the private IP of the VPC interface endpoint ENI rather than the public IP of the service. In the case where one AZ is not reachable the request will be routed to an interface endpoint ENI in a different AZ, allowing your client applications to continue functioning. The down side of this is that you will incur intra-region data transfer charges (of $0.01/GB) for sending requests to the ENI in a different AZ. The potential cost saving opportunity is to remove this availability mechanism to reduce the hourly interface endpoint charges.&nbsp;</p><p>As long as the data transferred to and from the interface endpoint is around 1GB/hour it is cheaper to configure the VPC interface endpoint to only be available in one (or two) availability zones. This makes sense for any API specific endpoints (EC2 for example) but may not make sense for high throughput data intensive endpoints (such as S3/Kinesis/Cloudwatch Logs). The cost and usage report data can once again be used to help identify interface endpoints where the data transfer is low enough to justify exposing the endpoint in only one availability zone. Note that the endpoint data charges are aggregated across all ENIs so the query will not correctly identify cases where traffic is not more or less equally balanced across AZs. The query assumes that the cost and usage report is configured for hourly granularity, the line_item_usage_amount would need to be modified for daily/monthly reports and would be less accurate. Annual cost saving potential would depend on data transfer and number of AZs provisioned but should be around $175 for API endpoints reduced from 3 AZs to 1 AZ.</p><div style="text-align: left;">Query:<br />select line_item_usage_account_id, line_item_resource_id<br />from cur<br />where line_item_usage_type like '%VpcEndpoint-Byte%'<br />&nbsp; and year='2021'<br />&nbsp; and month in ('7','07')<br />&nbsp; and line_item_usage_amount &lt; 1.0<br />&nbsp; and line_item_resource_id not in&nbsp;<br />&nbsp; &nbsp;(select distinct(line_item_resource_id)&nbsp;<br />&nbsp; &nbsp; from cur<br />&nbsp; &nbsp; where line_item_usage_type like '%VpcEndpoint-Byte%'<br />&nbsp; &nbsp; &nbsp; and year='2021'<br />&nbsp; &nbsp; &nbsp; and month in ('7','07')<br />&nbsp; &nbsp; &nbsp; and line_item_usage_amount &gt; 1.0)<br />group by line_item_usage_account_id, line_item_resource_id</div>
+      </article>
+
+      
+        <div class="blog-tags">
+          <span>Tags:</span>
+          
+            <a href="/tags#VPC Interface Endpoint">VPC Interface Endpoint</a>
+          
+            <a href="/tags#Athena">Athena</a>
+          
+            <a href="/tags#Cost saving">Cost saving</a>
+          
+            <a href="/tags#aws">aws</a>
+          
+        </div>
+      
+
+      
+
+      
+
+      <ul class="pagination blog-pager">
+        
+        <li class="page-item previous">
+          <a class="page-link" href="/2021/07/01/checking-regional-service-availability.html" data-toggle="tooltip" data-placement="top" title="Checking regional service availability with the AWS CLI">&larr; Previous Post</a>
+        </li>
+        
+        
+      </ul>
+      
+
+    </div>
+  </div>
+</div>
+
+
+  <footer>
+  <div class="container-md beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+      <ul class="list-inline text-center footer-links"><li class="list-inline-item">
+    <a href="mailto:craig@deplication.net" title="Email me">
+      <span class="fa-stack fa-lg" aria-hidden="true">
+        <i class="fas fa-circle fa-stack-2x"></i>
+        <i class="fas fa-envelope fa-stack-1x fa-inverse"></i>
+      </span>
+      <span class="sr-only">Email me</span>
+   </a>
+  </li><li class="list-inline-item">
+    <a href="https://github.com/watchamcb" title="GitHub">
+      <span class="fa-stack fa-lg" aria-hidden="true">
+        <i class="fas fa-circle fa-stack-2x"></i>
+        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+      <span class="sr-only">GitHub</span>
+   </a>
+  </li></ul>
+
+      
+      <p class="copyright text-muted">
+      
+        Craig Watcham
+        &nbsp;&bull;&nbsp;
+      
+      2025
+
+      
+
+      
+
+      
+
+      </p>
+      <p class="theme-by text-muted">
+        Powered by
+        <a href="https://beautifuljekyll.com">Beautiful Jekyll</a>
+      </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+
+  
+  
+    
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+
+
+  
+    
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+
+  
+    
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+
+  
+
+
+
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script src="/assets/js/beautifuljekyll.js"></script>
+    
+  
+
+
+
+
+
+
+
+
+
+</body>
 </html>

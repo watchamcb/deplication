@@ -1,54 +1,180 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<!-- Beautiful Jekyll 6.0.1 | Copyright Dean Attali 2023 -->
+<head>
   <meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Java application patch deployment | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
-<meta property="og:title" content="Java application patch deployment" />
-<meta name="author" content="Craig Watcham" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact. Class path update The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of the class path used to start the application. So for example if your application was started with the following command: java -cp application.jar:somelib.jar com.blogspot.deplication.MainClass  You could modify it as below to use the patched versions of your classes in the patch.jar file: java -cp patch.jar:application.jar:somelib.jar com.blogspot.deplication.MainClass This is the basic class path functionality inherent to Java and enables the loading of the patch classes from the patch.jar before the application.jar because patch.jar occurs first in the class path. This is the simplest deployment and requires the application to be restarted with the new class path for the patch to take effect. As the application needs to be restarted for this change to take effect, there is not much of a case for this approach over a full deployment. This approach does however allow you to override classes in one of the other JAR files, which may be useful for deploying a version of a class with additional logging (for example) without the need for a full deployment. Once the log data has been generated the patch file can be removed and the application restarted as its original deployment. Class file deployment The second option is to deploy compiled class files to a directory specified in the class path. This approach is almost identical to the class path update method but does not require the command line or class path environment variable to be updated with the new patch JAR file name. So for example, starting the application with the following command: java -cp .:application.jar:somelib.jar com.blogspot.deplication.MainClass Would allow new classes to be copied to the correct package structure in the working directory and after restart the patch class would be used. In this case, copying a new MainClass to ./com/blogspot/deplication/ would result in the class in the directory being used instead of the version in the application.jar. Once again, this approach requires a restart to take effect and has the added complexity of keeping track of the individual class files rather than just the patch JAR file. Dynamic class reloading The third option is the implementation of a custom class loader to enable dynamic class reloading. Unfortunately this option requires code changes and imposes various restrictions where the classes being loaded either need to extend a super class or implement an interface. Interesting points The class path and class file deployment can be quite useful on distributed systems where only a single VM requires the patched files and the nodes can be stopped and restarted independently. Remember to cleanup the deployed classes/JARs when doing a full deployment to prevent them from overriding the new code Solaris (and apparently AIX) may use memory mapped JAR files, expect very strange behaviour if you replace the JAR files in a running VM on these platforms For configurable applications that use reflection to load classes it is possible to deploy a patched class with a new (unique) name and configure the application to use the new class, thus avoiding the need for a restart Client applications launched via Java Web Start can be updated by adding the patch jar at the top of the resources section, the main=&quot;true&quot; attribute must be excluded for the order of the resources to be used in Java 1.6 Overriding classes using the class path is far from ideal and should be avoided where possible As always there are almost certainly different approaches, feel free to add comments with what has worked for you." />
-<meta property="og:description" content="This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact. Class path update The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of the class path used to start the application. So for example if your application was started with the following command: java -cp application.jar:somelib.jar com.blogspot.deplication.MainClass  You could modify it as below to use the patched versions of your classes in the patch.jar file: java -cp patch.jar:application.jar:somelib.jar com.blogspot.deplication.MainClass This is the basic class path functionality inherent to Java and enables the loading of the patch classes from the patch.jar before the application.jar because patch.jar occurs first in the class path. This is the simplest deployment and requires the application to be restarted with the new class path for the patch to take effect. As the application needs to be restarted for this change to take effect, there is not much of a case for this approach over a full deployment. This approach does however allow you to override classes in one of the other JAR files, which may be useful for deploying a version of a class with additional logging (for example) without the need for a full deployment. Once the log data has been generated the patch file can be removed and the application restarted as its original deployment. Class file deployment The second option is to deploy compiled class files to a directory specified in the class path. This approach is almost identical to the class path update method but does not require the command line or class path environment variable to be updated with the new patch JAR file name. So for example, starting the application with the following command: java -cp .:application.jar:somelib.jar com.blogspot.deplication.MainClass Would allow new classes to be copied to the correct package structure in the working directory and after restart the patch class would be used. In this case, copying a new MainClass to ./com/blogspot/deplication/ would result in the class in the directory being used instead of the version in the application.jar. Once again, this approach requires a restart to take effect and has the added complexity of keeping track of the individual class files rather than just the patch JAR file. Dynamic class reloading The third option is the implementation of a custom class loader to enable dynamic class reloading. Unfortunately this option requires code changes and imposes various restrictions where the classes being loaded either need to extend a super class or implement an interface. Interesting points The class path and class file deployment can be quite useful on distributed systems where only a single VM requires the patched files and the nodes can be stopped and restarted independently. Remember to cleanup the deployed classes/JARs when doing a full deployment to prevent them from overriding the new code Solaris (and apparently AIX) may use memory mapped JAR files, expect very strange behaviour if you replace the JAR files in a running VM on these platforms For configurable applications that use reflection to load classes it is possible to deploy a patched class with a new (unique) name and configure the application to use the new class, thus avoiding the need for a restart Client applications launched via Java Web Start can be updated by adding the patch jar at the top of the resources section, the main=&quot;true&quot; attribute must be excluded for the order of the resources to be used in Java 1.6 Overriding classes using the class path is far from ideal and should be avoided where possible As always there are almost certainly different approaches, feel free to add comments with what has worked for you." />
-<link rel="canonical" href="http://localhost:4000/2011/07/18/java-application-patch-deployment.html" />
-<meta property="og:url" content="http://localhost:4000/2011/07/18/java-application-patch-deployment.html" />
-<meta property="og:site_name" content="Deplication" />
-<meta property="og:type" content="article" />
-<meta property="article:published_time" content="2011-07-18T19:58:00+01:00" />
-<meta name="twitter:card" content="summary" />
-<meta property="twitter:title" content="Java application patch deployment" />
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2011-07-18T19:58:00+01:00","datePublished":"2011-07-18T19:58:00+01:00","description":"This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact. Class path update The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of the class path used to start the application. So for example if your application was started with the following command: java -cp application.jar:somelib.jar com.blogspot.deplication.MainClass  You could modify it as below to use the patched versions of your classes in the patch.jar file: java -cp patch.jar:application.jar:somelib.jar com.blogspot.deplication.MainClass This is the basic class path functionality inherent to Java and enables the loading of the patch classes from the patch.jar before the application.jar because patch.jar occurs first in the class path. This is the simplest deployment and requires the application to be restarted with the new class path for the patch to take effect. As the application needs to be restarted for this change to take effect, there is not much of a case for this approach over a full deployment. This approach does however allow you to override classes in one of the other JAR files, which may be useful for deploying a version of a class with additional logging (for example) without the need for a full deployment. Once the log data has been generated the patch file can be removed and the application restarted as its original deployment. Class file deployment The second option is to deploy compiled class files to a directory specified in the class path. This approach is almost identical to the class path update method but does not require the command line or class path environment variable to be updated with the new patch JAR file name. So for example, starting the application with the following command: java -cp .:application.jar:somelib.jar com.blogspot.deplication.MainClass Would allow new classes to be copied to the correct package structure in the working directory and after restart the patch class would be used. In this case, copying a new MainClass to ./com/blogspot/deplication/ would result in the class in the directory being used instead of the version in the application.jar. Once again, this approach requires a restart to take effect and has the added complexity of keeping track of the individual class files rather than just the patch JAR file. Dynamic class reloading The third option is the implementation of a custom class loader to enable dynamic class reloading. Unfortunately this option requires code changes and imposes various restrictions where the classes being loaded either need to extend a super class or implement an interface. Interesting points The class path and class file deployment can be quite useful on distributed systems where only a single VM requires the patched files and the nodes can be stopped and restarted independently. Remember to cleanup the deployed classes/JARs when doing a full deployment to prevent them from overriding the new code Solaris (and apparently AIX) may use memory mapped JAR files, expect very strange behaviour if you replace the JAR files in a running VM on these platforms For configurable applications that use reflection to load classes it is possible to deploy a patched class with a new (unique) name and configure the application to use the new class, thus avoiding the need for a restart Client applications launched via Java Web Start can be updated by adding the patch jar at the top of the resources section, the main=&quot;true&quot; attribute must be excluded for the order of the resources to be used in Java 1.6 Overriding classes using the class path is far from ideal and should be avoided where possible As always there are almost certainly different approaches, feel free to add comments with what has worked for you.","headline":"Java application patch deployment","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2011/07/18/java-application-patch-deployment.html"},"url":"http://localhost:4000/2011/07/18/java-application-patch-deployment.html"}</script>
-<!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
-        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
-        <label for="nav-trigger">
-          <span class="menu-icon">
-            <svg viewBox="0 0 18 15" width="18px" height="15px">
-              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
-            </svg>
-          </span>
-        </label>
+  
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
-      </nav></div>
+  
+
+  <title>Java application patch deployment</title>
+
+  
+  <meta name="author" content="Craig Watcham">
+  
+
+  <meta name="description" content="This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact. Class path update The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of...">
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+
+  
+    
+      
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+
+    
+      
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
+
+
+    
+      
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
+
+
+    
+      
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800">
+
+
+    
+  
+
+  
+    
+      <link rel="stylesheet" href="/assets/css/bootstrap-social.css">
+    
+      <link rel="stylesheet" href="/assets/css/beautifuljekyll.css">
+    
+  
+
+  
+
+  
+  
+  
+
+  
+
+  
+  <meta property="og:site_name" content="Deplication">
+  <meta property="og:title" content="Java application patch deployment">
+  <meta property="og:description" content="This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact. Class path update The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of...">
+
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:article:author" content="Craig Watcham">
+  <meta property="og:article:published_time" content="2011-07-18T19:58:00+01:00">
+  <meta property="og:url" content="http://localhost:4000/2011/07/18/java-application-patch-deployment.html">
+  <link rel="canonical" href="http://localhost:4000/2011/07/18/java-application-patch-deployment.html">
+  
+
+  
+  <meta name="twitter:card" content="summary">
+  
+  <meta name="twitter:site" content="@">
+  <meta name="twitter:creator" content="@">
+
+  <meta property="twitter:title" content="Java application patch deployment">
+  <meta property="twitter:description" content="This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact. Class path update The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of...">
+
+  
+
+  
+
+
+  
+
+  
+
+</head>
+
+
+<body>
+
+  
+
+
+  <nav class="navbar navbar-expand-xl navbar-light fixed-top navbar-custom top-nav-regular"><a class="navbar-brand" href="http://localhost:4000/">Deplication</a><button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="main-navbar">
+    <ul class="navbar-nav ml-auto"></ul>
+  </div>
+
+  
+
+  
+
+</nav>
+
+
+
+
+
+  <!-- TODO this file has become a mess, refactor it -->
+
+
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container-md">
+    <div class="row">
+      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+        <div class="post-heading">
+          <h1>Java application patch deployment</h1>
+          
+
+          
+            <span class="post-meta">Posted on July 18, 2011</span>
+            
+            
+          
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </header>
-<main class="page-content" aria-label="Content">
-      <div class="wrapper">
-        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
-  <header class="post-header">
-    <h1 class="post-title p-name" itemprop="name headline">Java application patch deployment</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2011-07-18T19:58:00+01:00" itemprop="datePublished">Jul 18, 2011
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
-  </header>
 
-  <div class="post-content e-content" itemprop="articleBody">
-    This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact.<br />
+
+
+
+<div class=" container-md ">
+  <div class="row">
+    <div class=" col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 ">
+
+      
+
+      
+
+      <article role="main" class="blog-post">
+        This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact.<br />
 <br />
 <b>Class path update</b><br />
 The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of the class path used to start the application. So for example if your application was started with the following command:<br />
@@ -74,34 +200,125 @@ The third option is the implementation of a custom class loader to enable<br />
 <li>Client applications launched via Java Web Start can be updated by adding the patch jar at the top of the resources section, the main="true" attribute must be excluded for the order of the resources to be used in Java 1.6</li>
 <li>Overriding classes using the class path is far from ideal and should be avoided where possible</li>
 </ul><div>As always there are almost certainly different approaches, feel free to add comments with what has worked for you.</div>
-  </div><a class="u-url" href="/2011/07/18/java-application-patch-deployment.html" hidden></a>
-</article>
+      </article>
 
-      </div>
-    </main><footer class="site-footer h-card">
-  <data class="u-url" href="/"></data>
+      
+        <div class="blog-tags">
+          <span>Tags:</span>
+          
+            <a href="/tags#Java">Java</a>
+          
+            <a href="/tags#patch">patch</a>
+          
+            <a href="/tags#deployment">deployment</a>
+          
+        </div>
+      
 
-  <div class="wrapper">
+      
 
-    <h2 class="footer-heading">Deplication</h2>
+      
 
-    <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
-        <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
-      </div>
+      <ul class="pagination blog-pager">
+        
+        <li class="page-item previous">
+          <a class="page-link" href="/2011/07/16/bash-script-to-automate-report-checking.html" data-toggle="tooltip" data-placement="top" title="Bash script to automate report checking">&larr; Previous Post</a>
+        </li>
+        
+        
+        <li class="page-item next">
+          <a class="page-link" href="/2011/07/20/forcing-xstream-to-use-reflection-for.html" data-toggle="tooltip" data-placement="top" title="Forcing XStream to use reflection for serialization">Next Post &rarr;</a>
+        </li>
+        
+      </ul>
+      
 
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
+    </div>
+  </div>
 </div>
 
-      <div class="footer-col footer-col-3">
-        <p>Simpler is better.</p>
+
+  <footer>
+  <div class="container-md beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+      <ul class="list-inline text-center footer-links"><li class="list-inline-item">
+    <a href="mailto:craig@deplication.net" title="Email me">
+      <span class="fa-stack fa-lg" aria-hidden="true">
+        <i class="fas fa-circle fa-stack-2x"></i>
+        <i class="fas fa-envelope fa-stack-1x fa-inverse"></i>
+      </span>
+      <span class="sr-only">Email me</span>
+   </a>
+  </li><li class="list-inline-item">
+    <a href="https://github.com/watchamcb" title="GitHub">
+      <span class="fa-stack fa-lg" aria-hidden="true">
+        <i class="fas fa-circle fa-stack-2x"></i>
+        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
+      </span>
+      <span class="sr-only">GitHub</span>
+   </a>
+  </li></ul>
+
+      
+      <p class="copyright text-muted">
+      
+        Craig Watcham
+        &nbsp;&bull;&nbsp;
+      
+      2025
+
+      
+
+      
+
+      
+
+      </p>
+      <p class="theme-by text-muted">
+        Powered by
+        <a href="https://beautifuljekyll.com">Beautiful Jekyll</a>
+      </p>
       </div>
     </div>
-
   </div>
-
 </footer>
-</body>
 
+
+  
+  
+    
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
+
+
+  
+    
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+
+
+  
+    
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+
+  
+
+
+
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script src="/assets/js/beautifuljekyll.js"></script>
+    
+  
+
+
+
+
+
+
+
+
+
+</body>
 </html>
