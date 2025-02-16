@@ -4,3 +4,5 @@
 
 layout: home
 ---
+
+In progress migration from Blogger, please excuse the chaos.

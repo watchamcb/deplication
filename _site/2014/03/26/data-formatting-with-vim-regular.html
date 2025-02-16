@@ -3,8 +3,8 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Data formatting with vim regular expressions | Your awesome title</title>
-<meta name="generator" content="Jekyll v4.3.4" />
+<title>Data formatting with vim regular expressions | Deplication</title>
+<meta name="generator" content="Jekyll v3.10.0" />
 <meta property="og:title" content="Data formatting with vim regular expressions" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -12,7 +12,7 @@
 <meta property="og:description" content="Using the right tool for a job can save massive amounts of time. This is a quick post to demonstrate a practical application of the power of regular expressions in vim. The problem is transforming the output from a SQL query into a wiki ready table format. Starting with the output from the query (test data for demonstration purposes):  category_name                  total  grated  mashed  boiled  ———————————————————–   Artichoke            107   67     9    31   Pepper                65   38     2    25   Carrot                 46   32  NULL    14   Lettuce                24   24  NULL  NULL   Spinach               16    8     1     7   Zuchini                 4    4  NULL  NULL Paste this data excluding the heading line into vim (or pipe it to an output file and then edit the file). Firstly lets get rid of those ugly null values: :%s/NULL/0/g This searches for the character sequence “NULL” and replaces it with 0 globally. The data should now look like this   Artichoke            107   67     9    31   Pepper                65   38     2    25   Carrot                 46   32  0    14   Lettuce                24   24  0  0   Spinach               16    8     1     7   Zuchini                 4    4  0  0 Next lets format the lines and add separators: :%s/^ /|-^M| /g This one is a bit trickier, the ^M is actually a control character indicating a new line and is created by pressing Ctrl-V and the Enter. It searches for lines starting with white space (^ ) and inserts |- and a new line before prefixing the line with a |: |- | Artichoke &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;107 &nbsp; 67 &nbsp; &nbsp; 9 &nbsp; &nbsp;31 |- | Pepper &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;65 &nbsp; 38 &nbsp; &nbsp; 2 &nbsp; &nbsp;25 |- | Carrot &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 46 &nbsp; 32 &nbsp;0 &nbsp; &nbsp;14 |- | Lettuce &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;24 &nbsp; 24 &nbsp;0 &nbsp;0 |- | Spinach &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 16 &nbsp; &nbsp;8 &nbsp; &nbsp; 1 &nbsp; &nbsp; 7 |- | Zuchini &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 4 &nbsp; &nbsp;4 &nbsp;0 &nbsp;0 Finally we want to split each number onto a separate line. This is where the power of regular expressions really shines: :%s/ \+\(\d\+\)/^M| \1/g The regex is actually quite simple, it says find all instances with one or more spaces ( \+) followed by one or more digits (\d\+) and save the digits for substitution (by putting them in brackets \( and \)). Then replace the pattern with a newline, a pipe and the saved digits (\1). And viola, columns to rows: |- | Artichoke | 107 | 67 | 9 | 31 |- | Pepper | 65 | 38 | 2 | 25 |- | Carrot | 46 | 32 | 0 | 14 |- | Lettuce | 24 | 24 | 0 | 0 |- | Spinach | 16 | 8 | 1 | 7 |- | Zuchini | 4 | 4 | 0 | 0 Pretty cool." />
 <link rel="canonical" href="http://localhost:4000/2014/03/26/data-formatting-with-vim-regular.html" />
 <meta property="og:url" content="http://localhost:4000/2014/03/26/data-formatting-with-vim-regular.html" />
-<meta property="og:site_name" content="Your awesome title" />
+<meta property="og:site_name" content="Deplication" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2014-03-26T17:56:00+00:00" />
 <meta name="twitter:card" content="summary" />
@@ -20,12 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2014-03-26T17:56:00+00:00","datePublished":"2014-03-26T17:56:00+00:00","description":"Using the right tool for a job can save massive amounts of time. This is a quick post to demonstrate a practical application of the power of regular expressions in vim. The problem is transforming the output from a SQL query into a wiki ready table format. Starting with the output from the query (test data for demonstration purposes):  category_name                  total  grated  mashed  boiled  ———————————————————–   Artichoke            107   67     9    31   Pepper                65   38     2    25   Carrot                 46   32  NULL    14   Lettuce                24   24  NULL  NULL   Spinach               16    8     1     7   Zuchini                 4    4  NULL  NULL Paste this data excluding the heading line into vim (or pipe it to an output file and then edit the file). Firstly lets get rid of those ugly null values: :%s/NULL/0/g This searches for the character sequence “NULL” and replaces it with 0 globally. The data should now look like this   Artichoke            107   67     9    31   Pepper                65   38     2    25   Carrot                 46   32  0    14   Lettuce                24   24  0  0   Spinach               16    8     1     7   Zuchini                 4    4  0  0 Next lets format the lines and add separators: :%s/^ /|-^M| /g This one is a bit trickier, the ^M is actually a control character indicating a new line and is created by pressing Ctrl-V and the Enter. It searches for lines starting with white space (^ ) and inserts |- and a new line before prefixing the line with a |: |- | Artichoke &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;107 &nbsp; 67 &nbsp; &nbsp; 9 &nbsp; &nbsp;31 |- | Pepper &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;65 &nbsp; 38 &nbsp; &nbsp; 2 &nbsp; &nbsp;25 |- | Carrot &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 46 &nbsp; 32 &nbsp;0 &nbsp; &nbsp;14 |- | Lettuce &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;24 &nbsp; 24 &nbsp;0 &nbsp;0 |- | Spinach &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 16 &nbsp; &nbsp;8 &nbsp; &nbsp; 1 &nbsp; &nbsp; 7 |- | Zuchini &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 4 &nbsp; &nbsp;4 &nbsp;0 &nbsp;0 Finally we want to split each number onto a separate line. This is where the power of regular expressions really shines: :%s/ \\+\\(\\d\\+\\)/^M| \\1/g The regex is actually quite simple, it says find all instances with one or more spaces ( \\+) followed by one or more digits (\\d\\+) and save the digits for substitution (by putting them in brackets \\( and \\)). Then replace the pattern with a newline, a pipe and the saved digits (\\1). And viola, columns to rows: |- | Artichoke | 107 | 67 | 9 | 31 |- | Pepper | 65 | 38 | 2 | 25 |- | Carrot | 46 | 32 | 0 | 14 |- | Lettuce | 24 | 24 | 0 | 0 |- | Spinach | 16 | 8 | 1 | 7 |- | Zuchini | 4 | 4 | 0 | 0 Pretty cool.","headline":"Data formatting with vim regular expressions","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2014/03/26/data-formatting-with-vim-regular.html"},"url":"http://localhost:4000/2014/03/26/data-formatting-with-vim-regular.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Your awesome title" />
-</head>
-<body><header class="site-header">
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
+<body><header class="site-header" role="banner">
 
-  <div class="wrapper"><a class="site-title" rel="author" href="/">Your awesome title</a><nav class="site-nav">
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
         <label for="nav-trigger">
           <span class="menu-icon">
@@ -35,7 +33,7 @@
           </span>
         </label>
 
-        <div class="trigger"></div>
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -44,11 +42,9 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Data formatting with vim regular expressions</h1>
-    <p class="post-meta"><time class="dt-published" datetime="2014-03-26T17:56:00+00:00" itemprop="datePublished">
-        Mar 26, 2014
-      </time>• 
-          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-03-26T17:56:00+00:00" itemprop="datePublished">Mar 26, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -223,31 +219,21 @@ Pretty cool.</div>
 
   <div class="wrapper">
 
+    <h2 class="footer-heading">Deplication</h2>
+
     <div class="footer-col-wrapper">
-      <div class="footer-col">
-        <p class="feed-subscribe">
-          <a href="http://localhost:4000/feed.xml">
-            <svg class="svg-icon orange">
-              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
-                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
-                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
-                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
-              />
-            </svg><span>Subscribe</span>
-          </a>
-        </p>
+      <div class="footer-col footer-col-1">
         <ul class="contact-list">
-          <li class="p-name">GitHub User</li>
-          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
-        </ul>
+          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
       </div>
-      <div class="footer-col">
-        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Simpler is better.</p>
       </div>
     </div>
-
-    <div class="social-links"><ul class="social-media-list"></ul>
-</div>
 
   </div>
 

@@ -3,8 +3,8 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
-<title>Finding S3 API requests from previous versions of the AWS CLI and SDKs | Your awesome title</title>
-<meta name="generator" content="Jekyll v4.3.4" />
+<title>Finding S3 API requests from previous versions of the AWS CLI and SDKs | Deplication</title>
+<meta name="generator" content="Jekyll v3.10.0" />
 <meta property="og:title" content="Finding S3 API requests from previous versions of the AWS CLI and SDKs" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -12,7 +12,7 @@
 <meta property="og:description" content="Introduction Earlier this year the S3 team announced that S3 will stop accepting API requests signed using AWS Signature Version 2 after June 24th, 2019. Customers will need to update their SDKs, CLIs, and custom implementations to make use of AWS Signature Version 4 to avoid impact after this date. It might be difficult to find older applications or instances using outdated versions of the AWS CLI or SDKs that need to be updated, the purpose of this post is to explain how AWS CloudTrail data events and Amazon Athena can be used to help identify applications that may need to be updated. We will cover the setup of the CloudTrail data events, the Athena table creation, and some Athena queries to filter and refine the results to help with this process. Update (January/February 2019) S3 recently added a&nbsp;SignatureVersion item to the AdditionalEventData field in the S3 data events, this significantly simplifies the process of finding clients using SigV2. The SQL queries below have been updated to exclude events with a SigV4 signature (additionaleventdata NOT LIKE &#39;%SigV4%&#39;). You can equally search for only &#39;%SigV2%&#39; and skip the CLI version string munging entirely. Setting up CloudTrail data events in the AWS console The first step is to create a trail to capture S3 data events. This should be done in the region you plan on running your Athena queries in order to avoid unnecessary data transfer charges. In the CloudTrail console for the region, create a new trail specifying the trail name. The ‘Apply trail to all regions’ option should be left as ‘Yes’ unless you plan on running separate analyses for each region. Given that we are creating a data events trail, select ‘None’ under the Management Events section and check the “Select all S3 buckets in your account” checkbox. Finally select the S3 location where the CloudTrail data will be written, we will create new bucket for simplicity: Setting up CloudTrail data events using the AWS CLI If you prefer to create the trail using the AWS CLI then you can use the create-subscription command to create the S3 bucket and trail with the correct permissions, updating it to be a global trail and then adding the S3 data event configuration:" />
 <link rel="canonical" href="http://localhost:4000/2018/10/14/finding-s3-api-requests-from-previous.html" />
 <meta property="og:url" content="http://localhost:4000/2018/10/14/finding-s3-api-requests-from-previous.html" />
-<meta property="og:site_name" content="Your awesome title" />
+<meta property="og:site_name" content="Deplication" />
 <meta property="og:type" content="article" />
 <meta property="article:published_time" content="2018-10-14T12:14:00+01:00" />
 <meta name="twitter:card" content="summary" />
@@ -20,12 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2018-10-14T12:14:00+01:00","datePublished":"2018-10-14T12:14:00+01:00","description":"Introduction Earlier this year the S3 team announced that S3 will stop accepting API requests signed using AWS Signature Version 2 after June 24th, 2019. Customers will need to update their SDKs, CLIs, and custom implementations to make use of AWS Signature Version 4 to avoid impact after this date. It might be difficult to find older applications or instances using outdated versions of the AWS CLI or SDKs that need to be updated, the purpose of this post is to explain how AWS CloudTrail data events and Amazon Athena can be used to help identify applications that may need to be updated. We will cover the setup of the CloudTrail data events, the Athena table creation, and some Athena queries to filter and refine the results to help with this process. Update (January/February 2019) S3 recently added a&nbsp;SignatureVersion item to the AdditionalEventData field in the S3 data events, this significantly simplifies the process of finding clients using SigV2. The SQL queries below have been updated to exclude events with a SigV4 signature (additionaleventdata NOT LIKE &#39;%SigV4%&#39;). You can equally search for only &#39;%SigV2%&#39; and skip the CLI version string munging entirely. Setting up CloudTrail data events in the AWS console The first step is to create a trail to capture S3 data events. This should be done in the region you plan on running your Athena queries in order to avoid unnecessary data transfer charges. In the CloudTrail console for the region, create a new trail specifying the trail name. The ‘Apply trail to all regions’ option should be left as ‘Yes’ unless you plan on running separate analyses for each region. Given that we are creating a data events trail, select ‘None’ under the Management Events section and check the “Select all S3 buckets in your account” checkbox. Finally select the S3 location where the CloudTrail data will be written, we will create new bucket for simplicity: Setting up CloudTrail data events using the AWS CLI If you prefer to create the trail using the AWS CLI then you can use the create-subscription command to create the S3 bucket and trail with the correct permissions, updating it to be a global trail and then adding the S3 data event configuration:","headline":"Finding S3 API requests from previous versions of the AWS CLI and SDKs","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2018/10/14/finding-s3-api-requests-from-previous.html"},"url":"http://localhost:4000/2018/10/14/finding-s3-api-requests-from-previous.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
-  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Your awesome title" />
-</head>
-<body><header class="site-header">
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
+<body><header class="site-header" role="banner">
 
-  <div class="wrapper"><a class="site-title" rel="author" href="/">Your awesome title</a><nav class="site-nav">
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
         <label for="nav-trigger">
           <span class="menu-icon">
@@ -35,7 +33,7 @@
           </span>
         </label>
 
-        <div class="trigger"></div>
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -44,11 +42,9 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Finding S3 API requests from previous versions of the AWS CLI and SDKs</h1>
-    <p class="post-meta"><time class="dt-published" datetime="2018-10-14T12:14:00+01:00" itemprop="datePublished">
-        Oct 14, 2018
-      </time>• 
-          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
-            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2018-10-14T12:14:00+01:00" itemprop="datePublished">Oct 14, 2018
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -397,31 +393,21 @@ ARN to track down the source of the requests.<o:p></o:p></div>
 
   <div class="wrapper">
 
+    <h2 class="footer-heading">Deplication</h2>
+
     <div class="footer-col-wrapper">
-      <div class="footer-col">
-        <p class="feed-subscribe">
-          <a href="http://localhost:4000/feed.xml">
-            <svg class="svg-icon orange">
-              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
-                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
-                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
-                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
-              />
-            </svg><span>Subscribe</span>
-          </a>
-        </p>
+      <div class="footer-col footer-col-1">
         <ul class="contact-list">
-          <li class="p-name">GitHub User</li>
-          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
-        </ul>
+          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
       </div>
-      <div class="footer-col">
-        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>Simpler is better.</p>
       </div>
     </div>
-
-    <div class="social-links"><ul class="social-media-list"></ul>
-</div>
 
   </div>
 
