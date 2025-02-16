@@ -1,0 +1,27 @@
+---
+layout: post
+title: 'AWS Tip: Terminating instances in an Auto Scaling group'
+date: '2015-06-22T14:35:00.001+01:00'
+author: Craig Watcham
+tags:
+- Auto Scaling
+- CLI
+- aws
+modified_time: '2015-06-22T14:35:48.660+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-6901351339196203667
+blogger_orig_url: https://www.deplication.net/2015/06/aws-tip-terminating-instances-in-auto.html
+---
+
+EC2 instances launched by Auto Scaling really should not be terminated outside of Auto Scaling but if for some reason you (really, really) need to terminate a number of instances you may see some unexpected behaviour if you terminate them using the EC2 console. Instead of all the instances being replaced by Auto Scaling simultaneously they are replaced individually over a period of time. This means that it may take significantly longer than you would expect to get the ASG back to the original size. As an <a href="https://gist.github.com/watchamcb/fc686c70e8c2660ee7ef" target="_blank">example</a>&nbsp;an instance in my test ASG was replaced every 2 minutes, taking around 6 minutes to terminate and replace 3 instances.<br />
+<br />
+There are two ways of doing this more efficiently (using the supremely useful <a href="http://docs.aws.amazon.com/cli/latest/index.html" target="_blank">AWS CLI</a>), firstly by setting the group capacity and then resetting it:<br />
+<br />
+<br />
+<script src="https://gist.github.com/watchamcb/f798d361a8b74fb0a707.js"></script>
+
+Note that&nbsp;<a href="http://docs.aws.amazon.com/cli/latest/reference/autoscaling/update-auto-scaling-group.html" target="_blank">update-auto-scaling-group</a>&nbsp;is used due to the minimum size being set, if no minimum size is specified the same result can be achieved with&nbsp;<a href="http://docs.aws.amazon.com/cli/latest/reference/autoscaling/set-desired-capacity.html" target="_blank">set-desired-capacity</a>.<br />
+<br />
+The second option is to use&nbsp;<a href="http://docs.aws.amazon.com/cli/latest/reference/autoscaling/terminate-instance-in-auto-scaling-group.html" target="_blank">terminate-instance-in-auto-scaling-group</a>:<br />
+<br />
+<br />
+<script src="https://gist.github.com/watchamcb/cf6e8e4a03f204fe9fe4.js"></script>

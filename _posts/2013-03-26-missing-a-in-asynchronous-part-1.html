@@ -1,0 +1,73 @@
+---
+layout: post
+title: Missing the A in Asynchronous - Part 1
+date: '2013-03-26T12:33:00.000Z'
+author: Craig Watcham
+tags:
+modified_time: '2013-03-26T12:38:18.769Z'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-8011187310755805080
+blogger_orig_url: https://www.deplication.net/2013/03/missing-a-in-asynchronous-part-1.html
+---
+
+Few things are more irritating in software development than when people use a&nbsp;<a href="http://en.wikipedia.org/wiki/Kludge">kludge</a>&nbsp;rather than taking the time to implement a properly designed and robust solution. The peeve I am exercising today relates to the code snippet that follows:<br />
+<br />
+<br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; <span style="color: #e06666;">private </span>BOTransfer getTransferInefficiently(Trade trade) <span style="color: #e06666;">throws </span>RemoteException {</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span style="white-space: pre;">&nbsp;   </span><span style="color: #6aa84f;">// There is some delay between when a trade and corresponsing transfer is created</span></span><br />
+<span style="font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;"><span style="white-space: pre;">&nbsp;   </span>BOTransfer transfer = </span><span style="color: #e06666; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">null</span><span style="font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;">    </span><span style="color: #e06666;">int </span>cnt = 0;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;">        </span><span style="color: #e06666;">do </span>{</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;"> </span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #e06666;">try </span>{</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;">                </span>Thread.sleep(500l);</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;"> </span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; } <span style="color: #e06666;">catch</span> (Exception e) {</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;">               </span><span style="color: #e06666;">return null</span>;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;"> </span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;"> </span>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; transfer = getFirstTransfer(trade);</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;">        </span>} <span style="color: #e06666;">while </span>(cnt++ &lt; 10 &amp;&amp; transfer == <span style="color: #e06666;">null</span>);</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><span class="Apple-tab-span" style="white-space: pre;">        </span><span style="color: #e06666;">return</span> transfer;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; }</span><br />
+<div>
+<br /></div>
+<div>
+The code is pretty simple. Wait 500ms and try and load a transfer object from the trade, repeat until the transfer object is loaded or the number of load attempts reaches 10. In a single threaded or single user environment this code might be excusable. In a multi-user production trading system processing hundreds of transactions a second this implementation is totally unacceptable. Some well meaning soul has added a comment further explaining the method:</div>
+<div>
+<br /></div>
+<div>
+<div>
+<span style="color: #6aa84f; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; // This implementation is fundamentally broken in many ways. The transfer creation is</span></div>
+<div>
+<span style="color: #6aa84f; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; // asynchronous and this logic should be triggered off the transfer creation event (instead of</span></div>
+<div>
+<span style="color: #6aa84f; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; // looping and sleeping). This approach prevents this engine thread from processing any other</span></div>
+<div>
+<span style="color: #6aa84f; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; // events and will not find the transfer in the case where the TransferEngine is under heavy</span></div>
+<div>
+<span style="color: #6aa84f; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; // load. useInefficientWaitForTransfer method added to the interface to allow correct</span></div>
+<div>
+<span style="color: #6aa84f; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; // implementation on new classes</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+This person at least understood that the code was a problem and tried to mitigate the risks by extracting it into a separate method and adding the explanatory comment. Unfortunately for whatever reason (time constraints, lack of automated regression testing, indifference, ...) they only raised the visibility of the problem rather than fixing it entirely.</div>
+<div>
+<br /></div>
+<h4>
+Issues</h4>
+Increased system load - the call to&nbsp;<span style="font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">getFirstTransfer</span>&nbsp;actually does a remote call and a database query each time it is executed. This means that in the worst case (when the system is probably already overloaded) 10 database queries are executed at half a second intervals for 5 seconds (per thread), a great way to further degrade performance.<br />
+<div>
+<div>
+<br /></div>
+<div>
+Poor thread pool usage - the&nbsp;<span style="font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">getTransferInefficiently</span>&nbsp;method is run from a static sized thread pool responsible for handling all requests queued for this process (typically between a few hundred and a few thousand per second). For each thread looping in this method there are numerous other requests that could have been processed instead. In the worst case if all threads are handling requests requiring this method then for a few seconds potentially thousands of requests will be queued unnecessarily.</div>
+</div>
+<div>
+<br /></div>
+<div>
+Poor transparency - under heavy load most of the invocations of the method will return null as the transfer object will not have been created and consequently can't be loaded in the timeout (despite adding significant load to the already strained system). There is also no mechanism for measuring the average time taken for the object to be created and no backoff policy to try and reduce server load.<br />
+<br />
+<h4>
+Solution</h4>
+</div>
+<div>
+The correct implementation to achieve the desired behaviour asynchronously is relatively simple. A separate process should register/subscribe to BOTransfer events, on successful transfer creation perform the processing currently performed on the object returned by the&nbsp;<span style="font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">getTransferInefficiently</span>&nbsp;method.</div>

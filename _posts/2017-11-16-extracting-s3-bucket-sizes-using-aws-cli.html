@@ -1,0 +1,47 @@
+---
+layout: post
+title: Extracting S3 bucket sizes using the AWS CLI
+date: '2017-11-16T15:20:00.001Z'
+author: Craig Watcham
+tags:
+- CloudWatch
+- S3
+- CLI
+- aws
+modified_time: '2017-11-16T16:21:31.806Z'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-5749857963236690407
+blogger_orig_url: https://www.deplication.net/2017/11/extracting-s3-bucket-sizes-using-aws-cli.html
+---
+
+A quick one liner for printing out the size (in bytes) of S3 StandardStorage buckets in your account (using bash):<br />
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: xx-small;"><br /></span>
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">for name in $(aws s3api list-buckets --query 'Buckets[*].Name' --output text); do size=$(aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --start-time $(date --date="yesterday" +%Y-%m-%d) --end-time $(date +%Y-%m-%d) --period 86400 --statistics Maximum --dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage --query 'Datapoints[0].Maximum' | sed 's/null/0.0/' | cut -d. -f1); echo "$name,$size"; done</span><br />
+<div>
+<br /></div>
+<div>
+<br /></div>
+<div>
+Some of the individual components may be independently useful, starting off with listing buckets:</div>
+<div>
+<br /></div>
+<div>
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">aws s3api list-buckets --query 'Buckets[*].Name' --output text</span></div>
+<div>
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;"><br /></span></div>
+<span style="font-family: inherit;">Pretty straight forward, uses the <a href="http://docs.aws.amazon.com/cli/latest/reference/s3api/index.html">s3api</a>&nbsp;in the CLI to list buckets returning only their names in text format.</span><br />
+<span style="font-family: inherit;"><br /></span>
+<br />
+To get the bucket sizes we are actually querying CloudWatch (using <a href="http://docs.aws.amazon.com/cli/latest/reference/cloudwatch/get-metric-statistics.html">get-metric-statistics</a>) which provides bucket size and object count <a href="http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/s3-metricscollected.html">metrics for S3</a>:<br />
+<br />
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --start-time $(date --date="yesterday" +%Y-%m-%d) --end-time $(date +%Y-%m-%d) --period 86400 --statistics Maximum --dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage --query 'Datapoints[0].Maximum' | sed 's/null/0.0/' | cut -d. -f1</span><br />
+<br />
+Most of this is fairly straight forward some of the parameters worth explaining further:<br />
+--start-time: we are setting the start date to yesterday and formatting it in yyyy-mm-dd format, this ensures we get at least one data point containing the bucket size<br />
+--period: 86400 = 1 day as the bucket size metric is only published once a day (at 00:00:00)<br />
+--query: we are only interested in the the actual value for one of the metric datapoints<br />
+<br />
+The sed and cut commands are just to clean up formatting, if the bucket is empty the CloudWatch metric request will return null so we replace null with 0.0. The bucket size metric value will always end in .0 so we truncate it using cut (yes there are other ways of doing this).<br />
+<br />
+If you are only wanting to check the size of a single bucket or the bucket size on a specific date you can use a simpler version:<br />
+<br class="Apple-interchange-newline" />
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --start-time 2017-11-15 --end-time 2017-11-16 --period 86400 --statistics Maximum --dimensions Name=BucketName,Value=MY_BUCKET_NAME Name=StorageType,Value=StandardStorage --query 'Datapoints[0].Maximum'</span>

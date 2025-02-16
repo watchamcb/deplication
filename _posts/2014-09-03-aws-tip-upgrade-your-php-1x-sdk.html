@@ -1,0 +1,17 @@
+---
+layout: post
+title: 'AWS Tip: Upgrade your PHP 1.x SDK'
+date: '2014-09-03T09:06:00.004+01:00'
+author: Craig Watcham
+tags:
+modified_time: '2014-09-03T09:06:45.308+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-8481898378586294243
+blogger_orig_url: https://www.deplication.net/2014/09/aws-tip-upgrade-your-php-1x-sdk.html
+---
+
+<span>If you are still using 1.6.2 of the&nbsp;<a href="https://github.com/amazonwebservices/aws-sdk-for-php" target="_blank">AWS PHP SDK</a>&nbsp;you can expect some strange issues, for example:</span><br />
+<span><br /></span>
+<span id="caseCorrespondence_27233513465_text">$ec2-&gt;describe_instances();</span><br />
+<span><br /></span>
+<span>Will not list T2 instance types. Save yourself some hassle and upgrade to the <a href="https://github.com/aws/aws-sdk-php" target="_blank">latest</a>&nbsp;version with the help of this&nbsp;<a href="http://docs.aws.amazon.com/aws-sdk-php/guide/latest/migration-guide.html" target="_blank">migration guide</a>.</span><br />
+<br />

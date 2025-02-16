@@ -1,0 +1,48 @@
+---
+layout: post
+title: Python cx_Oracle on Ubuntu 12.04
+date: '2013-11-20T09:57:00.000Z'
+author: Craig Watcham
+tags:
+- python
+- oracle
+modified_time: '2013-11-20T09:57:29.678Z'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-1515224214177521526
+blogger_orig_url: https://www.deplication.net/2013/11/python-cxoracle-on-ubuntu-1204.html
+---
+
+There are some <a href="http://maxolasersquad.blogspot.com/2011/04/cxoracle-on-ubuntu-1104-natty.html">older</a> articles on getting cx_Oracle working using RPMs and alien but it seems Oracle are now providing non-RPM downloads. Below are the (quick and dirty) steps I followed to get it installed on Ubuntu 12.04 x64.<br />
+<br />
+<ol>
+<li>Download both the "Instant Client Package - Basic Lite" and "Instant Client Package - SDK" ZIP files from the <a href="http://www.oracle.com/technetwork/topics/linuxx86-64soft-092277.html">Oracle Instant Client</a> download page (taking note of the version of Oracle you are connecting to)</li>
+<li>Unzip both the files, they will create a directory correponding to the Oracle version, instantclient_11_2 for example</li>
+<li>Change to the instantclient directory created in the previous step and:</li>
+<ul>
+<li>Create symbolic links to the version specific files:&nbsp;</li>
+<ul>
+<li>libclntsh.so -&gt; libclntsh.so.11.1&nbsp;</li>
+<li>libocci.so -&gt; libocci.so.11.1</li>
+</ul>
+<li>Create a lib directory (mkdir lib)</li>
+<li>Move lib* to the lib directory (mv lib* lib)</li>
+<li>Move header files from ./sdk/include to . (mv ./sdk/include/*.h .)</li>
+</ul>
+<li>Optionally move the instantclient directory to another location </li>
+<li>Sudo to root (sudo -s) and build the module:</li>
+<ul>
+<li>Install the python-dev package (apt-get install python-dev) </li>
+<li>Export environment variables:&nbsp;</li>
+<ul>
+<li>export ORACLE_HOME="path/to/instantclient"</li>
+<li>export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$ORACLE_HOME/lib"</li>
+</ul>
+<li>Install the cx_oracle module using pip (pip install cx_oracle)</li>
+<li>Hopefully get a "Successfully installed cx-oracle" message</li>
+</ul>
+<li>Exit the root shell (Ctrl-D)</li>
+<li>Add the ORACLE_HOME and LD_LIBRARY_PATH environment variables to your profile (or just manually export them)</li>
+<li>Launch python and test:</li>
+</ol>
+&gt;&gt;&gt; import cx_Oracle<br />&gt;&gt;&gt; dsn = cx_Oracle.makedsn('host', port, 'sid')<br />&gt;&gt;&gt; connection = cx_Oracle.connect('user','password',dsn)<br />&gt;&gt;&gt; cursor = connection.cursor()<br />&gt;&gt;&gt; results = cursor.execute("select id from table where ROWNUM &lt;= 10")<br />&gt;&gt;&gt; cursor.fetchall()<br />[(705,), (718,), (719,), (721,), (725,), (726,), (727,), (737,), (748,), (769,)]<br />&gt;&gt;&gt; cursor.close()<br />&gt;&gt;&gt; connection.close()<br /><br /><ol><ul>
+</ul>
+</ol>

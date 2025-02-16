@@ -1,0 +1,44 @@
+---
+layout: post
+title: Forcing XStream to use reflection for serialization
+date: '2011-07-20T10:48:00.000+01:00'
+author: Craig Watcham
+tags:
+- Java
+- XStream
+modified_time: '2011-07-20T10:48:50.494+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-8421854145867774088
+blogger_orig_url: https://www.deplication.net/2011/07/forcing-xstream-to-use-reflection-for.html
+---
+
+<a href="http://xstream.codehaus.org/">XStream</a> is a fantastic library for serialising objects to XML, this (very short) post explains how to force reflection on classes implementing the Externalizable interface. The code below is the typical usage of XStream to serialise an object<br />
+<br />
+<blockquote>XStream xstream = new XStream();<br />
+System.out.println(xstream.toXML(someObject);</blockquote><br />
+Unfortunately if someObject implements Externalizable then the output XML looks something like:<br />
+<blockquote>&lt;com.blogspot.deplication.SomeObject&gt;<br />
+&nbsp; &nbsp; &lt;boolean&gt;true&lt;/boolean&gt;<br />
+&nbsp; &nbsp; &lt;int&gt;1234213&lt;/int&gt;<br />
+&nbsp; &nbsp; &lt;int&gt;20163&lt;/int&gt;<br />
+&nbsp; &nbsp; &lt;int&gt;0&lt;/int&gt;<br />
+&nbsp; &nbsp; &lt;int&gt;4211&lt;/int&gt;<br />
+&nbsp; &nbsp; &lt;int&gt;32321981&lt;/int&gt;<br />
+&nbsp; &nbsp; &lt;int&gt;1233&lt;/int&gt;<br />
+&nbsp; &nbsp; &lt;boolean&gt;true&lt;/boolean&gt;<br />
+&lt;/com.blogspot.deplication.SomeObject&gt;</blockquote><br />
+To fix this, the priority of the ReflectionConverter needs to be increased as by default it is the last converter called when trying to serialise the object.<br />
+<blockquote>XStream xstream = new XStream();<br />
+ReflectionConverter reflectionConverter = new ReflectionConverter(<br />
+&nbsp; &nbsp; new CachingMapper(xstream.getMapper()), xstream.getReflectionProvider());<br />
+xstream.registerConverter(reflectionConverter, XStream.PRIORITY_LOW);<br />
+System.out.println(xstream.toXML(someObject);</blockquote><br />
+This code results in the more friendly XML output:<br />
+<br />
+<blockquote>&lt;com.blogspot.deplication.SomeObject&gt;<br />
+&nbsp; &nbsp; &lt;__id&gt;1234213&lt;/__id&gt;<br />
+&nbsp; &nbsp; &lt;__tradeId&gt;20163&lt;/__tradeId&gt;<br />
+&nbsp; &nbsp; &lt;__linkedTradeId&gt;0&lt;/__linkedTradeId&gt;<br />
+&nbsp; &nbsp; &lt;__bookId&gt;4211&lt;/__bookId&gt;<br />
+&nbsp; &nbsp; &lt;__productId&gt;32321981&lt;/__productId&gt;<br />
+&nbsp; &nbsp; &lt;__eventConfigId&gt;1233&lt;/__eventConfigId&gt;<br />
+&lt;/com.blogspot.deplication.SomeObject&gt;</blockquote>

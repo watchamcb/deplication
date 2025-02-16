@@ -1,0 +1,19 @@
+---
+layout: post
+title: "'Connection to s3.amazonaws.com timed out' using VPC S3 Endpoint"
+date: '2016-05-04T13:07:00.000+01:00'
+author: Craig Watcham
+tags:
+modified_time: '2016-05-04T13:07:34.951+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-6545364338809562348
+blogger_orig_url: https://www.deplication.net/2016/05/connection-to-s3amazonawscom-timed-out.html
+---
+
+A quick post to point you in the right direction if you are getting connection time out errors using the AWS CLI or Boto with <a href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-endpoints.html">AWS S3 VPC Endpoints</a> in a private subnet. The two most likely causes of this are:<br />
+<br />
+1. Your bucket name contains dots.<br />
+To work around this you can specify the region of the bucket, for example:<br />
+aws --region eu-west-1 s3 ls s3://bucket.with.dots/<br />
+<br />
+2. You are trying to access a bucket in a different region.<br />
+This is not supported by VPC Endpoints, see the restrictions <a href="http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-endpoints.html#vpc-endpoints-limitations">here</a>.

@@ -1,0 +1,112 @@
+---
+layout: post
+title: Using the EJB3 timer service instead of Thread.sleep()
+date: '2011-07-10T18:00:00.001+01:00'
+author: Craig Watcham
+tags:
+- JBoss
+- EJB3
+- TimerService
+modified_time: '2011-07-14T07:55:29.491+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-3642910474881784757
+blogger_orig_url: https://www.deplication.net/2011/07/using-ejb3-timer-service-instead-of.html
+---
+
+As with most software development a large amount of effort is spent testing, be it functional or regression. The effort required to coordinate testing increases significantly when integration with external systems is required, particularly if those systems are not part of the same division or organisation. I recently volunteered to assist with reducing this overhead for an interface to our payment gateway, this post uses this implementation to demonstrate the use of the EJB 3 timer service for delaying processing.<br />
+
+
+The gateway in this system is responsible for routing messages to a payment network and processing asynchronous responses which are then communicated to the originating source system. In this case the source system interface to the gateway is quite simple, using TextMessage objects placed on a JMS queue hosted on JBoss. The response messages from the gateway are simple ACK/NACK messages containing an identifier and are placed on a separate JMS response queue processed by the source system. Unfortunately the test payment network is not always available and is only able to accept payment messages to specific test entities, this limits the variety of test cases and introduces reliability issues in the regression testing. Given the simple interface mechanism it was logical to create a gateway simulator that merely processed the request queue and sent corresponding responses to the response queue. The original implementation code as as follows:<br />
+<br />
+<pre class="brush: java">@MessageDriven(activationConfig = {
+  @ActivationConfigProperty(propertyName = "destinationType", 
+    propertyValue = "javax.jms.Queue"),
+  @ActivationConfigProperty(propertyName = "destination", 
+    propertyValue = "queue/InQueue")
+  //...
+  })
+@TransactionManagement(value = TransactionManagementType.CONTAINER)
+@TransactionAttribute(TransactionAttributeType.REQUIRED)
+public class SimulateGatewayMDB implements MessageListener {
+    static Logger log = Logger.getLogger(SimulateGatewayMDB.class);
+
+    @Resource(mappedName = "ConnectionFactory")
+    private QueueConnectionFactory connectionFactory;
+
+    @Resource(mappedName = "queue/OutQueue")
+    private Queue responseQueue;
+
+    public void onMessage(Message message) {
+        try {
+            String reference = message.getStringProperty("Reference");
+            log.info("Simulator received message: " + reference);
+            queueReply(reference);
+        } catch (Exception e) {
+            log.error("Message processing failed.", e);
+        }
+    }
+
+    protected void queueReply(String sourceReference) throws Exception {
+        final String SEPARATOR = ";";
+        StringBuffer message = new StringBuffer("GWRESPONSE");
+        message.append(SEPARATOR);
+        message.append(sourceReference).append(SEPARATOR);
+        message.append("ACK").append(SEPARATOR);
+        message.append("ACK by SimulateGW").append(SEPARATOR);
+        message.append("Response").append(SEPARATOR);
+        publishMessage(message.toString());
+    }
+
+    private void publishMessage(String message) throws Exception {
+        QueueConnection queueConnection =
+            connectionFactory.createQueueConnection();
+        QueueSession queueSession = queueConnection.createQueueSession(false, 
+            Session.AUTO_ACKNOWLEDGE);
+        TextMessage textMessage = queueSession.createTextMessage(message);
+        QueueSender sender = queueSession.createSender(responseQueue);
+        sender.send(textMessage);
+        queueConnection.close();
+    }
+}
+</pre><br />
+This implementation works exactly as expected, placing a response message on the response queue for each request message. Unfortunately it works a bit too well... In the production environment the message is sent to an external network and has a delay between the request being sent and the response being received (hence the asynchronous processing). This delay allows the source system to perform additional processing, updating the message status and moving it along a workflow. The almost instantaneous response from the simulator prevents this processing from occurring which causes some of the test cases to fail.<br />
+<br />
+The obvious solution to this timing issue is to introduce an artificial delay between the request being received and the response being sent. In a standalone application this delay would typically be accomplished by calling Thread.sleep() to delay further processing. The EJB specification is quite clear about not interfering with the container thread management: <br />
+<br />
+<blockquote>"The enterprise bean must not attempt to manage threads. The enterprise bean must not attempt to start, stop, suspend, or resume a thread, or to change a thread’s priority or name. The enterprise bean must not attempt to manage thread groups.<br />
+<br />
+These functions are reserved for the EJB container. Allowing the enterprise bean to manage threads would decrease the container’s ability to properly manage the runtime environment."</blockquote><br />
+It is unclear whether or not Thread.sleep() should be considered a thread management attempt but  it is preferable to use the container provided timer service. Fortunately this service is remarkably simple to use:<br />
+<ul><li>Add a&nbsp;TimerService resource</li>
+<li>Add a&nbsp;@Timeout annotated method as a callback on timer expiry</li>
+</ul>The updated code (containing the changed sections):<br />
+<br />
+<pre class="brush: java">    @Resource
+    javax.ejb.TimerService timerService;
+
+    public void onMessage(Message message) {
+        try {
+            String reference = message.getStringProperty("Reference");
+            log.info("Simulator received message: " + reference);
+            timerService.createTimer(10000, reference);
+        } catch (Exception e) {
+            log.error("Message processing failed.", e);
+        }
+    }
+
+    @Timeout
+    public void sendResponse(Timer timer) {
+        try {
+            log.info("Sending response: " + timer.getInfo());
+            queueReply((String) timer.getInfo());
+        } catch (Exception e) {
+            log.error("Message processing failed.", e);
+        }
+    }
+</pre><br />
+The changes above introduce a ten second delay between the request being received and the response being sent. A few notes about the implementation:<br />
+<br />
+<ul><li>The createTimer call creates a single action timer which is only triggered once when the specified period (in milliseconds) &nbsp;has passed.</li>
+<li>The reference object passed into the createTimer method is a string but can be replaced with any class implementing the Serializable interface</li>
+<li>There are various other methods serving different purposes which are provided by the TimerService interface</li>
+</ul><br />
+Andrew Lee Rubinger and Bill Burke's book <a href="http://oreilly.com/catalog/9780596158033/">Enterprise JavaBeans 3.1</a> is an excellent resource for EJB3 implementation. Additional credit to <a href="http://oreilly.com/">O'Reilly</a> for providing quality book downloads in a number of DRM-free formats. Thanks to Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a> for providing the code formatting script embedded in this page.

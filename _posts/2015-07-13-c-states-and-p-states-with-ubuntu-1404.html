@@ -1,0 +1,661 @@
+---
+layout: post
+title: C-states and P-states with Ubuntu 14.04 on Amazon EC2
+date: '2015-07-13T15:58:00.000+01:00'
+author: Craig Watcham
+tags:
+- C-state
+- Ubuntu
+- EC2
+- aws
+- P-State
+modified_time: '2015-07-13T16:34:44.162+01:00'
+thumbnail: https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgUcb0oZb0rXglsBSfx9jsmuAUrHelnRb0jyzD07kNitMQgjSvFgBNSQ-gwvwJXtwF6WeOCBwXolcAEjuS70pZgO7Jq-8w0SCo4C8Ca66UtbP7qxqrGIb0MokxHkiSFM88LPDGKf6g_3ec/s72-c/idle.png
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-8375930343849603053
+blogger_orig_url: https://www.deplication.net/2015/07/c-states-and-p-states-with-ubuntu-1404.html
+---
+
+<h3>
+Introduction</h3>
+The largest new generation EC2 instance types now expose <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/processor_state_control.html">C-state and P-state</a> control to the operating system, unfortunately additional complexity is introduced with the added control and this post will discuss some of the issues related to this on&nbsp;Ubuntu 14.04.<br />
+<br />
+For comparison I am going to be using a relatively vanilla Ubuntu 14.04.02 (3.13.0-57-generic) AMI running memcached on both a c3.8xl and a c4.8xl. As a memcached workload is generally dependant on memory and network, I have enabled Receive Packet Steering (RPS) as described by <a href="http://engineering.pinterest.com/post/53467339970/building-pinterest-in-the-cloud">this</a> Pinterest article and ensuring it persists across reboots by adding it in /etc/rc.local.<br />
+<br />
+<h3>
+More haste, less speed (TL;DR)</h3>
+<div>
+For those without the time or patience to read the full post, intel_pstate is disabled by default in Ubuntu 14.04 and the ondemand rc.d script will prevent optimal performance of a latency sensitive application on C-state/P-state enabled instances. Make these changes to improve latency and reduce variability:</div>
+<div>
+<br /></div>
+<div>
+1. Disable ondemand (dynamic) CPU frequency scaling</div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">$ sudo update-rc.d ondemand disable</span></div>
+<div>
+<div>
+<div>
+<br /></div>
+<div>
+2.&nbsp;Edit /etc/default/grub.d/50-cloudimg-settings.cfg and update the Grub command line to be:</div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;"># Set the default commandline</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 intel_idle.max_cstate=1 intel_pstate=enable"</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+3. Install the new version of grub</div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">$ sudo update-grub</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+4. Reboot</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo reboot</span></div>
+</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<h3>
+Not so idle (for those with time)</h3>
+The first notable thing is that the idle state on the c4.8xl differs from the c3.8xl according to CloudWatch:<br />
+<br />
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody>
+<tr><td style="text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgUcb0oZb0rXglsBSfx9jsmuAUrHelnRb0jyzD07kNitMQgjSvFgBNSQ-gwvwJXtwF6WeOCBwXolcAEjuS70pZgO7Jq-8w0SCo4C8Ca66UtbP7qxqrGIb0MokxHkiSFM88LPDGKf6g_3ec/s1600/idle.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="400" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgUcb0oZb0rXglsBSfx9jsmuAUrHelnRb0jyzD07kNitMQgjSvFgBNSQ-gwvwJXtwF6WeOCBwXolcAEjuS70pZgO7Jq-8w0SCo4C8Ca66UtbP7qxqrGIb0MokxHkiSFM88LPDGKf6g_3ec/s640/idle.png" width="640" /></a></td></tr>
+<tr><td class="tr-caption" style="text-align: center;">Idle instances c3.8xl (i-2cb4bd86) vs. c4.8xl (i-0e737ba4)</td></tr>
+</tbody></table>
+<br />
+According to sar the c3 is marginally more idle:<br />
+<br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sar 1 10</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Linux 3.13.0-57-generic (ip-172-31-40-39) <span class="Apple-tab-span" style="white-space: pre;"> </span>07/12/2015 <span class="Apple-tab-span" style="white-space: pre;"> </span>_x86_64_<span class="Apple-tab-span" style="white-space: pre;"> </span>(32 CPU)</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:51 PM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:52 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:53 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:54 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:55 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:56 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:57 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:58 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:59 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:12:00 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:12:01 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<div>
+<br /></div>
+<br />
+While the c4 is doing some system related work:<br />
+<br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sar 1 10</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Linux 3.13.0-57-generic (ip-172-31-34-50) <span class="Apple-tab-span" style="white-space: pre;"> </span>07/12/2015 <span class="Apple-tab-span" style="white-space: pre;"> </span>_x86_64_<span class="Apple-tab-span" style="white-space: pre;"> </span>(36 CPU)</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:46 PM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:47 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.03 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 99.97</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:48 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:49 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.03 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 99.97</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:50 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:51 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:52 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.03 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.03 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 99.94</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:53 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:54 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.03 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 99.97</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:55 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">05:11:56 PM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp;100.00</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.01 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 99.99</span><br />
+<div>
+<br /></div>
+Although this does not account for the ~0.5% CPU being reported by CloudWatch, presumably due to some overhead for C-state management. On the c3 we don't seem to have a cpuidle driver:<br />
+<br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ cat /sys/devices/system/cpu/cpuidle/current_driver</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">none</span><br />
+<br />
+Whereas on the c4 we have:<br />
+<br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ cat /sys/devices/system/cpu/cpuidle/current_driver</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">intel_idle</span><br />
+<div>
+<br /></div>
+<h3>
+Disabling C-states (intel_idle driver)</h3>
+<div>
+Out of interest lets see what the impact of disabling the driver is. In order to do this we need to set some kernel parameters in Grub which live in&nbsp;/etc/default/grub.d/50-cloudimg-settings.cfg on Ubuntu instances running on EC2, the updated file should look like this:</div>
+<div>
+<br /></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ cat /etc/default/grub.d/50-cloudimg-settings.cfg</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Cloud Image specific Grub settings for Generic Cloud Images</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># CLOUD_IMG: This file was created/modified by the Cloud Image build process</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Set the recordfail timeout</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">GRUB_RECORDFAIL_TIMEOUT=0</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Do not wait on grub prompt</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">GRUB_TIMEOUT=0</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Set the default commandline</span></div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 intel_idle.max_cstate=0 processor.max_cstate=0"</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Set the grub console type</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">GRUB_TERMINAL=console</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+And can be installed with:</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo update-grub</span></div>
+<div>
+<br /></div>
+<div>
+A relatively good explanation of the <a href="https://www.kernel.org/doc/Documentation/kernel-parameters.txt">kernel options</a> can be found on <a href="http://stackoverflow.com/questions/12111954/context-switches-much-slower-in-new-linux-kernels">stackoverflow</a>, note that the idle=poll option will cause CloudWatch to report 100% CPU and is not advised. After a reboot for the changes to take effect the following CloudWatch graph (including a default c4.8xl for comparison) shows the difference in idle CPU.</div>
+<div>
+<br /></div>
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody>
+<tr><td style="text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjimmWhtbKwD1_XTqC6mGFcSGXgObrSXspb6L5hsyCnkkx4zK9J0GFBsSiRmY6YXB55B5lelDE1HsJltfKcgcc1i72mLA8-kDHw-pal5trPWZvIB5qBPMTXhUoBQrIGQoAV93Daw31qcAM/s1600/idle-no-cstate.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="400" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjimmWhtbKwD1_XTqC6mGFcSGXgObrSXspb6L5hsyCnkkx4zK9J0GFBsSiRmY6YXB55B5lelDE1HsJltfKcgcc1i72mLA8-kDHw-pal5trPWZvIB5qBPMTXhUoBQrIGQoAV93Daw31qcAM/s640/idle-no-cstate.png" width="640" /></a></td></tr>
+<tr><td class="tr-caption" style="text-align: center;"><span style="font-size: 12.8000001907349px;">Idle instances c3.8xl (i-2cb4bd86) vs. c4.8xl with C-state disabled (i-0e737ba4)</span></td></tr>
+</tbody></table>
+<div>
+<br /></div>
+<div>
+A notable improvement but still not identical, lets take a look at performance next.</div>
+<div>
+<br /></div>
+<h3>
+The need for speed</h3>
+<div>
+As the c3.8xl does not support P-states we would not expect to see a frequency scaling policy or any difference between the core CPU frequencies and this can be confirmed with the cpupower utility:</div>
+<div>
+<br /></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo cpupower frequency-info</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">analyzing CPU 0:</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; no or unknown cpufreq driver is active on this CPU</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; boost state support:</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; Supported: no</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; Active: no</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; 25500 MHz max turbo 4 active cores</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; 25500 MHz max turbo 3 active cores</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; 25500 MHz max turbo 2 active cores</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; 25500 MHz max turbo 1 active cores</span></div>
+</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"></span><br />
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">
+</span>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ cat /proc/cpuinfo | grep MHz</span></div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">
+<div>
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+[...]<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044<br />
+cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2800.044</div>
+<div>
+<br /></div>
+</span></div>
+<div>
+<br /></div>
+<div>
+Nothing terribly surprising here, no cpufreq driver and all the cores running at the default frequency. Looking at the c4.8xl however, we see a few noteworthy items:</div>
+<div>
+<br /></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo cpupower frequency-info</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">analyzing CPU 0:</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; driver: acpi-cpufreq</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; CPUs which run at the same hardware frequency: 0</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; CPUs which need to have their frequency coordinated by software: 0</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; maximum transition latency: 10.0 us.</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; hardware limits: 1.20 GHz - 2.90 GHz</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; available frequency steps: 2.90 GHz, 2.90 GHz, 2.80 GHz, 2.70 GHz, 2.50 GHz, 2.40 GHz, 2.30 GHz, 2.20 GHz, 2.00 GHz, 1.90 GHz, 1.80 GHz, 1.70 GHz, 1.60 GHz, 1.40 GHz, 1.30 GHz, 1.20 GHz</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; available cpufreq governors: conservative, ondemand, userspace, powersave, performance</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; current policy: frequency should be within 1.20 GHz and 2.90 GHz.</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; The governor "ondemand" may decide which speed to use</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; within this range.</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; current CPU frequency is 1.20 GHz (asserted by call to hardware).</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; cpufreq stats: 2.90 GHz:1.17%, 2.90 GHz:0.00%, 2.80 GHz:0.00%, 2.70 GHz:0.01%, 2.50 GHz:0.00%, 2.40 GHz:0.00%, 2.30 GHz:0.00%, 2.20 GHz:0.00%, 2.00 GHz:0.00%, 1.90 GHz:0.00%, 1.80 GHz:0.00%, 1.70 GHz:0.00%, 1.60 GHz:0.00%, 1.40 GHz:0.00%, 1.30 GHz:0.00%, 1.20 GHz:98.82% &nbsp;(15)</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; boost state support:</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; Supported: yes</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; Active: yes</span></div>
+</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ cat /proc/cpuinfo | grep MHz</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">[...]</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1600.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 1200.000</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+Firstly, it seems Ubuntu is using the acpi-cpufreq driver instead of the new and improved intel_pstate driver (more on this later). Secondly we are using the 'ondemand' governor which is great for power saving but not ideal for a high performance or low latency server. Finally, thanks to the ondemand governor all of &nbsp;the cores are running significantly slower than their advertised (3.2 GHz) maximum. Some digging finds that it is related to <a href="https://bugs.launchpad.net/ubuntu/+source/sysvinit/+bug/1314653">this</a> and is relatively easy to fix by disabling /etc/init.d/ondemand:</div>
+<div>
+<br /></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo update-rc.d ondemand disable</span></div>
+<div>
+<br /></div>
+<div>
+Which will prevent the 'performance' governor from being replaced with 'ondemand' at the next boot. To correct the frequency without a reboot we can update the governor with cpupower:</div>
+<div>
+<br /></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo cpupower frequency-set -g performance</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ cat /proc/cpuinfo | grep MHz</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">[...]</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 2901.000</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+Still not hitting the maximum frequency but this shaves a few more fractions off the idle CPU usage reported by CloudWatch:</div>
+<div>
+<br /></div>
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody>
+<tr><td style="text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhopr0pTfiUQPecGA0yCdllVx2c6lIXiXxvdX-FLklLnYNh8FiHzL6AD0AMTpDrlSF7CuDqFuCCb257HDe9LG3U6-7TiCVg_8uj3hxJrZnISEOT8QO2A6KrguhGqiuYrKWUXcps3XqZY7k/s1600/idle-fix.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="396" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhopr0pTfiUQPecGA0yCdllVx2c6lIXiXxvdX-FLklLnYNh8FiHzL6AD0AMTpDrlSF7CuDqFuCCb257HDe9LG3U6-7TiCVg_8uj3hxJrZnISEOT8QO2A6KrguhGqiuYrKWUXcps3XqZY7k/s640/idle-fix.png" width="640" /></a></td></tr>
+<tr><td class="tr-caption" style="text-align: center;"><span style="font-size: 12.8000001907349px;">Idle instances c3.8xl (i-2cb4bd86) vs. c4.8xl with C-state disabled and performance frequency policy (i-0e737ba4)</span></td></tr>
+</tbody></table>
+<br />
+<h3>
+Adding some stress</h3>
+<div>
+Thus far we have been looking at the idle CPU utilisation and have got relatively close to the same baseline performance with our customised c4.8xl. Time now to look at how adding some load changes things, starting of with a relatively simple test using 'stress' to generate artificial load on CPU and memory.</div>
+<div>
+<br /></div>
+<div>
+Using 'stress -c 4 -m 2' the c3.8xl shows the following sar average after running for a few minutes:</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">06:58:11 AM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">06:58:40 AM &nbsp; &nbsp; all &nbsp; &nbsp; 12.65 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;6.12 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 81.23</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; 12.63 &nbsp; &nbsp; &nbsp;0.06 &nbsp; &nbsp; &nbsp;6.14 &nbsp; &nbsp; &nbsp;0.03 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 81.14</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+The default c4.8xl shows:</div>
+<div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">06:58:11 AM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">06:58:41 AM &nbsp; &nbsp; all &nbsp; &nbsp; 11.22 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;5.50 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 83.28</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; 11.24 &nbsp; &nbsp; &nbsp;0.15 &nbsp; &nbsp; &nbsp;5.47 &nbsp; &nbsp; &nbsp;0.03 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 83.10</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+And the tweaked c4.8xl (with C-states disabled and performance policy) shows:</div>
+<div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">06:58:11 AM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">06:58:43 AM &nbsp; &nbsp; all &nbsp; &nbsp; 11.27 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;5.44 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 83.29</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; 11.23 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;5.45 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 83.32</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+The CloudWatch graph shows the c3 (i-2cb4bd86) averaging around 18.8%, the default c4 (i-c2b4bd68) averaging around 17.1%, and the tweaked c4 (i-0e737ba4) averaging around 16.8%. All of which match the sar %idle relatively closely:</div>
+<div>
+<br /></div>
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody>
+<tr><td style="text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEimqhI9GnXt8LS1x4-K4aAzWIFvtirLBeOMXbvfZdQvl8rgIu9Lvo7S0XhEj7Czg_hAmGpsPkHM4iDyaqEJRuZjX0ViHtNejHeveujL11Fe0rHDD9BRcGabROd-Hm-TNaOm1mqv4i_9D-g/s1600/stress.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="362" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEimqhI9GnXt8LS1x4-K4aAzWIFvtirLBeOMXbvfZdQvl8rgIu9Lvo7S0XhEj7Czg_hAmGpsPkHM4iDyaqEJRuZjX0ViHtNejHeveujL11Fe0rHDD9BRcGabROd-Hm-TNaOm1mqv4i_9D-g/s640/stress.png" width="640" /></a></td></tr>
+<tr><td class="tr-caption" style="text-align: center;">Instances under stress c3 (i-2cb4bd86), default c4 (i-c2b4bd68), tweaked c4 (i-0e737ba4)</td></tr>
+</tbody></table>
+<div>
+<br /></div>
+<div>
+Testing memcached using a simple approach of an infinite loop calling memcslap shows slightly greater differences. Two loops are started in the background to simulate a reasonable load of around 200k packets per second (admittedly on the loopback interface but good enough for now):</div>
+<div>
+<br /></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ while true; do memcslap --servers=&lt;server_ip_here&gt;:11211 --concurrency=10 --execute-number=10000 --binary &gt; /dev/null; done &amp;</span></div>
+<div>
+<br /></div>
+<div>
+On the c3.8xl sar shows (approximately):</div>
+<div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">08:35:51 AM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span></div>
+<div>
+</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">08:38:34 AM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;5.48 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;8.61 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.60 &nbsp; &nbsp; 85.31</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; &nbsp;5.50 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;4.62 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.33 &nbsp; &nbsp; 89.54</span></div>
+</div>
+</div>
+<div>
+<br /></div>
+<div>
+<div>
+The default c4 shows:</div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">08:35:51 AM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span></div>
+<div>
+</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">08:36:20 AM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;5.01 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.84 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 94.15</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; &nbsp;5.14 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;2.99 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 91.87</span></div>
+</div>
+</div>
+<div>
+<br /></div>
+<div>
+While the tweaked c4 shows:</div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">08:35:51 AM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span></div>
+</div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">08:36:26 AM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;5.53 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;2.12 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 92.35</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; &nbsp;5.26 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;2.71 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 92.03</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+Again not much between them according to sar but CloudWatch shows some larger discrepancies in this case with CPU above 20% for all instances and the default c4 showing between 25% - 30% vs the tweaked c4 (and c3) staying mostly between 20% and 25%.</div>
+<div>
+<br /></div>
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody>
+<tr><td style="text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg28HdizaDN7b2CQZdNSUWnKMBhgO0DvBd76x24v4LeEqnJp755rj7gMuzvgUZToUWvwfjQ3D2tT5s2M9fNqpkeAK4jCwO5nOz-00rP8Pv_3oAQF9GHIfsbPeLlBbch_Loq5QcG9Ra8gaQ/s1600/memcslap.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="352" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg28HdizaDN7b2CQZdNSUWnKMBhgO0DvBd76x24v4LeEqnJp755rj7gMuzvgUZToUWvwfjQ3D2tT5s2M9fNqpkeAK4jCwO5nOz-00rP8Pv_3oAQF9GHIfsbPeLlBbch_Loq5QcG9Ra8gaQ/s640/memcslap.png" width="640" /></a></td></tr>
+<tr><td class="tr-caption" style="text-align: center;"><span style="font-size: 12.8000001907349px;">Instances running memcslap c3 (i-</span>2cb4bd86<span style="font-size: 12.8000001907349px;">), default c4 (i-</span>c2b4bd68<span style="font-size: 12.8000001907349px;">), tweaked c4 (i-0e737ba4)</span></td></tr>
+</tbody></table>
+<div>
+We are clearly missing something important here, time to look at that intel_pstate driver.</div>
+<div>
+<br /></div>
+<div>
+<h3>
+All about the driver (enabling intel_pstate)</h3>
+</div>
+<div>
+As noted earlier the default cpufreq driver on Ubuntu 14.04 appears to be the legacy acpi-cpufreq driver. There is some history around this which is not really relevant here but suffice it to say that you need to opt-in to enable the intel_pstate driver. Again it is a relatively simple matter of adding a kernel option to grub and given that the evidence above shows our default c4 installation is a loser, lets make some changes to make it faster. Firstly, disable the ondemand scaling policy as we did for the the tweaked c4 earlier, next we will enable the intel_pstate driver by adding 'intel_pstate=enable' to the Grub command line, we are also going to disable the deeper C states at the same time to limit latency of waking cores (with 'intel_idle.max_cstate=1') after which we will install the new Grub config and reboot:</div>
+<div>
+<br /></div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">$ sudo update-rc.d ondemand disable</span></div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">...</span></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ cat /etc/default/grub.d/50-cloudimg-settings.cfg&nbsp;</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Cloud Image specific Grub settings for Generic Cloud Images</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># CLOUD_IMG: This file was created/modified by the Cloud Image build process</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Set the recordfail timeout</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">GRUB_RECORDFAIL_TIMEOUT=0</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Do not wait on grub prompt</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">GRUB_TIMEOUT=0</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Set the default commandline</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">GRUB_CMDLINE_LINUX_DEFAULT="console=tty1 console=ttyS0 intel_idle.max_cstate=1 intel_pstate=enable"</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"># Set the grub console type</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">GRUB_TERMINAL=console</span></div>
+</div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo update-grub</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">...</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo reboot</span></div>
+<div>
+<br /></div>
+<div>
+After the reboot, cpupower confirms that we are now using the intel_pstate driver and that our server is now super-charged at 3.2 GHz:</div>
+<div>
+<br /></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ sudo cpupower frequency-info</span></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">analyzing CPU 0:</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; driver: intel_pstate</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; CPUs which run at the same hardware frequency: 0</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; CPUs which need to have their frequency coordinated by software: 0</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; maximum transition latency: 0.97 ms.</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; hardware limits: 1.20 GHz - 3.50 GHz</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; available cpufreq governors: performance, powersave</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; current policy: frequency should be within 1.20 GHz and 3.50 GHz.</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; The governor "performance" may decide which speed to use</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; within this range.</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; current CPU frequency is 3.20 GHz (asserted by call to hardware).</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; boost state support:</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; Supported: yes</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">&nbsp; &nbsp; Active: yes</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;"><br /></span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">$ cat /proc/cpuinfo | grep MHz</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">[...]</span></div>
+<div>
+<span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">cpu MHz</span><span class="Apple-tab-span" style="font-family: 'Courier New', Courier, monospace; font-size: xx-small; white-space: pre;">  </span><span style="font-family: 'Courier New', Courier, monospace; font-size: xx-small;">: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">cpu MHz<span class="Apple-tab-span" style="white-space: pre;">  </span>: 3200.875</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+Rerunning the earlier memcached test shows quite a significant improvement for the P-state instance. While the sar results are quite similar, the CloudWatch graph shows the P-state instance using around 16% CPU, beating both the c3 and tweaked c4. The sar approximate average for the P-state c4:</div>
+<div>
+<br /></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">09:09:52 AM &nbsp; &nbsp; CPU &nbsp; &nbsp; %user &nbsp; &nbsp; %nice &nbsp; %system &nbsp; %iowait &nbsp; &nbsp;%steal &nbsp; &nbsp; %idle</span></div>
+<div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">09:10:36 AM &nbsp; &nbsp; all &nbsp; &nbsp; &nbsp;7.17 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;3.75 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 89.08</span></div>
+<div>
+<span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">Average: &nbsp; &nbsp; &nbsp; &nbsp;all &nbsp; &nbsp; &nbsp;6.15 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;2.43 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; &nbsp;0.00 &nbsp; &nbsp; 91.42</span></div>
+</div>
+<div>
+<br /></div>
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody>
+<tr><td style="text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgeXhktaJDSJ66HOlaCvVgSnhLyrSIzebwzQWFLjw1_9HqWi0Kb9-I-gcdfskdSEANxUlMlm4lwlb-injQmfiPaqhwzgd4hcZcsVnNI-56YpjgGRjFPP9stM3tdtR8U2lJhlBjQIAEGaFY/s1600/p_state.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="352" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgeXhktaJDSJ66HOlaCvVgSnhLyrSIzebwzQWFLjw1_9HqWi0Kb9-I-gcdfskdSEANxUlMlm4lwlb-injQmfiPaqhwzgd4hcZcsVnNI-56YpjgGRjFPP9stM3tdtR8U2lJhlBjQIAEGaFY/s640/p_state.png" width="640" /></a></td></tr>
+<tr><td class="tr-caption" style="text-align: center;">Instance<span style="font-size: 12.8000001907349px;">s running memcslap c3 (i-</span>2cb4bd86<span style="font-size: 12.8000001907349px;">), intel_pstate c4 (i-c2b4bd68), tweaked c4 (i-0e737ba4)</span></td></tr>
+</tbody></table>
+<div>
+<br /></div>
+<div>
+For comparison rerunning the stress test from earlier (stress -c 4 -m 2):</div>
+<div>
+<br /></div>
+<table align="center" cellpadding="0" cellspacing="0" class="tr-caption-container" style="margin-left: auto; margin-right: auto; text-align: center;"><tbody>
+<tr><td style="text-align: center;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEipJ1dGHGxoWrLJwV6xjwRxVUQGMKUzMM-P95Z4MNtLGuXy-39Bpg-nz_i5C9qRO3glZzI0zyGfJQPmlwU0FcIWYbIYl_eF6yj_8E7P_5avZGfdmv2T20mJm6wPQjiLMZ0b7kASk5ipzko/s1600/p-state_stress.png" imageanchor="1" style="margin-left: auto; margin-right: auto;"><img border="0" height="352" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEipJ1dGHGxoWrLJwV6xjwRxVUQGMKUzMM-P95Z4MNtLGuXy-39Bpg-nz_i5C9qRO3glZzI0zyGfJQPmlwU0FcIWYbIYl_eF6yj_8E7P_5avZGfdmv2T20mJm6wPQjiLMZ0b7kASk5ipzko/s640/p-state_stress.png" width="640" /></a></td></tr>
+<tr><td class="tr-caption" style="text-align: center;"><span style="font-size: 12.8000001907349px;">Instances under stress c3 (i-2cb4bd86), intel_pstate c4 (i-c2b4bd68), tweaked c4 (i-0e737ba4)</span></td></tr>
+</tbody></table>
+<div>
+<br /></div>
+<h3>
+Summary</h3>
+<div>
+After a relatively quick and dirty investigation it is clear that the intel_pstate driver while not enabled by default on Ubuntu 14.04 really should be the driver of choice.</div>
+<div>
+<br /></div>

@@ -1,0 +1,26 @@
+---
+layout: post
+title: Yesterday Perl script
+date: '2013-06-26T08:33:00.000+01:00'
+author: Craig Watcham
+tags:
+- perl
+modified_time: '2013-06-26T08:34:34.997+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-8092623022871732486
+blogger_orig_url: https://www.deplication.net/2013/06/yesterday-perl-script.html
+---
+
+A quick script to display yesterday's date in a specified date format:<br />
+<br />
+#!/bin/perl -w<br />
+<br />
+use strict;<br />
+use POSIX qw(strftime);<br />
+use Time::Local;<br />
+<br />
+{<br />
+&nbsp; &nbsp;my $yesterday=time() - (24 * 60 * 60);<br />
+&nbsp; &nbsp;print strftime("%d%m%Y", localtime($yesterday));<br />
+}<br />
+<div>
+<br /></div>

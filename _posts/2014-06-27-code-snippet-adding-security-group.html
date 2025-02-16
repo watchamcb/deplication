@@ -1,0 +1,21 @@
+---
+layout: post
+title: 'Code snippet: Adding a security group egress rule in boto'
+date: '2014-06-27T09:11:00.000+01:00'
+author: Craig Watcham
+tags:
+- python
+- boto
+- aws
+modified_time: '2014-06-27T09:11:08.705+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-6197987281390951207
+blogger_orig_url: https://www.deplication.net/2014/06/code-snippet-adding-security-group.html
+---
+
+Quick example of adding an egress rule to an existing security group (turns out cidr_ip is actually required). Assumes you have&nbsp;<a href="https://github.com/boto/boto">boto</a>&nbsp;installed and your AWS credentials configured:<br />
+<br />
+import boto<br />
+c = boto.connect_ec2()<br />
+c.authorize_security_group_egress('sg-xxxxxxx', 'tcp', from_port=1024, to_port=1024, cidr_ip='0.0.0.0/0')<br />
+<div>
+<br /></div>

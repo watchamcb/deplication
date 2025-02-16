@@ -1,0 +1,38 @@
+---
+layout: post
+title: 'Python gotcha: bound method'
+date: '2014-01-08T10:16:00.000Z'
+author: Craig Watcham
+tags:
+- python
+modified_time: '2014-01-08T10:16:16.389Z'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-4453467197142579768
+blogger_orig_url: https://www.deplication.net/2014/01/python-gotcha-bound-method.html
+---
+
+A quick Python observation that will hopefully save somebody some time. Given the following Python code:<br />
+<br />
+<span style="font-family: &quot;Courier New&quot;,Courier,monospace;">class Example:<br />&nbsp;&nbsp;&nbsp; X = 5<br /><br />&nbsp;&nbsp;&nbsp; def __init__(self, value):<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; self.some_value = value<br /><br />&nbsp;&nbsp;&nbsp; def method(self, value):<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if value &gt; Example.X:<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 'Yup'<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return 'Nope'<br /><br />&nbsp;&nbsp;&nbsp; def another_method(self):<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return self.method(self.some_value)</span><br />
+<span style="font-family: &quot;Courier New&quot;,Courier,monospace;">e = Example(2)</span><br />
+<span style="font-family: &quot;Courier New&quot;,Courier,monospace;">print e.some_value </span><br />
+<br />
+This code defines a class named Example, instantiates it and prints out one of the class member variables. In this case the code will print out the value "2" which is logical as it was used to instantiate the object.<br />
+<br />
+Extending this and trying to do:<br />
+<span style="font-family: &quot;Courier New&quot;,Courier,monospace;">print e.another_method</span><br />
+<br />
+Results in output that looks something like:<br />
+<span style="font-family: Times,&quot;Times New Roman&quot;,serif;">&lt;bound method Example.another_method of &lt;__main__.Example instance at 0x7ffde0f4fd88&gt;&gt;</span><br />
+<br />
+This seems a bit strange until you realise that Python is doing exactly what you are telling it to do which is return the method object rather than invoke the method. There are two really simple fixes to this:<br />
+<ol>
+<li>Change the call to "print e.another_method()", this causes the method to be invoked and the result returned as expected (rather obvious really) </li>
+<li>Add the @property decorator to the method definition. This allows you to access the method as a read-only property</li>
+</ol>
+Both approaches work but they are mutually exclusive. Changing the method definition to:<br />
+<br />
+<span style="font-family: &quot;Courier New&quot;,Courier,monospace;">&nbsp;&nbsp;&nbsp; @property</span><span style="font-family: &quot;Courier New&quot;,Courier,monospace;"></span><br />
+<span style="font-family: &quot;Courier New&quot;,Courier,monospace;">&nbsp;&nbsp;&nbsp; def another_method(self):<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; return self.method(self.some_value)</span><br />
+<br />
+And then trying to call e.another_method() will result in the error:<br />
+<span style="font-family: Times,&quot;Times New Roman&quot;,serif;">TypeError: 'str' object is not callable</span>

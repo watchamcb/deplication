@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>JBoss 6.x AS and log4j | Your awesome title</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="JBoss 6.x AS and log4j" />
+<meta name="author" content="Craig Watcham" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="This post is a result of spending quite a bit of time working on trying to get a custom log4j (1.2) appender to work on JBoss 6.x. The purpose of this article is not to explain how to get log4j working in a WAR/JAR/EAR, if that is what you are looking for rather have a look here, or here. If you are looking to add a log4j appender to the default JBoss server logging then carry on reading. The first thing to be aware of is that log4j in JBoss 6.0 is broken, as is also the case in JBoss 6.1. The steps below are required to fix this and are based on clean JBoss 6.x AS installations. 1. Add and configure a log4j appender This is done by editing the jboss-logging.xml file located in the server deployment directory (jboss-6.x.0.Final/server/default/deploy) First add an appender named “LOG4J” (or whatever you would like to call it):    &lt;log4j-appender name=”LOG4J” class=”org.apache.log4j.FileAppender”&gt;       &lt;error-manager&gt;          &lt;only-once/&gt;       &lt;/error-manager&gt;       &lt;properties&gt;          &lt;property name=”file”&gt;${jboss.server.log.dir}/log4j.log&lt;/property&gt;          &lt;property name=”append”&gt;true&lt;/property&gt;       &lt;/properties&gt;       &lt;formatter&gt;          &lt;pattern-formatter pattern=”%d %-5p [%c] (%t) %m%n”/&gt;       &lt;/formatter&gt;    &lt;/log4j-appender&gt; This configuration is for a standard log4j file appender writing to a file named “log4j.log”. Next you need to add your new appender to the root-logger section in the same file:    &lt;root-logger&gt;       &lt;!– Set the root logger priority via a system property, with a default value. –&gt;       &lt;level name=”${jboss.server.log.threshold:INFO}”/&gt;       &lt;handlers&gt;          &lt;handler-ref name=”CONSOLE”/&gt;          &lt;handler-ref name=”FILE”/&gt;          &lt;handler-ref name=”LOG4J”/&gt;       &lt;/handlers&gt;    &lt;/root-logger&gt; If you were to start JBoss now it would be reasonable to expect a new log file named &quot;log4j.log&quot; to have been created in the server/default/log/ directory, unfortunately this is not the case. And instead you are given no errors by JBoss 6.0 while JBoss 6.1 spews the only slightly more useful message below for each line it should be writing to the log file: ERROR [STDERR] log4j:ERROR No output stream or file set for the appender named [null]. 2. Update log4j.jar packaged with JBoss installation Download the latest version of the log4j 1.2 package from Apache log4j and replace the JBoss version in jboss-6.x.0/common/lib. Using 1.2.17: cp apache-log4j-1.2.17/log4j-1.2.17.jar jboss-6.x.0.Final/common/lib/log4j.jar 3. Update the jboss-logging packages Download the patch (zip) from the bug report and unzip it. There is unfortunately no directory structure so you will need to manually copy the replacement JAR files as follows: cp jboss-logmanager-log4j.jar jboss-6.x.0.Final/common/lib cp jboss-logmanager.jar jboss-6.x.0.Final/lib cp logging-service-metadata.jar jboss-6.x.0.Final/server/default/deployers/jboss-logging.deployer 4. Start JBoss and enjoy your new logging framework" />
+<meta property="og:description" content="This post is a result of spending quite a bit of time working on trying to get a custom log4j (1.2) appender to work on JBoss 6.x. The purpose of this article is not to explain how to get log4j working in a WAR/JAR/EAR, if that is what you are looking for rather have a look here, or here. If you are looking to add a log4j appender to the default JBoss server logging then carry on reading. The first thing to be aware of is that log4j in JBoss 6.0 is broken, as is also the case in JBoss 6.1. The steps below are required to fix this and are based on clean JBoss 6.x AS installations. 1. Add and configure a log4j appender This is done by editing the jboss-logging.xml file located in the server deployment directory (jboss-6.x.0.Final/server/default/deploy) First add an appender named “LOG4J” (or whatever you would like to call it):    &lt;log4j-appender name=”LOG4J” class=”org.apache.log4j.FileAppender”&gt;       &lt;error-manager&gt;          &lt;only-once/&gt;       &lt;/error-manager&gt;       &lt;properties&gt;          &lt;property name=”file”&gt;${jboss.server.log.dir}/log4j.log&lt;/property&gt;          &lt;property name=”append”&gt;true&lt;/property&gt;       &lt;/properties&gt;       &lt;formatter&gt;          &lt;pattern-formatter pattern=”%d %-5p [%c] (%t) %m%n”/&gt;       &lt;/formatter&gt;    &lt;/log4j-appender&gt; This configuration is for a standard log4j file appender writing to a file named “log4j.log”. Next you need to add your new appender to the root-logger section in the same file:    &lt;root-logger&gt;       &lt;!– Set the root logger priority via a system property, with a default value. –&gt;       &lt;level name=”${jboss.server.log.threshold:INFO}”/&gt;       &lt;handlers&gt;          &lt;handler-ref name=”CONSOLE”/&gt;          &lt;handler-ref name=”FILE”/&gt;          &lt;handler-ref name=”LOG4J”/&gt;       &lt;/handlers&gt;    &lt;/root-logger&gt; If you were to start JBoss now it would be reasonable to expect a new log file named &quot;log4j.log&quot; to have been created in the server/default/log/ directory, unfortunately this is not the case. And instead you are given no errors by JBoss 6.0 while JBoss 6.1 spews the only slightly more useful message below for each line it should be writing to the log file: ERROR [STDERR] log4j:ERROR No output stream or file set for the appender named [null]. 2. Update log4j.jar packaged with JBoss installation Download the latest version of the log4j 1.2 package from Apache log4j and replace the JBoss version in jboss-6.x.0/common/lib. Using 1.2.17: cp apache-log4j-1.2.17/log4j-1.2.17.jar jboss-6.x.0.Final/common/lib/log4j.jar 3. Update the jboss-logging packages Download the patch (zip) from the bug report and unzip it. There is unfortunately no directory structure so you will need to manually copy the replacement JAR files as follows: cp jboss-logmanager-log4j.jar jboss-6.x.0.Final/common/lib cp jboss-logmanager.jar jboss-6.x.0.Final/lib cp logging-service-metadata.jar jboss-6.x.0.Final/server/default/deployers/jboss-logging.deployer 4. Start JBoss and enjoy your new logging framework" />
+<link rel="canonical" href="http://localhost:4000/2014/05/17/jboss-6x-as-and-log4j.html" />
+<meta property="og:url" content="http://localhost:4000/2014/05/17/jboss-6x-as-and-log4j.html" />
+<meta property="og:site_name" content="Your awesome title" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-05-17T13:41:00+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="JBoss 6.x AS and log4j" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2014-05-17T13:41:00+01:00","datePublished":"2014-05-17T13:41:00+01:00","description":"This post is a result of spending quite a bit of time working on trying to get a custom log4j (1.2) appender to work on JBoss 6.x. The purpose of this article is not to explain how to get log4j working in a WAR/JAR/EAR, if that is what you are looking for rather have a look here, or here. If you are looking to add a log4j appender to the default JBoss server logging then carry on reading. The first thing to be aware of is that log4j in JBoss 6.0 is broken, as is also the case in JBoss 6.1. The steps below are required to fix this and are based on clean JBoss 6.x AS installations. 1. Add and configure a log4j appender This is done by editing the jboss-logging.xml file located in the server deployment directory (jboss-6.x.0.Final/server/default/deploy) First add an appender named “LOG4J” (or whatever you would like to call it):    &lt;log4j-appender name=”LOG4J” class=”org.apache.log4j.FileAppender”&gt;       &lt;error-manager&gt;          &lt;only-once/&gt;       &lt;/error-manager&gt;       &lt;properties&gt;          &lt;property name=”file”&gt;${jboss.server.log.dir}/log4j.log&lt;/property&gt;          &lt;property name=”append”&gt;true&lt;/property&gt;       &lt;/properties&gt;       &lt;formatter&gt;          &lt;pattern-formatter pattern=”%d %-5p [%c] (%t) %m%n”/&gt;       &lt;/formatter&gt;    &lt;/log4j-appender&gt; This configuration is for a standard log4j file appender writing to a file named “log4j.log”. Next you need to add your new appender to the root-logger section in the same file:    &lt;root-logger&gt;       &lt;!– Set the root logger priority via a system property, with a default value. –&gt;       &lt;level name=”${jboss.server.log.threshold:INFO}”/&gt;       &lt;handlers&gt;          &lt;handler-ref name=”CONSOLE”/&gt;          &lt;handler-ref name=”FILE”/&gt;          &lt;handler-ref name=”LOG4J”/&gt;       &lt;/handlers&gt;    &lt;/root-logger&gt; If you were to start JBoss now it would be reasonable to expect a new log file named &quot;log4j.log&quot; to have been created in the server/default/log/ directory, unfortunately this is not the case. And instead you are given no errors by JBoss 6.0 while JBoss 6.1 spews the only slightly more useful message below for each line it should be writing to the log file: ERROR [STDERR] log4j:ERROR No output stream or file set for the appender named [null]. 2. Update log4j.jar packaged with JBoss installation Download the latest version of the log4j 1.2 package from Apache log4j and replace the JBoss version in jboss-6.x.0/common/lib. Using 1.2.17: cp apache-log4j-1.2.17/log4j-1.2.17.jar jboss-6.x.0.Final/common/lib/log4j.jar 3. Update the jboss-logging packages Download the patch (zip) from the bug report and unzip it. There is unfortunately no directory structure so you will need to manually copy the replacement JAR files as follows: cp jboss-logmanager-log4j.jar jboss-6.x.0.Final/common/lib cp jboss-logmanager.jar jboss-6.x.0.Final/lib cp logging-service-metadata.jar jboss-6.x.0.Final/server/default/deployers/jboss-logging.deployer 4. Start JBoss and enjoy your new logging framework","headline":"JBoss 6.x AS and log4j","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2014/05/17/jboss-6x-as-and-log4j.html"},"url":"http://localhost:4000/2014/05/17/jboss-6x-as-and-log4j.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Your awesome title" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Your awesome title</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">JBoss 6.x AS and log4j</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2014-05-17T13:41:00+01:00" itemprop="datePublished">
+        May 17, 2014
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    This post is a result of spending quite a bit of time working on trying to get a custom log4j (1.2) appender to work on JBoss 6.x. The purpose of this article is not to explain how to get log4j working in a WAR/JAR/EAR, if that is what you are looking for rather have a look <a href="http://blog.jyore.com/?p=234" target="_blank">here</a>, or&nbsp;<a href="https://community.jboss.org/thread/231438" target="_blank">here</a>. If you are looking to add a log4j appender to the default JBoss server logging then carry on reading.<br />
+<br />
+The first thing to be aware of is that log4j in JBoss 6.0 is&nbsp;<a href="https://issues.jboss.org/browse/JBAS-8791" target="_blank">broken</a>, as is also the <a href="https://issues.jboss.org/browse/JBAS-9441" target="_blank">case</a>&nbsp;in JBoss 6.1. The steps below are required to fix this and are based on clean JBoss 6.x AS installations.<br />
+<br />
+<h4>
+1. Add and configure a log4j appender</h4>
+This is done by editing the jboss-logging.xml file located in the server deployment directory (jboss-6.x.0.Final/server/default/deploy)<br />
+<br />
+First add an appender named "LOG4J" (or whatever you would like to call it):<br />
+<br />
+&nbsp; &nbsp;&lt;log4j-appender name="LOG4J" class="org.apache.log4j.FileAppender"&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;error-manager&gt;<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;only-once/&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;/error-manager&gt;<br />
+<br />
+&nbsp; &nbsp; &nbsp; &lt;properties&gt;<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;property name="file"&gt;${jboss.server.log.dir}/log4j.log&lt;/property&gt;<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;property name="append"&gt;true&lt;/property&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;/properties&gt;<br />
+<br />
+&nbsp; &nbsp; &nbsp; &lt;formatter&gt;<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;pattern-formatter pattern="%d %-5p [%c] (%t) %m%n"/&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;/formatter&gt;<br />
+&nbsp; &nbsp;&lt;/log4j-appender&gt;<br />
+<br />
+This configuration is for a standard log4j file appender writing to a file named "log4j.log".<br />
+<br />
+Next you need to add your new appender to the root-logger section in the same file:<br />
+<br />
+&nbsp; &nbsp;&lt;root-logger&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;!-- Set the root logger priority via a system property, with a default value. --&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;level name="${jboss.server.log.threshold:INFO}"/&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;handlers&gt;<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;handler-ref name="CONSOLE"/&gt;<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;handler-ref name="FILE"/&gt;<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&lt;handler-ref name="LOG4J"/&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;/handlers&gt;<br />
+&nbsp; &nbsp;&lt;/root-logger&gt;<br />
+<div>
+<br /></div>
+<div>
+If you were to start JBoss now it would be reasonable to expect a new log file named "log4j.log" to have been created in the server/default/log/ directory, unfortunately this is not the case. And instead you are given no errors by JBoss 6.0 while JBoss 6.1 spews the only slightly more useful message below for each line it should be writing to the log file:</div>
+<div>
+<br /></div>
+<div>
+ERROR [STDERR] log4j:ERROR No output stream or file set for the appender named [null].</div>
+<div>
+<br /></div>
+<h4>
+2. Update log4j.jar packaged with JBoss installation</h4>
+Download the latest version of the log4j 1.2 package from&nbsp;<a href="http://logging.apache.org/log4j/1.2/download.html" target="_blank">Apache log4j</a>&nbsp;and replace the JBoss version in&nbsp;jboss-6.x.0/common/lib. Using 1.2.17:<br />
+<br />
+cp apache-log4j-1.2.17/log4j-1.2.17.jar jboss-6.x.0.Final/common/lib/log4j.jar<br />
+<br />
+<h4>
+3. Update the jboss-logging packages</h4>
+Download the <a href="https://issues.jboss.org/secure/attachment/12340210/JBAS-8791-1.zip">patch</a>&nbsp;(zip)&nbsp;from the&nbsp;<a href="https://issues.jboss.org/browse/JBAS-8791" target="_blank">bug report</a>&nbsp;and unzip it. There is unfortunately no directory structure so you will need to manually copy the replacement JAR files as follows:<br />
+<br />
+cp jboss-logmanager-log4j.jar&nbsp;jboss-6.x.0.Final/common/lib<br />
+cp jboss-logmanager.jar&nbsp;jboss-6.x.0.Final/lib<br />
+cp logging-service-metadata.jar&nbsp;jboss-6.x.0.Final/server/default/deployers/jboss-logging.deployer<br />
+<br />
+<h4>
+4. Start JBoss and enjoy your new logging framework</h4>
+
+  </div><a class="u-url" href="/2014/05/17/jboss-6x-as-and-log4j.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

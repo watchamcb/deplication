@@ -1,0 +1,21 @@
+---
+layout: post
+title: Ruby DevKit compilation errors on Windows
+date: '2013-08-16T18:41:00.003+01:00'
+author: Craig Watcham
+tags:
+- devkit
+- ruby
+- windows
+modified_time: '2013-08-16T18:42:54.577+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-3400668133386980372
+blogger_orig_url: https://www.deplication.net/2013/08/ruby-devkit-compilation-errors-on.html
+---
+
+Lesson for the day, when installing Ruby <a href="https://github.com/oneclick/rubyinstaller/wiki/Development-Kit">DevKit</a>&nbsp;on Windows ensure that the Ruby installation architecture matches the DevKit architecture.<br />
+<br />
+ruby --version<br />
+ruby 2.0.0p247 (2013-06-27) [x64-mingw32]<br />
+<br />
+Note the [x64-mingw32], you will get some strange compilation errors trying to install gems using the 32 bit DevKit with 64 bit Ruby (and vice-versa).<br />
+<br />

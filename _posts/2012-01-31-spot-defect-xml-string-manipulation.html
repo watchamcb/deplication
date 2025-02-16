@@ -1,0 +1,46 @@
+---
+layout: post
+title: Spot the defect - XML string manipulation
+date: '2012-01-31T05:56:00.000Z'
+author: Craig Watcham
+tags:
+modified_time: '2012-01-31T05:56:27.334Z'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-3323535164799172551
+blogger_orig_url: https://www.deplication.net/2012/01/spot-defect-xml-string-manipulation.html
+---
+
+So I have been a bit lazy about posting recently, time to look at a defect found in some production code:<br />
+<br />
+<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; String details = XPathReader.getValueAt(detailPath, xml);<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; if (details != null &amp;&amp; details.length() &gt; 0) {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; String mappedDetails = getFormattedDetails(details, accId, pay);<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; logger.info("Details [" + details + "] replaced with [" + mappedDetails + "]");<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; xml = xml.replace("Details=\"" + details + "\"", "Details=\"" + mappedDetails + "\"");<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; return xml;<br />
+<br />
+At first glance there is nothing particularly wrong with this code, the XPathReader class extracts a value from a specific path in the XML, some mapping is done on the value and the original value us replaced with the updated details. Unfortunately there is a sneaky defect in this code. The log message printed for the problematic input is:<br />
+<br />
+INFO &nbsp;[MappingSessionBean] Details [Book##VALUE&amp;DEV] replaced with [Book VALUE 111111111]<br />
+<br />
+Take a moment to see if you are able to spot the problem... Not yet apparent? The input XML (with some details replaced):<br />
+<br />
+<br />
+&lt;RequestXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;Header Sending_System="SOURCE" Message_Identifier="Update"<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Message_Status="New" Message_Name="Nostro Update" /&gt;<br />
+&nbsp; &nbsp; &nbsp; &lt;AccountingInfo BICCode="XXXXXXXX" CurrencyCode="USD"<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; TradingArea="Book" Amount="12345.67/NEW/11111111/444444.44"<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ValueDate="2011-11-11+0200" Details="Book##VALUE&amp;amp;DEV"<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; TransactionReference="111111111" AccountType="PRINCIPAL" /&gt;<br />
+&lt;/RequestXML&gt;<br />
+<br />
+<div><br />
+</div><div>Still not clear? Notice the difference between the input XML Details field and the log message?</div><div><br />
+</div><div>Details="Book##VALUE&amp;amp;DEV"&nbsp;</div><div>Details [Book##VALUE&amp;DEV]</div><div><br />
+</div><div><div>The Details value in the XML has the ampersand escaped as "&amp;amp;" while the call to XPathReader.getValueAt() returns the attribute value without the escaping. The getFormattedDetails method merrily goes about its job enriching the details string to be "Book VALUE 111111111" but then the code fails when trying to do the replace call:</div><div><br />
+</div><div>&nbsp; &nbsp; &nbsp; &nbsp; xml = xml.replace("Details=\"" + details + "\"", "Details=\"" + mappedDetails + "\"");</div><div><br />
+</div><div>The contents of the details variable are now "Book##VALUE&amp;DEV" instead of the original "Book##VALUE&amp;amp;DEV" so no replacement is performed. Given that this code is due to be replaced shortly the quick and easy fix is to use the Apache commons-lang StringEscapeUtils.escapeXml() method. Thus the replace call becomes:</div><div><br />
+</div><div>&nbsp; &nbsp; &nbsp; &nbsp; xml = xml.replace("Details=\"" + StringEscapeUtils.escapeXml(details) + "\"", "Details=\""</div><div>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; + StringEscapeUtils.escapeXml(mappedDetails) + "\"");</div><div><br />
+</div><div>The alternative (and more correct solution) would be to convert the XML to an object using your favourite XML library and then perform the data manipulation on the object before converting back to XML.</div></div>

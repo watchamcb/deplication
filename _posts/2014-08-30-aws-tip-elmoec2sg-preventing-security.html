@@ -1,0 +1,16 @@
+---
+layout: post
+title: 'AWS Tip: elmo.ec2sg preventing security group deletion'
+date: '2014-08-30T09:56:00.002+01:00'
+author: Craig Watcham
+tags:
+modified_time: '2014-08-30T09:56:45.564+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-7828097227841072343
+blogger_orig_url: https://www.deplication.net/2014/08/aws-tip-elmoec2sg-preventing-security.html
+---
+
+<span>If you are trying to delete an EC2 security group and get an error something like:</span><br />
+<span><br /></span>
+<span id="caseCorrespondence_27243625145_text">sg-12345678: Group 111222333444:My SG Name is used by groups: 123412341234:elmo.ec2sg.887766</span><br />
+<span><br /></span>
+<span>Save yourself some time and check that your ElastiCache and RDS security groups don't reference (by name) the group you are trying to delete.&nbsp;</span>See <a href="https://forums.aws.amazon.com/thread.jspa?messageID=555154" target="_blank">this</a>&nbsp;forum thread.

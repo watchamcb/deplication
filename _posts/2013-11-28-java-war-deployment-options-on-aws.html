@@ -1,0 +1,87 @@
+---
+layout: post
+title: Java WAR deployment options on AWS Elastic Beanstalk
+date: '2013-11-28T14:57:00.000Z'
+author: Craig Watcham
+tags:
+- Java
+- Elastic Beanstalk
+- git
+- aws
+modified_time: '2013-11-28T14:58:36.331Z'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-3904552190263725938
+blogger_orig_url: https://www.deplication.net/2013/11/java-war-deployment-options-on-aws.html
+---
+
+<h4>
+Introduction </h4>
+Elastic Beanstalk deployment is pretty cool for interpreted languages like <a href="http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_Python.html">Python</a>, <a href="http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_Ruby.html">Ruby</a>, or <a href="http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create_deploy_PHP_eb.html">PHP</a> where all you need to do is a "git aws.push" to deploy the latest version of your application. The <a href="http://aws.amazon.com/eclipse">AWS Toolkit for Eclipse</a> is also great for Java deployments but what if you want to deploy a manually built WAR? This post lists a few of the options available. It assumes that you have already created an Elastic Beanstalk application using <a href="http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/command-reference-get-started.html">these</a> instructions. The example uses an application name of war-test and a WAR file named sample.war (kindly provided by Apache Tomcat <a href="http://tomcat.apache.org/tomcat-7.0-doc/appdev/sample/">here</a>).<br />
+<br />
+<h4>
+Option 1 - AWS Console</h4>
+Pretty simple, select your Beanstalk application and click the "Upload and Deploy" button. Select the WAR file and give it a version name, a few minutes later your new version is up and running.<br />
+<br />
+In the background the file is uploaded to an S3 bucket, a new application version linked to the bucket/object and a deployment triggered.<br />
+<br />
+<h4>
+Option 2 - Command line</h4>
+This is pretty much the same approach as for the AWS Console upload except that you need to manually perform each of the steps using the AWS CLI tools.<br />
+<br />
+<b>Step 1</b>: Find the S3 bucket to upload the file to, this can be done as follows:<br />
+<br />
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">aws elasticbeanstalk describe-application-versions --application-name war-test</span><br />
+<br />
+Which will print something like:<br />
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">{<br />&nbsp;&nbsp;&nbsp; "ApplicationVersions": [<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "ApplicationName": "war-test", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "VersionLabel": "git-db96ef73b33ba5ae515907c586d133b26b3489b6-1385637920942", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Description": "First commit", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "DateCreated": "2013-11-28T11:25:21.596Z", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "DateUpdated": "2013-11-28T11:25:21.596Z", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "SourceBundle": {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "S3Bucket": "elasticbeanstalk-us-east-1-XXXXXX", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "S3Key": "git-db96ef73b33ba5ae515907c586d133b26b3489b6-1385637920942.zip"<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }, <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "ApplicationName": "war-test", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "VersionLabel": "Sample Application", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "SourceBundle": {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "S3Bucket": "elasticbeanstalk-us-east-1", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "S3Key": "GenericSampleApplication"<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }, <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "DateUpdated": "2013-11-28T11:25:12.781Z", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "DateCreated": "2013-11-28T11:25:12.781Z"<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br />&nbsp;&nbsp;&nbsp; ]<br />}</span><br />
+<br />
+You are interested in is the "elasticbeanstalk-us-east-1-XXXXXX" bucket (where XXXXXX represents your bucket identifier), use this as the destination for your WAR file. You can probably also use your own (custom bucket) but I have not checked what permissions are needed to allow Elastic Beanstalk to access the files.<br />
+<br />
+<b>Step 2</b>: Copy your WAR file to the S3 bucket identified in Step 1. Using the CLI tools again:<br />
+<br />
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">aws s3 cp ./sample.war s3://elasticbeanstalk-us-east-1-XXXXXX/s3-sample.war</span><br />
+<br />
+<b>Step 3</b>: Create an application version:<br />
+<br />
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">aws elasticbeanstalk create-application-version --application-name war-test --version-label s3-upload --source-bundle S3Bucket=elasticbeanstalk-us-east-1-XXXXXX,S3Key=s3-sample.war</span><br />
+<br />
+<b>Step 4</b>:<b> </b>Identify the environment to update<br />
+<br />
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">aws elasticbeanstalk describe-environments --application-name war-test</span><br />
+<br />
+Which returns something like: <br />
+<br />
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">{<br />&nbsp;&nbsp;&nbsp; "Environments": [<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "ApplicationName": "war-test", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "EnvironmentName": "war-test-env", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "VersionLabel": "git-dd7d815e8251acae3560158b169d652d66479bc1-1385644793798", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Status": "Ready", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "EnvironmentId": "e-bwjydyebw9", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "EndpointURL": "54.204.44.36", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "SolutionStackName": "64bit Amazon Linux 2013.09 running Tomcat 7 Java 7", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "CNAME": "war-test-env-bffkznzafh.elasticbeanstalk.com", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "Health": "Green", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "DateUpdated": "2013-11-28T13:20:51.828Z", <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; "DateCreated": "2013-11-28T11:25:29.308Z"<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br />&nbsp;&nbsp;&nbsp; ]<br />}</span><br />
+<br />
+<span style="font-family: inherit;">Note the value of the</span> EnvironmentName (war-test-env<span style="font-family: inherit;"> in this example)</span><br />
+<br />
+<span style="font-family: inherit;"><b>Step 5</b>: Update the environment</span><br />
+<br />
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">aws elasticbeanstalk update-environment --environment-name war-test-env --version-label s3-upload</span></span><br />
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;"><br /><span style="font-family: inherit;">Which will return something like:</span></span></span><br />
+<br />
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">{<br />&nbsp;&nbsp;&nbsp; "ApplicationName": "war-test", <br />&nbsp;&nbsp;&nbsp; "EnvironmentName": "war-test-env", <br />&nbsp;&nbsp;&nbsp; "VersionLabel": "s3-upload", <br />&nbsp;&nbsp;&nbsp; "Status": "Updating", <br />&nbsp;&nbsp;&nbsp; "EnvironmentId": "e-bwjydyebw9", <br />&nbsp;&nbsp;&nbsp; "EndpointURL": "54.204.44.36", <br />&nbsp;&nbsp;&nbsp; "SolutionStackName": "64bit Amazon Linux 2013.09 running Tomcat 7 Java 7", <br />&nbsp;&nbsp;&nbsp; "CNAME": "war-test-env-bffkznzafh.elasticbeanstalk.com", <br />&nbsp;&nbsp;&nbsp; "Health": "Grey", <br />&nbsp;&nbsp;&nbsp; "DateUpdated": "2013-11-28T14:13:42.836Z", <br />&nbsp;&nbsp;&nbsp; "DateCreated": "2013-11-28T11:25:29.308Z", <br />&nbsp;&nbsp;&nbsp; "Resources": {}<br />}</span></span><br />
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;"><br /></span>Rerun step 4 until the Health reflects as "Green" which indicates your updated application has been deployed (but does not neccessarily mean it is working).</span><br />
+<span style="font-family: inherit;"></span>
+
+<br />
+<h4>
+<span style="font-family: inherit;">Option 3 - git aws.push</span></h4>
+<span style="font-family: inherit;">This is a bit of hack (storing compiled binary files in git) but is still quite cool:</span><br />
+<br />
+<span style="font-family: inherit;"><span style="font-family: inherit;"><b>Step 1</b>: Unzip your WAR file into the directory that you ran "eb init" in</span></span><br />
+<span style="font-family: inherit;"><br /></span>
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">unzip sample.war -d war-test/</span><br />
+<br />
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;"><span style="font-family: inherit;"><b>Step 2</b>: Add and commit code to git (in the eb init directory again</span></span></span><br />
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;"><br /></span></span>
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">cd war-test</span><br />
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">git add .</span><br />
+<span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">git commit -m "Some comment" .</span><br />
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;"><br /></span></span>
+<span style="font-family: inherit;"><b>Step 3</b>: Deploy</span><br />
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;"><br /></span></span>
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">git aws.push</span></span><br />
+<br />
+<h4>
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;"><span style="font-family: inherit;">Conclusion</span></span></span></h4>
+<span style="font-family: inherit;"><span style="font-family: &quot;Helvetica Neue&quot;,Arial,Helvetica,sans-serif;">There are probably other ways of doing this, feel free to add a comment if you find a more elegant solution. Some of the approaches may also work with .</span>NET applications although I have not tested them.</span>

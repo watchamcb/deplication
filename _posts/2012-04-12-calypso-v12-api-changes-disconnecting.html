@@ -1,0 +1,16 @@
+---
+layout: post
+title: Calypso v12 API changes - Disconnecting a client from the DataServer
+date: '2012-04-12T07:59:00.000+01:00'
+author: Craig Watcham
+tags:
+modified_time: '2012-04-12T07:59:26.302+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-5841958740101050042
+blogger_orig_url: https://www.deplication.net/2012/04/calypso-v12-api-changes-disconnecting.html
+---
+
+In previous versions of Calypso the following code would have worked as expected:<div><br />
+</div><div><div>DSConnection ds = ConnectionUtil.connect(username, password, appName, environmentName);</div><div>// Do some stuff ...</div><div>ds.disconnect();</div><div><br />
+</div><div>In the v12 API (SP5) the disconnect() method has been deprecated and unfortunately the JavaDocs were not updated to specify that the DSConnection.logout() method must be used instead. This is also not mentioned in the developer guide, nor is the fact that the client application will not be able to complete cleanly (at least without a call to System.exit()) before the logout() method is called.</div><div><br />
+</div><div>A more logical deprecation implementation would have been to call DSConnection.logout() from the disconnect() method.</div><div><br />
+</div></div>

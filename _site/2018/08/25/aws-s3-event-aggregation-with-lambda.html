@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>AWS S3 event aggregation with Lambda and DynamoDB | Your awesome title</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="AWS S3 event aggregation with Lambda and DynamoDB" />
+<meta name="author" content="Craig Watcham" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Introduction S3 has had event notifications since 2014 and for individual object notifications these events work well with Lambda, allowing you to perform an action on every object event in a bucket. It is harder to use this approach when you want to perform an action a limited number of times or at an aggregated bucket level. An example use case would be refreshing a dependency (like Storage Gateway RefreshCache) when you are expecting a large number of objects events in a bucket. Performing a relatively expensive action for every event is not practical or efficient in this case. This post provides a solution for aggregating these events using Lambda, DynamoDB, and SQS.&lt;div&gt;&lt;h4 style=&quot;text-align: left;&quot;&gt;Update (June/July 2020)&lt;/h4&gt;&lt;div&gt;Cache refresh can now be automated. The event aggregation approach below may still be useful depending on your requirements.&lt;/div&gt;&lt;h4&gt;&lt;/h4&gt;&lt;h4&gt; The problem&lt;/h4&gt; We want to call RefreshCache on our Storage Gateway (SGW) whenever the contents of the S3 bucket it exposes are updated by an external process. If the external process is updating a large number of (small) S3 objects then a large number of S3 events will be triggered. We don&#39;t want to overload our SGW with refresh requests so we need a way to aggregate these events to only send occasional refresh requests. The solution The solution is fairly simple and uses DynamoDB’s Conditional Writes for synchronisation and SQS Message Timers to enable aggregation. When the Lambda function processes a new object event it first checks to see if the event falls within the window of the currently active refresh request. If the event is within the window it will automatically be included when the refresh executes and the event can be ignored. If the event occurred after the last refresh then a new refresh request is sent to an SQS queue with a message timer equal to the refresh window period. This allows for all messages received within a refresh window to be included in a single refresh operation. Implementation At a high level we need to create resources (SQS queue, DynamoDB table, Lambda functions), set up permissions (create and assign IAM roles), and apply some configuration (linking Lambda to S3 event notification and SQS queues). This implementation really belongs in a CloudFormation template (and I may actually create one) but I was interested to try and do this entirely via the AWS CLI, masochistic as that may be. If you are not interested in the gory implementation details then skip ahead to &#39;Creation and deletion script&#39; section" />
+<meta property="og:description" content="Introduction S3 has had event notifications since 2014 and for individual object notifications these events work well with Lambda, allowing you to perform an action on every object event in a bucket. It is harder to use this approach when you want to perform an action a limited number of times or at an aggregated bucket level. An example use case would be refreshing a dependency (like Storage Gateway RefreshCache) when you are expecting a large number of objects events in a bucket. Performing a relatively expensive action for every event is not practical or efficient in this case. This post provides a solution for aggregating these events using Lambda, DynamoDB, and SQS.&lt;div&gt;&lt;h4 style=&quot;text-align: left;&quot;&gt;Update (June/July 2020)&lt;/h4&gt;&lt;div&gt;Cache refresh can now be automated. The event aggregation approach below may still be useful depending on your requirements.&lt;/div&gt;&lt;h4&gt;&lt;/h4&gt;&lt;h4&gt; The problem&lt;/h4&gt; We want to call RefreshCache on our Storage Gateway (SGW) whenever the contents of the S3 bucket it exposes are updated by an external process. If the external process is updating a large number of (small) S3 objects then a large number of S3 events will be triggered. We don&#39;t want to overload our SGW with refresh requests so we need a way to aggregate these events to only send occasional refresh requests. The solution The solution is fairly simple and uses DynamoDB’s Conditional Writes for synchronisation and SQS Message Timers to enable aggregation. When the Lambda function processes a new object event it first checks to see if the event falls within the window of the currently active refresh request. If the event is within the window it will automatically be included when the refresh executes and the event can be ignored. If the event occurred after the last refresh then a new refresh request is sent to an SQS queue with a message timer equal to the refresh window period. This allows for all messages received within a refresh window to be included in a single refresh operation. Implementation At a high level we need to create resources (SQS queue, DynamoDB table, Lambda functions), set up permissions (create and assign IAM roles), and apply some configuration (linking Lambda to S3 event notification and SQS queues). This implementation really belongs in a CloudFormation template (and I may actually create one) but I was interested to try and do this entirely via the AWS CLI, masochistic as that may be. If you are not interested in the gory implementation details then skip ahead to &#39;Creation and deletion script&#39; section" />
+<link rel="canonical" href="http://localhost:4000/2018/08/25/aws-s3-event-aggregation-with-lambda.html" />
+<meta property="og:url" content="http://localhost:4000/2018/08/25/aws-s3-event-aggregation-with-lambda.html" />
+<meta property="og:site_name" content="Your awesome title" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2018-08-25T17:23:00+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="AWS S3 event aggregation with Lambda and DynamoDB" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2018-08-25T17:23:00+01:00","datePublished":"2018-08-25T17:23:00+01:00","description":"Introduction S3 has had event notifications since 2014 and for individual object notifications these events work well with Lambda, allowing you to perform an action on every object event in a bucket. It is harder to use this approach when you want to perform an action a limited number of times or at an aggregated bucket level. An example use case would be refreshing a dependency (like Storage Gateway RefreshCache) when you are expecting a large number of objects events in a bucket. Performing a relatively expensive action for every event is not practical or efficient in this case. This post provides a solution for aggregating these events using Lambda, DynamoDB, and SQS.&lt;div&gt;&lt;h4 style=&quot;text-align: left;&quot;&gt;Update (June/July 2020)&lt;/h4&gt;&lt;div&gt;Cache refresh can now be automated. The event aggregation approach below may still be useful depending on your requirements.&lt;/div&gt;&lt;h4&gt;&lt;/h4&gt;&lt;h4&gt; The problem&lt;/h4&gt; We want to call RefreshCache on our Storage Gateway (SGW) whenever the contents of the S3 bucket it exposes are updated by an external process. If the external process is updating a large number of (small) S3 objects then a large number of S3 events will be triggered. We don&#39;t want to overload our SGW with refresh requests so we need a way to aggregate these events to only send occasional refresh requests. The solution The solution is fairly simple and uses DynamoDB’s Conditional Writes for synchronisation and SQS Message Timers to enable aggregation. When the Lambda function processes a new object event it first checks to see if the event falls within the window of the currently active refresh request. If the event is within the window it will automatically be included when the refresh executes and the event can be ignored. If the event occurred after the last refresh then a new refresh request is sent to an SQS queue with a message timer equal to the refresh window period. This allows for all messages received within a refresh window to be included in a single refresh operation. Implementation At a high level we need to create resources (SQS queue, DynamoDB table, Lambda functions), set up permissions (create and assign IAM roles), and apply some configuration (linking Lambda to S3 event notification and SQS queues). This implementation really belongs in a CloudFormation template (and I may actually create one) but I was interested to try and do this entirely via the AWS CLI, masochistic as that may be. If you are not interested in the gory implementation details then skip ahead to &#39;Creation and deletion script&#39; section","headline":"AWS S3 event aggregation with Lambda and DynamoDB","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2018/08/25/aws-s3-event-aggregation-with-lambda.html"},"url":"http://localhost:4000/2018/08/25/aws-s3-event-aggregation-with-lambda.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Your awesome title" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Your awesome title</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">AWS S3 event aggregation with Lambda and DynamoDB</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2018-08-25T17:23:00+01:00" itemprop="datePublished">
+        Aug 25, 2018
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h4>
+Introduction</h4>
+S3 has had <a href="https://aws.amazon.com/blogs/aws/s3-event-notification/">event notifications</a> since 2014 and for <a href="https://docs.aws.amazon.com/lambda/latest/dg/with-s3.html">individual object notifications</a>&nbsp;these events work well with Lambda, allowing you to perform an action on every object event in a bucket. It is harder to use this approach when you want to perform an action a limited number of times or at an aggregated bucket level. An example use case would be refreshing a dependency (like <a href="https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-gateway-file.html#refresh-cache">Storage Gateway RefreshCache</a>) when you are expecting a large number of objects events in a bucket. Performing a relatively expensive action for every event is not practical or efficient in this case. This post provides a solution for aggregating these events using Lambda, DynamoDB, and SQS.<div><br /><h4 style="text-align: left;">Update (June/July 2020)</h4><div>Cache refresh can now be <a href="https://aws.amazon.com/blogs/storage/automating-cache-refresh-process-for-file-gateway-on-aws-storage-gateway/">automated</a>. The event aggregation approach below may still be useful depending on your requirements.</div><h4><br /></h4><h4>
+The problem</h4>
+<div>
+We want to call RefreshCache on our Storage Gateway (SGW) whenever the contents of the S3 bucket it exposes are updated by an external process. If the external process is updating a large number of (small) S3 objects then a large number of S3 events will be triggered. We don't want to overload our SGW with refresh requests so we need a way to aggregate these events to only send occasional refresh requests.</div>
+<div>
+<br /></div>
+<h4>
+The solution</h4>
+The solution is fairly simple and uses DynamoDB's <a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalUpdate">Conditional Writes</a>&nbsp;for synchronisation and SQS <a href="https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-message-timers.html">Message Timers</a>&nbsp;to enable aggregation. When the Lambda function processes a new object event it first checks to see if the event falls within the window of the currently active refresh request. If the event is within the window it will automatically be included when the refresh executes and the event can be ignored. If the event occurred after the last refresh then a new refresh request is sent to an SQS queue with a message timer equal to the refresh window period. This allows for all messages received within a refresh window to be included in a single refresh operation.<br />
+<br />
+<h4>
+Implementation</h4>
+<div>
+At a high level we need to create resources (SQS queue, DynamoDB table, Lambda functions), set up permissions (create and assign IAM roles), and apply some configuration (linking Lambda to S3 event notification and SQS queues). This implementation really belongs in a CloudFormation template (and I may actually create one) but I was interested to try and do this entirely via the AWS CLI, masochistic as that may be. If you are not interested in the gory implementation details then skip ahead to 'Creation and deletion script' section<br />
+<br />
+<script src="https://github.com/watchamcb/s3-event-aggregator/blob/f324ca33e18d0dcc7dd45e1294d0b2aeadb03b7b/iam/dynamo-writer.json#L1"> </script>
+
+Let's start with the S3 event aggregation piece. We need:<br />
+<ol>
+<li>A DynamoDB table to track state</li>
+<li>An SQS queue as a destination for aggregated actions</li>
+<li>A Lambda function for processing and aggregating the S3 events</li>
+<li>IAM permissions for all of the above</li>
+</ol>
+<div>
+As the DynamoDB table and SQS queue are independent we can create these first:<br />
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">aws dynamodb create-table --table-name S3EventAggregator --attribute-definitions AttributeName=BucketName,AttributeType=S&nbsp;</span><span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">--key-schema AttributeName=BucketName,KeyType=HASH --provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=5</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif"><span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;"><br /></span>
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">aws sqs create-queue --queue-name S3EventAggregatorActionQueue</span></span><br />
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;"><br /></span><span style="font-family: inherit;">
+Naturally this needs to be done with a user that has sufficient permissions and assumes your default region is set.</span><br />
+<span style="font-family: inherit;"><br /></span>
+<span style="font-family: inherit;">The Lambda function is a bit trickier as it requires a role to be created before the function can be created. So let's start with the IAM permissions. First let's create a policy allowing DynamoDB GetItem and UpdateItem to be performed on the DynamoDB table we created earlier. To do this we need a JSON file containing the necessary permissions.&nbsp;</span>The&nbsp;<a href="https://github.com/watchamcb/s3-event-aggregator/blob/master/iam/dynamo-writer.json">dynamo-writer.json</a>&nbsp;file looks like this:<br />
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">{</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; "Version": "2012-10-17",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; "Statement": [</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Effect": "Allow",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Action": [</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><span style="white-space: pre;">  </span> &nbsp; &nbsp;"dynamodb:UpdateItem",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><span style="white-space: pre;">  </span> &nbsp; &nbsp;"dynamodb:GetItem"</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><span style="white-space: pre;"> </span> &nbsp; &nbsp;],</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Resource": "arn:aws:dynamodb:REGION:ACCOUNT_ID:table/S3EventAggregator"</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; ]</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">}</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><br /></span></div>
+<div>
+We need to replace REGION and ACCOUNT_ID with the relevant values. As we are aiming at using the command line for this exercise, let's use STS to retrieve our account ID, set our region, and then use sed to substitute both variables:<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><br /></span>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)&nbsp;</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">AWS_DEFAULT_REGION="eu-west-1"&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O dynamo-writer.json&nbsp;</span><span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/iam/dynamo-writer.json&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/g" dynamo-writer.json</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sed -i "s/REGION/$AWS_DEFAULT_REGION/g" dynamo-writer.json</span><br />
+<div>
+</div>
+</div>
+<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam create-policy --policy-name S3EventAggregatorDynamo --policy-document file://dynamo-writer.json</span><br />
+<div>
+<div>
+<br /></div>
+<div>
+We now have a policy that allows the caller (our soon to be created Lambda function in this case) to update items in the S3EventAggregator DynamoDB table. Next we need to create a policy to allow the function to write messages to SQS. The <a href="https://github.com/watchamcb/s3-event-aggregator/blob/master/iam/sqs-writer.json">sqs-writer.json</a>&nbsp;policy file contents are similar to the DynamoDB policy:<br />
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small; white-space: pre-wrap;">{</span><br />
+<pre style="overflow-wrap: break-word; white-space: pre-wrap; word-wrap: break-word;"><span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "sqs:SendMessage",
+            "Resource": "arn:aws:sqs:REGION:ACCOUNT_ID:S3EventAggregatorActionQueue"
+        }
+    ]
+}</span></pre>
+</div>
+<div>
+<br /></div>
+<div>
+Retrieving the file and substituting the ACCOUNT_ID and REGION using the environment variables we created for the DynamoDB policy:<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O sqs-writer.json&nbsp;</span><span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/iam/sqs-writer.json&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/g" sqs-writer.json</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sed -i "s/REGION/$AWS_DEFAULT_REGION/g" sqs-writer.json</span></div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam create-policy --policy-name S3EventAggregatorSqsWriter --policy-document file://sqs-writer.json</span><br />
+<br />
+Having defined the two resource access policies let's create an IAM role for the Lambda function.&nbsp;</div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O lambda-trust.json&nbsp;</span><span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/iam/lambda-trust.json</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam create-role --role-name S3EventAggregatorLambdaRole --assume-role-policy-document file://lambda-trust.json</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><br /></span>
+The <a href="https://github.com/watchamcb/s3-event-aggregator/blob/master/iam/lambda-trust.json">lambda-trust.json</a>&nbsp;policy allows Lambda access to assume roles via STS and looks like this (no substitutions required for this one):<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">{</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; "Version": "2012-10-17",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; "Statement": [</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; {</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; "Effect": "Allow",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; "Principal": {</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "Service": "lambda.amazonaws.com"</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; },</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; "Action": "sts:AssumeRole"</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; }</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; ]</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">}</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><br /></span>
+<span style="font-family: inherit;">We can now attach the SQS and DynamoDB policies to the new created Lambda role. We also need the AWS</span>LambdaBasicExecutionRole which is an AWS managed policy providing access to CloudWatch logs and Lambda function execution:<br />
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam attach-role-policy --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/S3EventAggregatorDynamo --role-name S3EventAggregatorLambdaRole</span></div>
+</div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam attach-role-policy --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/S3EventAggregatorSqsWriter --role-name S3EventAggregatorLambdaRole</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole --role-name S3EventAggregatorLambdaRole</span></div>
+</div>
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;"></span><br />
+<div style="font-family: &quot;Times New Roman&quot;; font-size: medium;">
+</div>
+<span style="font-family: inherit;">We are now finally ready to create the </span><a href="https://github.com/watchamcb/s3-event-aggregator/blob/master/src/s3_aggregator.py" style="font-family: inherit;">S3EventAggregator Lambda function</a><span style="font-family: inherit;">. Starting by creating the </span><a href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html" style="font-family: inherit;">Python deployment package</a><span style="font-family: inherit;">:</span><br />
+<div style="orphans: 2; text-align: start; text-decoration-color: initial; text-decoration-style: initial; text-indent: 0px; widows: 2;">
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O s3_aggregator.py https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/src/s3_aggregator.py</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">zip function.zip s3_aggregator.py</span><br />
+<br />
+And then creating the function (using the AWS_DEFAULT_REGION and ACCOUNT_ID environment variables again):<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws lambda create-function --function-name S3EventAggregator --runtime python3.6&nbsp;</span><span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">--role arn:aws:iam::$ACCOUNT_ID:role/S3EventAggregatorLambdaRole --zip-file fileb://function.zip&nbsp;</span><span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">--handler s3_aggregator.lambda_handler --timeout 10&nbsp;</span><span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">--environment "Variables={QUEUE_URL=https://sqs.$AWS_DEFAULT_REGION.amazonaws.com/$ACCOUNT_ID/S3EventAggregatorActionQueue,REFRESH_DELAY_SECONDS=30,LOG_LEVEL=INFO}"</span><br />
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws lambda put-function-concurrency --function-name S3EventAggregator --reserved-concurrent-executions 1</span></div>
+<div>
+<br /></div>
+<div>
+The function concurrency is set to 1 as there is no benefit to having the function processing S3 events concurrently and 'single threading' the function will limit the maximum concurrent DynamoDB request rate to reduce DynamoDB capacity usage and costs.</div>
+<div>
+<br /></div>
+<div>
+All that is left now is to give S3 permission to execute the Lambda function and link the bucket notification events to the S3EventAggregator function. Giving S3 permission on the specific bucket:</div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">BUCKET=my-bucket</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws lambda add-permission --function-name S3EventAggregator --statement-id SID_$BUCKET --action lambda:InvokeFunction --principal s3.amazonaws.com --source-account $ACCOUNT_ID --source-arn arn:aws:s3:::$BUCKET</span></div>
+<div>
+<br /></div>
+<div>
+Interestingly, the --source-arn can be omitted to avoid needing to add permissions for each bucket you want the function to operate on but it is required (and must match a specific bucket) for the Lambda Console to display the function and trigger correctly. The S3 <a href="https://github.com/watchamcb/s3-event-aggregator/blob/master/s3/event.json">event.json</a> configuration creates an event on any object creation or removal events:</div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">{</span></div>
+<div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; "LambdaFunctionConfigurations": [</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Id": "s3-event-aggregator",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "LambdaFunctionArn": "arn:aws:lambda:REGION:ACCOUNT_ID:function:S3EventAggregator",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Events": [</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "s3:ObjectCreated:*",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "s3:ObjectRemoved:*"</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; ]</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">}</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+Once again substituting the relevant region and account IDs:</div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O event.json https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/s3/event.json</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/g" event.json</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sed -i "s/REGION/$AWS_DEFAULT_REGION/g" event.json</span></div>
+<div>
+<br /></div>
+<div>
+And linking the event configuration to a bucket:</div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws s3api put-bucket-notification-configuration --bucket $BUCKET --notification-configuration file://event.json</span></div>
+<div>
+<br /></div>
+<div>
+Thus concludes the event aggregation part of the solution. A quick test confirms the event aggregation is working as expected:</div>
+<div>
+<br /></div>
+<div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">time for i in $(seq 1 5); do aws s3 cp test.txt s3://$BUCKET/test$i.txt; done</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test1.txt&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test2.txt&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test3.txt&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test4.txt&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test5.txt&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><br /></span>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">real<span style="white-space: pre;"> </span>0m2.106s</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">user<span style="white-space: pre;"> </span>0m1.227s</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sys<span style="white-space: pre;"> </span>0m0.140s</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">STREAM=$(aws logs describe-log-streams --log-group-name /aws/lambda/S3EventAggregator --order-by LastEventTime --descending --query 'logStreams[0].logStreamName' --output text); aws logs get-log-events --log-group-name /aws/lambda/S3EventAggregator --log-stream-name $STREAM --query 'events[*].{msg:message}' --output text | grep "^\[" | sed 's/\t/ /g'</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">[INFO] 2018-08-12T18:14:03.647Z 7da07415-9e5b-11e8-ab6d-8f962149ce24 Sending refresh request for bucket: s3-test-net, timestamp: 1534097642149</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">[INFO] 2018-08-12T18:14:04.207Z 7e1d6ca2-9e5b-11e8-ac9d-e1f0f9729f66 Refresh for bucket: s3-test-net within refresh window, skipping. S3 Event timestamp: 1534097642938</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">[INFO] 2018-08-12T18:14:04.426Z 7eefb013-9e5b-11e8-ab6d-8f962149ce24 Refresh for bucket: s3-test-net within refresh window, skipping. S3 Event timestamp: 1534097643812</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">[INFO] 2018-08-12T18:14:04.635Z 7e5b5feb-9e5b-11e8-8aa9-7908c99c450a Refresh for bucket: s3-test-net within refresh window, skipping. S3 Event timestamp: 1534097643371</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">[INFO] 2018-08-12T18:14:05.915Z 7ddb5a72-9e5b-11e8-80de-0dd6a15c3f62 Refresh for bucket: s3-test-net within refresh window, skipping. S3 Event timestamp: 1534097642517</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+From the 'within refresh window' log messages we can see 4 of the 5 events were skipped as they fell within the refresh aggregation window. Checking the SQS queue we can see the refresh request event:</div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><br /></span>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws sqs receive-message --queue-url https://$AWS_DEFAULT_REGION.queue.amazonaws.com/$ACCOUNT_ID/S3EventAggregatorActionQueue --attribute-names All --message-attribute-names All</span></div>
+<div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">{</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; "Messages": [</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "MessageId": "c0027dd2-30bc-48bc-b622-b5c85d862c92",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReceiptHandle": "AQEB9DQXkIWsWn...5XU2a13Q8=",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "MD5OfBody": "99914b932bd37a50b983c5e7c90ae93b",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Body": "{}",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Attributes": {</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "SenderId": "AROAI55PXBF63XVSEBNYM:S3EventAggregator",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ApproximateFirstReceiveTimestamp": "1534097653846",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ApproximateReceiveCount": "1",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "SentTimestamp": "1534097642728"</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; },</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "MD5OfMessageAttributes": "6f6eaf397811cbece985f3e8d87546c3",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "MessageAttributes": {</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "bucket-name": {</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "StringValue": "s3-test-net",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "DataType": "String"</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; },</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "timestamp": {</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "StringValue": "1534097642149",</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "DataType": "Number"</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; ]</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">}</span></div>
+</div>
+<div>
+<br /></div>
+<div>
+Moving onto the final part of the solution, we need a Lambda function that processes the events that the S3EventAggregator function sends to SQS. For the function's permissions we can reuse the&nbsp;S3EventAggregatorDynamo policy for DynamoDB access but will need to create a new policy for reading and deleting SQS messages and refreshing the Storage Gateway cache.<br />
+<br />
+The <a href="https://github.com/watchamcb/s3-event-aggregator/blob/master/iam/sgw-refresh.json">sgw-refresh.json</a> is as follows, note that SMB file shares are included but the current <a href="https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html">Lambda execution environment</a>&nbsp;only supports boto3 1.7.30 which does not actually expose the SMB APIs (more on working around this later):<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">{</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; "Version": "2012-10-17",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; "Statement": [</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Effect": "Allow",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Action": [</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "storagegateway:RefreshCache",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "storagegateway:ListFileShares",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "storagegateway:DescribeNFSFileShares",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "storagegateway:DescribeSMBFileShares"</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Resource": "*"</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; ]</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">}</span><br />
+<br />
+Creating the policy:<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O sgw-refresh.json https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/iam/sgw-refresh.json</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam create-policy --policy-name StorageGatewayRefreshPolicy --policy-document file://sgw-refresh.json</span><br />
+<br />
+The <a href="https://github.com/watchamcb/s3-event-aggregator/blob/master/iam/sqs-reader.json">sqs-reader.json</a> gives the necessary SQS read permissions &nbsp;on the S3EventAggregatorActionQueue:<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">{</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; "Version": "2012-10-17",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; "Statement": [</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Effect": "Allow",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Action": [</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "sqs:DeleteMessage",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "sqs:GetQueueAttributes",</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "sqs:ReceiveMessage"</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Resource": "arn:aws:sqs:REGION:ACCOUNT_ID:S3EventAggregatorActionQueue"</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">&nbsp; &nbsp; ]</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">}</span><br />
+<br />
+Substituting &nbsp;and creating the policy:<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O sqs-reader.json https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/iam/sqs-reader.json</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sed -i "s/ACCOUNT_ID/$ACCOUNT_ID/g" sqs-reader.json&nbsp;</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">sed -i "s/REGION/$AWS_DEFAULT_REGION/g" sqs-reader.json</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam create-policy --policy-name S3EventAggregatorSqsReader --policy-document file://sqs-reader.json</span><br />
+<div>
+<br /></div>
+And then creating the role and adding the relevant policies:<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O lambda-trust.json https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/iam/lambda-trust.json</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam create-role --role-name S3AggregatorActionLambdaRole --assume-role-policy-document file://lambda-trust.json</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam attach-role-policy --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole --role-name S3AggregatorActionLambdaRole</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam attach-role-policy --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/S3EventAggregatorSqsReader --role-name S3AggregatorActionLambdaRole</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam attach-role-policy --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/S3EventAggregatorDynamo --role-name S3AggregatorActionLambdaRole</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws iam attach-role-policy --policy-arn arn:aws:iam::$ACCOUNT_ID:policy/StorageGatewayRefreshPolicy --role-name S3AggregatorActionLambdaRole</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><br /></span>
+Next we will create the Lambda function, this will however depend on whether or not you require SMB file share support. As mentioned earlier the current Lambda execution environment does not expose the new SMB file share APIs so if you have SMB shares mapped on your Storage Gateway you will have to <a href="https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html">include the latest botocore and boto3</a> libraries with your deployment. The disadvantage of this is that you are not able to view the code in the Lambda console (due to the deployment file size limitation). If you are only using NFS shares then you only need the code without the latest libraries but it will break if you add an SMB share before the Lambda execution environment supports it. Including the dependency in the deployment is the preferred option so that is what we are going to do:<br />
+<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">mkdir deploy</span><br />
+<div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">pip install boto3 botocore -t deploy</span></div>
+</div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">wget -O deploy/s3_sgw_refresh.py&nbsp;https://raw.githubusercontent.com/watchamcb/s3-event-aggregator/master/src/s3_sgw_refresh.py</span></div>
+<div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">cd deploy</span></div>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">zip -r function.zip *</span><br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;"><br /></span>
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws lambda create-function --function-name S3StorageGatewayRefresh --runtime python3.6 --role arn:aws:iam::$ACCOUNT_ID:role/S3AggregatorActionLambdaRole --zip-file fileb://function.zip --handler s3_sgw_refresh.lambda_handler --timeout 5&nbsp;</span><span face="&quot;helvetica neue&quot;, arial, helvetica, sans-serif" style="font-size: x-small;">--environment "Variables={LOG_LEVEL=INFO}"</span><br />
+
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws lambda put-function-concurrency --function-name S3StorageGatewayRefresh --reserved-concurrent-executions 1</span><br />
+<br />
+And finally create the event mapping to execute the <a href="https://github.com/watchamcb/s3-event-aggregator/blob/master/src/s3_sgw_refresh.py">S3StorageGatewayRefresh</a> function when messages are received on the queue:<br />
+<br />
+<span face="&quot;helvetica neue&quot; , &quot;arial&quot; , &quot;helvetica&quot; , sans-serif" style="font-size: x-small;">aws lambda create-event-source-mapping --function-name S3StorageGatewayRefresh --event-source arn:aws:sqs:$AWS_DEFAULT_REGION:$ACCOUNT_ID:S3EventAggregatorActionQueue --batch-size 1</span><br />
+<br />
+And that is the final solution. Verifying it works as expected, let's mount the NFS share and upload some files via the CLI and confirm the share is refreshed. Mounting the share:<br />
+<br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">$ sudo mount -t nfs -o nolock 172.31.2.13:/s3-test-net share</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">$ cd share/sgw</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">$ ls -l</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">total 0</span><br />
+<div>
+<br /></div>
+<div>
+Uploading the files through the CLI (from a different machine):</div>
+<br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">$ for i in $(seq 1 20); do aws s3 cp test.txt s3://$BUCKET/sgw/test$i.txt; done</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test1.txt &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test2.txt &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">...</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test19.txt &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">upload: ./test.txt to s3://s3-test-net/test20.txt &nbsp; &nbsp; </span><br />
+<br />
+And confirming the refresh of the share:<br />
+<br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">$ ls -l</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">total 10</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">-rw-rw-rw- 1 nobody nogroup 19 Aug 25 07:46 test10.txt</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">-rw-rw-rw- 1 nobody nogroup 19 Aug 25 07:46 test11.txt</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">...</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">-rw-rw-rw- 1 nobody nogroup 19 Aug 25 07:46 test8.txt</span><br />
+<span face="Helvetica Neue, Arial, Helvetica, sans-serif" style="font-size: x-small;">-rw-rw-rw- 1 nobody nogroup 19 Aug 25 07:46 test9.txt</span></div>
+<div>
+<br /></div>
+<div>
+<h4>
+Creation and deletion scripts</h4>
+<div>
+For convenience a script to create (and remove) this stack is provided on GitHub. Clone the&nbsp;<a href="https://github.com/watchamcb/s3-event-aggregator">s3-event-aggregator</a>&nbsp;repository and run the create-stack.sh and delete-stack.sh scripts respectively. You need to have the AWS CLI installed and configured and sed and zip must be available. Be sure to edit the BUCKET variable in the script to match your bucket name and change the REGION if appropriate.</div>
+<div>
+<br /></div>
+<div>
+Note that the delete stack script will not remove the S3 event notification configuration by default. There is no safe and convenient way to remove only the S3EventAggregator configuration (other than removing all configuration which may result in unintended loss of other event configuration). If you have other events configured on a bucket it is best to use the AWS Console to remove the s3-event-aggregator event configuration. If there are no other events configured on your bucket you can safely uncomment the relevant line in the deletion script.</div>
+</div>
+<div>
+<br /></div>
+<h4>
+Configuration</h4>
+<div>
+The two Lambda functions both have a LOG_LEVEL environment variable to control the details logged to CloudWatch Logs, the functions were created with the level set to INFO but DEBUG may be useful for troubleshooting and WARN is probably appropriate for use in production.</div>
+<div>
+<br /></div>
+<div>
+The S3EventAggregator function also has an environment variable called REFRESH_DELAY_SECONDS for controlling the event aggregation window. It was initialised to 30 seconds when the function was created but it may be appropriate to change it depending on your S3 upload pattern. If the uploads are mostly small and complete quickly, or if you need the Storage Gateway to reflect changes quickly then this may be a reasonable value. If you are performing larger uploads or the total upload process takes significantly longer then the refresh window would need to be increased to be longer than the total expected upload time.</div>
+<div>
+<br /></div>
+<div>
+The DynamoDB table was created with 5 write capacity units and as the entries are less than 1KB this should be sufficient as long as you are not writing more than 5 objects a second to the Storage Gateway S3 bucket. Writing more than this will required additional write capacity to be provisioned (or auto scaling enabled).</div>
+<div>
+<br /></div>
+<div>
+The same code can be used for multiple buckets by simply adding additional bucket event configurations via the CLI&nbsp;put-bucket-notification-configuration as above or using the AWS Console.</div>
+<div>
+<br /></div>
+<h4>
+Cost</h4>
+<div>
+There are three component costs involved in this solution, the two Lambda functions, DynamoDB, and SQS. The Lambda and DynamoDB costs will scale fairly linearly with usage with both the S3EventAggregator and DynamoDB being charged for each S3 event that is triggered. To get an idea of the number of events to expect you can enable <a href="https://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html">S3 metrics</a> on the bucket and check the PUT and DELETE counts. The S3StorageGatewayRefresh function and SQS messages will be a fraction of the total S3 event counts and dependent on the REFRESH_DELAY_SECONDS configuration. A longer refresh delay will result in fewer SQS messages and S3StorageGatewayRefresh function executions.</div>
+<div>
+<br /></div>
+<div>
+As an example lets use an example of 1000 objects uploaded a day with these being aggregated into 50 refresh events. For simplicity we will also assume that the free tier has been exhausted and that there are 30 days in the month. The total Lambda request count will then be:</div>
+<div>
+(30 days x 1000 S3 events) + (30 days x 50 refresh events)&nbsp; = 31 500 request</div>
+<div>
+As Lambda requests are charged in 1 million increments this will result in a charge of $0.2 for the requests</div>
+<div>
+<br /></div>
+<div>
+The compute charges are based on duration, with the S3EventAggregator executing in less than 100ms for all aggregate events and around 300 - 600ms for the refresh events. The S3StorageGatewayRefesh function takes between 400ms and 800ms. Giving us:</div>
+<div>
+(30 days x 950 S3 requests x 0.1s) + (30 days x 50 S3 requests x 0.5s) + (30 days x 50 refresh events x 0.7s) = 4650 seconds</div>
+<div>
+Lambda compute is charged in GB-s, so:</div>
+<div>
+4650 seconds x 128MB/1024 = 581.25 GB-s at $0.00001667 = $0.0096894</div>
+<div>
+Bringing the total Lambda charges for the month to $0.21</div>
+<div>
+<br /></div>
+<div>
+For DynamoDB we have provisioned 5 WCU at $0.000735/WCU/hour and 1 RCU at&nbsp;$0.000147/RCU/hour working out as:</div>
+<div>
+(5 WCU x 0.000735 per hour x 24 hours a day x 30 days) + (1 RCU x 0.000147 per hour x 24 hours x 30 days) = $2.75 a month</div>
+<div>
+<br /></div>
+<div>
+SQS charges per million requests with the 1500 send message requests and a further 1500 receive and delete requests all falling under this limit (and thus only costing $0.40 for the month). It is worth noting that Lambda does poll the SQS queue roughly 4 times a minute and this will contribute to your total SQS request costs, using around 172,800 SQS requests a month.</div>
+<div>
+<br /></div>
+<div>
+There are some other costs associated with CloudWatch Logs and DynamoDB storage but these should be fairly small compared to the request costs and I would not expect the total cost of the stack to be more than $10 - $15 a month.</div>
+<div>
+<br /></div>
+<h4>
+Conclusion</h4>
+<div>
+And so ends this post, well done for reading to the end. I quite enjoyed building this solution and will look at converting it to a CloudFormation template at a later stage. Feel free to log issues or pull requests against the GitHub repo.</div>
+</div>
+</div>
+</div>
+</div>
+  </div><a class="u-url" href="/2018/08/25/aws-s3-event-aggregation-with-lambda.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

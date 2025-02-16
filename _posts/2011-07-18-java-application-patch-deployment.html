@@ -1,0 +1,40 @@
+---
+layout: post
+title: Java application patch deployment
+date: '2011-07-18T19:58:00.000+01:00'
+author: Craig Watcham
+tags:
+- Java
+- patch
+- deployment
+modified_time: '2011-07-18T19:58:06.553+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-5414875187832859653
+blogger_orig_url: https://www.deplication.net/2011/07/java-application-patch-deployment.html
+---
+
+This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact.<br />
+<br />
+<b>Class path update</b><br />
+The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of the class path used to start the application. So for example if your application was started with the following command:<br />
+<blockquote>java -cp application.jar:somelib.jar com.blogspot.deplication.MainClass</blockquote>&nbsp;You could modify it as below to use the patched versions of your classes in the patch.jar file:<br />
+<blockquote>java -cp patch.jar:application.jar:somelib.jar com.blogspot.deplication.MainClass</blockquote>This is the basic class path functionality inherent to Java and enables the loading of the patch classes from the patch.jar before the application.jar because patch.jar occurs first in the class path. This is the simplest deployment and requires the application to be restarted with the new class path for the patch to take effect.<br />
+<br />
+As the application needs to be restarted for this change to take effect, there is not much of a case for this approach over a full deployment. This approach does however allow you to override classes in one of the other JAR files, which may be useful for deploying a version of a class with additional logging (for example) without the need for a full deployment. Once the log data has been generated the patch file can be removed and the application restarted as its original deployment.<br />
+<br />
+<b>Class file deployment</b><br />
+The second option is to deploy compiled class files to a directory specified in the class path. This approach is almost identical to the class path update method but does not require the command line or class path environment variable to be updated with the new patch JAR file name. So for example, starting the application with the following command:<br />
+<blockquote>java -cp .:application.jar:somelib.jar com.blogspot.deplication.MainClass</blockquote>Would allow new classes to be copied to the correct package structure in the working directory and after restart the patch class would be used. In this case, copying a new MainClass to ./com/blogspot/deplication/ would result in the class in the directory being used instead of the version in the application.jar.&nbsp;Once again, this approach requires a restart to take effect and has the added complexity of keeping track of the individual class files rather than just the patch JAR file.<br />
+<br />
+<b>Dynamic class reloading</b><br />
+The third option is the implementation of a custom class loader to enable<br />
+<a href="http://tutorials.jenkov.com/java-reflection/dynamic-class-loading-reloading.html">dynamic class reloading</a>. Unfortunately this option requires code changes and imposes various restrictions where the classes being loaded either need to extend a super class or implement an interface.<br />
+<br />
+<b>Interesting points</b><br />
+<br />
+<ul><li>The class path and class file deployment can be quite useful on distributed systems where only a single VM requires the patched files and the nodes can be stopped and restarted independently.</li>
+<li>Remember to cleanup the deployed classes/JARs when doing a full deployment to prevent them from overriding the new code</li>
+<li>Solaris (and apparently AIX) may use memory mapped JAR files, expect very strange behaviour if you replace the JAR files in a running VM on these platforms</li>
+<li>For configurable applications that use reflection to load classes it is possible to deploy a patched class with a new (unique) name and configure the application to use the new class, thus avoiding the need for a restart</li>
+<li>Client applications launched via Java Web Start can be updated by adding the patch jar at the top of the resources section, the main="true" attribute must be excluded for the order of the resources to be used in Java 1.6</li>
+<li>Overriding classes using the class path is far from ideal and should be avoided where possible</li>
+</ul><div>As always there are almost certainly different approaches, feel free to add comments with what has worked for you.</div>

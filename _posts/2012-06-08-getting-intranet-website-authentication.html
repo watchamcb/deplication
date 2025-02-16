@@ -1,0 +1,21 @@
+---
+layout: post
+title: Getting intranet website authentication wrong
+date: '2012-06-08T08:28:00.002+01:00'
+author: Craig Watcham
+tags:
+modified_time: '2012-06-08T08:28:41.290+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-6183264890010653809
+blogger_orig_url: https://www.deplication.net/2012/06/getting-intranet-website-authentication.html
+---
+
+Website usability is as important for internal sites as for publicly accessible sites, yet for some reason the corporate whip-crackers are willing to accept substandard implementations when only their employees are being forced to use a service. The points below are problems in a leave management system provided by a major international company. It is unclear whether this international company or their local implementation team is responsible for the usability idiocy but here are some of the more annoying design problems:<br />
+<br />
+<ul>
+<li><b>Authentication integration</b>. In most large corporations some form of central authentication service is typically available. There is very rarely a need to reinvent the security wheel by having internal websites with their own username and password authentication system. This is one of the worst usability failures as it is pure laziness by the implementer to use the out-of-box authentication rather than integrating to the central authentication service.</li>
+<li><b>Username selection</b>. Assuming laziness wins out and the site implements its own internal authentication, try to allow logical usernames. An employee ID code is a great database key but expecting employees to memorise their employee ID is totally ridiculous, particularly for a system they are not accessing daily. If you are unable/unwilling to let the users log in with their network credentials at least allow them to use an easy to remember username, their email address at the company for example.</li>
+<li><b>Password constraints</b>. Continuing with the custom authentication assumption, try to minimise user frustration with password selection criteria. Weak passwords are obviously a security concern but for internal sites where local network access is required this is less of an issue. Simplistic password constraints only serve to frustrate users. The most ridiculous (actual) example is not allowing repeating characters, thus the strong password "M@ss!veAtt4ck" is rejected yet "Idiot123" is allowed. This is not increasing security, it is needlessly annoying your users.</li>
+<li><b>Reset password process</b>. Should the user need to reset their password, try to simplify the process. On the login screen there will typically be a "Forgot password" link, it is really trivial to use the username already entered on the login page to populate the reset password page. Requiring the user to re-enter the username on the reset password page is redundant, even if it is an easily remembered value. Similarly, once the password reset is complete (via email redirect for example) rather populate the username on the login screen automatically, or preferably log the user in automatically with the newly created password.</li>
+</ul>
+<div>
+The issues above only relate to the process of logging into the website, it is not hard to imagine the (un)usability of the rest of the site.</div>

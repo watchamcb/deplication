@@ -1,0 +1,32 @@
+---
+layout: post
+title: 'AWS tip: Wildcard characters in S3 lifecycle policy prefixes'
+date: '2019-02-16T15:21:00.000Z'
+author: Craig Watcham
+tags:
+- lifecycle
+- S3
+- CLI
+- aws
+modified_time: '2019-02-16T15:21:40.390Z'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-7380565957841221224
+blogger_orig_url: https://www.deplication.net/2019/02/aws-tip-wildcard-characters-in-s3.html
+---
+
+A quick word of warning regarding S3's treatment of asterisks (*) in object&nbsp;<a href="https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html">lifecycle policies</a>. In S3 asterisks are valid <a href="https://docs.aws.amazon.com/AmazonS3/latest/dev/UsingMetadata.html#object-keys">'special' characters</a>&nbsp;and can be used in object key names, this can lead to a lifecycle action not being applied as expected when the prefix contains an asterisk.<br />
+<br />
+Historically an asterisk is treated as a wildcard to pattern match 'any', so you would be able to conveniently match all files for a certain pattern: 'rm *' as an example, would delete all files. This is NOT how an asterisk behaves in S3 lifecycle prefixes. If you specify a prefix of '*' or '/*' it will only be applied to objects that start with an asterisk and not all objects. The '*' prefix rule would be applied to these objects:<br />
+example-bucket/*/key<br />
+example-bucket/*yek<br />
+<br />
+But would not be applied to:<br />
+example-bucket/object<br />
+example-bucket/directory/key<br />
+example-bucket/tcejbo*<br />
+<br />
+It is not an error to specify an asterisk and it will merely result in the policy not being applied so you may not even know this as an issue. Fortunately it is fairly easy to check for this configuration with the CLI, the following bash one liner will iterate through all buckets owned by the caller and check if the bucket has any policies with an asterisk in their name. It will print out the bucket name and policy if affected or a '.' (to show progress) if not.<br />
+<br />
+<script src="https://gist.github.com/watchamcb/bc99754981bc68b5c398829ca51b72be.js"></script>
+
+<div>
+You can also check the S3 console, it should display 'Whole bucket' under the 'Applied To' column for any lifecycle rules you intended to have applied to the entire bucket.</div>

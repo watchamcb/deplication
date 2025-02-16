@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Curl with Kerberos authentication | Your awesome title</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="Curl with Kerberos authentication" />
+<meta name="author" content="Craig Watcham" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don’t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (–negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V. $ curl “https://your-secure-url/path/query?param=1&amp;value=2” -u : –negotiate This will return the requested page and print it to console Doing the same thing in Python (with pycurl - ‘pip install pycurl’): import pycurl curl = pycurl.Curl() curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE) curl.setopt(pycurl.USERPWD, &#39;:&#39;) curl.setopt(pycurl.URL, &#39;https://your-secure-url/path/query?param=1&amp;value=2&#39;) curl.perform() curl.close() And finally in PHP: $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, &quot;https://your-secure-url/path/query?param=1&amp;value=2&quot;); curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE); curl_setopt($ch, CURLOPT_USERPWD, &quot;:&quot;); curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); $page = curl_exec($ch); curl_close($ch);" />
+<meta property="og:description" content="Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don’t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (–negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V. $ curl “https://your-secure-url/path/query?param=1&amp;value=2” -u : –negotiate This will return the requested page and print it to console Doing the same thing in Python (with pycurl - ‘pip install pycurl’): import pycurl curl = pycurl.Curl() curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE) curl.setopt(pycurl.USERPWD, &#39;:&#39;) curl.setopt(pycurl.URL, &#39;https://your-secure-url/path/query?param=1&amp;value=2&#39;) curl.perform() curl.close() And finally in PHP: $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, &quot;https://your-secure-url/path/query?param=1&amp;value=2&quot;); curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE); curl_setopt($ch, CURLOPT_USERPWD, &quot;:&quot;); curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); $page = curl_exec($ch); curl_close($ch);" />
+<link rel="canonical" href="http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html" />
+<meta property="og:url" content="http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html" />
+<meta property="og:site_name" content="Your awesome title" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-02-19T08:24:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Curl with Kerberos authentication" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2014-02-19T08:24:00+00:00","datePublished":"2014-02-19T08:24:00+00:00","description":"Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don’t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (–negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V. $ curl “https://your-secure-url/path/query?param=1&amp;value=2” -u : –negotiate This will return the requested page and print it to console Doing the same thing in Python (with pycurl - ‘pip install pycurl’): import pycurl curl = pycurl.Curl() curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE) curl.setopt(pycurl.USERPWD, &#39;:&#39;) curl.setopt(pycurl.URL, &#39;https://your-secure-url/path/query?param=1&amp;value=2&#39;) curl.perform() curl.close() And finally in PHP: $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, &quot;https://your-secure-url/path/query?param=1&amp;value=2&quot;); curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE); curl_setopt($ch, CURLOPT_USERPWD, &quot;:&quot;); curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); $page = curl_exec($ch); curl_close($ch);","headline":"Curl with Kerberos authentication","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html"},"url":"http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Your awesome title" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Your awesome title</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Curl with Kerberos authentication</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2014-02-19T08:24:00+00:00" itemprop="datePublished">
+        Feb 19, 2014
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don't have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding:<br />
+<br />
+$ kinit -f<br />
+<br />
+You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (--negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V.<br />
+<br />
+$ curl "https://your-secure-url/path/query?param=1&amp;value=2" -u : --negotiate 
+<br />
+<br />
+This will return the requested page and print it to console Doing the same thing in Python (with pycurl - 'pip install pycurl'):<br />
+<br />
+import pycurl<br />
+<br />
+curl = pycurl.Curl()<br />
+curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE)<br />
+<div>
+curl.setopt(pycurl.USERPWD, ':')</div>
+<div>
+curl.setopt(pycurl.URL, 'https://your-secure-url/path/query?param=1&amp;value=2')</div>
+<div>
+curl.perform()</div>
+<div>
+curl.close()</div>
+<div>
+<br /></div>
+<div>
+And finally in PHP:<br />
+<br /></div>
+<div>
+<div>
+$ch = curl_init();</div>
+<div>
+<br /></div>
+<div>
+curl_setopt($ch, CURLOPT_URL, "https://your-secure-url/path/query?param=1&amp;value=2");</div>
+<div>
+curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE);</div>
+<div>
+curl_setopt($ch, CURLOPT_USERPWD, ":");</div>
+<div>
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);</div>
+<div>
+<br /></div>
+<div>
+$page = curl_exec($ch);</div>
+<div>
+curl_close($ch);</div>
+</div>
+<div>
+<br /></div>
+
+  </div><a class="u-url" href="/2014/02/19/curl-with-kerberos-authentication.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

@@ -1,0 +1,39 @@
+---
+layout: post
+title: Bash script to automate report checking
+date: '2011-07-16T11:20:00.000+01:00'
+author: Craig Watcham
+tags:
+- Linux
+- script
+- bash
+modified_time: '2011-07-16T11:20:12.879+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-6375986507523905680
+blogger_orig_url: https://www.deplication.net/2011/07/bash-script-to-automate-report-checking.html
+---
+
+The script below is a convenient hack to automate manual report checking. It requires uuencode and mailx (or equivalents) to be installed and uses the regular expression provided on the command line to check if the occurrences are greater than the specified number. This allows for a number of convenient checks:<br />
+<br />
+<ul><li>Using "$" as the regex and a count of 1 prevents empty reports from being sent. The count can be changed to 2 if the report has a header line even when it has no results.</li>
+<li>A specific condition can be matched, for example using a regex of "Match this text" to email the report only if the text appears in the report.</li>
+</ul><br />
+As always, there are multiple ways of solving the problem. This was a quick an convenient script to allow multiple reports to be checked and mailed to different recipients under different conditions.<br />
+<br />
+<blockquote>#!/bin/bash<br />
+# Shell script for checking a named (text) report for a number of occurrences of a <br />
+# search if the search string is found at least the number of times specified then <br />
+# the report is mailed to the specified email list<br />
+#<br />
+# Usage example:<br />
+# This command will check the report.csv report for any entries ($REPORT_DIR needs <br />
+# to be set):<br />
+# ./check_report.sh report.csv "$" 1 my.email@address "Email Subject"<br />
+<br />
+cd $REPORT_DIR<br />
+<br />
+if [ -e $1 ]; then<br />
+&nbsp; &nbsp; COUNT=`grep -c "$2" "$1"`<br />
+&nbsp; &nbsp; if [ $COUNT -gt $3 ]; then<br />
+&nbsp; &nbsp; &nbsp; &nbsp; uuencode "$1" "$1" | mailx -s "Check Report $5" "$4" &gt; /dev/null<br />
+&nbsp; &nbsp; fi<br />
+fi</blockquote>

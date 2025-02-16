@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Extracting S3 bucket sizes using the AWS CLI | Your awesome title</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="Extracting S3 bucket sizes using the AWS CLI" />
+<meta name="author" content="Craig Watcham" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A quick one liner for printing out the size (in bytes) of S3 StandardStorage buckets in your account (using bash): for name in $(aws s3api list-buckets –query ‘Buckets[*].Name’ –output text); do size=$(aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time $(date –date=”yesterday” +%Y-%m-%d) –end-time $(date +%Y-%m-%d) –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’ | sed ‘s/null/0.0/’ | cut -d. -f1); echo “$name,$size”; done Some of the individual components may be independently useful, starting off with listing buckets: aws s3api list-buckets --query &#39;Buckets[*].Name&#39; --output text Pretty straight forward, uses the s3api in the CLI to list buckets returning only their names in text format. To get the bucket sizes we are actually querying CloudWatch (using get-metric-statistics) which provides bucket size and object count metrics for S3: aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time $(date –date=”yesterday” +%Y-%m-%d) –end-time $(date +%Y-%m-%d) –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’ | sed ‘s/null/0.0/’ | cut -d. -f1 Most of this is fairly straight forward some of the parameters worth explaining further: –start-time: we are setting the start date to yesterday and formatting it in yyyy-mm-dd format, this ensures we get at least one data point containing the bucket size –period: 86400 = 1 day as the bucket size metric is only published once a day (at 00:00:00) –query: we are only interested in the the actual value for one of the metric datapoints The sed and cut commands are just to clean up formatting, if the bucket is empty the CloudWatch metric request will return null so we replace null with 0.0. The bucket size metric value will always end in .0 so we truncate it using cut (yes there are other ways of doing this). If you are only wanting to check the size of a single bucket or the bucket size on a specific date you can use a simpler version: aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time 2017-11-15 –end-time 2017-11-16 –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=MY_BUCKET_NAME Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’" />
+<meta property="og:description" content="A quick one liner for printing out the size (in bytes) of S3 StandardStorage buckets in your account (using bash): for name in $(aws s3api list-buckets –query ‘Buckets[*].Name’ –output text); do size=$(aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time $(date –date=”yesterday” +%Y-%m-%d) –end-time $(date +%Y-%m-%d) –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’ | sed ‘s/null/0.0/’ | cut -d. -f1); echo “$name,$size”; done Some of the individual components may be independently useful, starting off with listing buckets: aws s3api list-buckets --query &#39;Buckets[*].Name&#39; --output text Pretty straight forward, uses the s3api in the CLI to list buckets returning only their names in text format. To get the bucket sizes we are actually querying CloudWatch (using get-metric-statistics) which provides bucket size and object count metrics for S3: aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time $(date –date=”yesterday” +%Y-%m-%d) –end-time $(date +%Y-%m-%d) –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’ | sed ‘s/null/0.0/’ | cut -d. -f1 Most of this is fairly straight forward some of the parameters worth explaining further: –start-time: we are setting the start date to yesterday and formatting it in yyyy-mm-dd format, this ensures we get at least one data point containing the bucket size –period: 86400 = 1 day as the bucket size metric is only published once a day (at 00:00:00) –query: we are only interested in the the actual value for one of the metric datapoints The sed and cut commands are just to clean up formatting, if the bucket is empty the CloudWatch metric request will return null so we replace null with 0.0. The bucket size metric value will always end in .0 so we truncate it using cut (yes there are other ways of doing this). If you are only wanting to check the size of a single bucket or the bucket size on a specific date you can use a simpler version: aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time 2017-11-15 –end-time 2017-11-16 –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=MY_BUCKET_NAME Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’" />
+<link rel="canonical" href="http://localhost:4000/2017/11/16/extracting-s3-bucket-sizes-using-aws-cli.html" />
+<meta property="og:url" content="http://localhost:4000/2017/11/16/extracting-s3-bucket-sizes-using-aws-cli.html" />
+<meta property="og:site_name" content="Your awesome title" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2017-11-16T15:20:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Extracting S3 bucket sizes using the AWS CLI" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2017-11-16T15:20:00+00:00","datePublished":"2017-11-16T15:20:00+00:00","description":"A quick one liner for printing out the size (in bytes) of S3 StandardStorage buckets in your account (using bash): for name in $(aws s3api list-buckets –query ‘Buckets[*].Name’ –output text); do size=$(aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time $(date –date=”yesterday” +%Y-%m-%d) –end-time $(date +%Y-%m-%d) –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’ | sed ‘s/null/0.0/’ | cut -d. -f1); echo “$name,$size”; done Some of the individual components may be independently useful, starting off with listing buckets: aws s3api list-buckets --query &#39;Buckets[*].Name&#39; --output text Pretty straight forward, uses the s3api in the CLI to list buckets returning only their names in text format. To get the bucket sizes we are actually querying CloudWatch (using get-metric-statistics) which provides bucket size and object count metrics for S3: aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time $(date –date=”yesterday” +%Y-%m-%d) –end-time $(date +%Y-%m-%d) –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’ | sed ‘s/null/0.0/’ | cut -d. -f1 Most of this is fairly straight forward some of the parameters worth explaining further: –start-time: we are setting the start date to yesterday and formatting it in yyyy-mm-dd format, this ensures we get at least one data point containing the bucket size –period: 86400 = 1 day as the bucket size metric is only published once a day (at 00:00:00) –query: we are only interested in the the actual value for one of the metric datapoints The sed and cut commands are just to clean up formatting, if the bucket is empty the CloudWatch metric request will return null so we replace null with 0.0. The bucket size metric value will always end in .0 so we truncate it using cut (yes there are other ways of doing this). If you are only wanting to check the size of a single bucket or the bucket size on a specific date you can use a simpler version: aws cloudwatch get-metric-statistics –namespace AWS/S3 –metric-name BucketSizeBytes –start-time 2017-11-15 –end-time 2017-11-16 –period 86400 –statistics Maximum –dimensions Name=BucketName,Value=MY_BUCKET_NAME Name=StorageType,Value=StandardStorage –query ‘Datapoints[0].Maximum’","headline":"Extracting S3 bucket sizes using the AWS CLI","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2017/11/16/extracting-s3-bucket-sizes-using-aws-cli.html"},"url":"http://localhost:4000/2017/11/16/extracting-s3-bucket-sizes-using-aws-cli.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Your awesome title" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Your awesome title</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Extracting S3 bucket sizes using the AWS CLI</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2017-11-16T15:20:00+00:00" itemprop="datePublished">
+        Nov 16, 2017
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    A quick one liner for printing out the size (in bytes) of S3 StandardStorage buckets in your account (using bash):<br />
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: xx-small;"><br /></span>
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">for name in $(aws s3api list-buckets --query 'Buckets[*].Name' --output text); do size=$(aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --start-time $(date --date="yesterday" +%Y-%m-%d) --end-time $(date +%Y-%m-%d) --period 86400 --statistics Maximum --dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage --query 'Datapoints[0].Maximum' | sed 's/null/0.0/' | cut -d. -f1); echo "$name,$size"; done</span><br />
+<div>
+<br /></div>
+<div>
+<br /></div>
+<div>
+Some of the individual components may be independently useful, starting off with listing buckets:</div>
+<div>
+<br /></div>
+<div>
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">aws s3api list-buckets --query 'Buckets[*].Name' --output text</span></div>
+<div>
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;"><br /></span></div>
+<span style="font-family: inherit;">Pretty straight forward, uses the <a href="http://docs.aws.amazon.com/cli/latest/reference/s3api/index.html">s3api</a>&nbsp;in the CLI to list buckets returning only their names in text format.</span><br />
+<span style="font-family: inherit;"><br /></span>
+<br />
+To get the bucket sizes we are actually querying CloudWatch (using <a href="http://docs.aws.amazon.com/cli/latest/reference/cloudwatch/get-metric-statistics.html">get-metric-statistics</a>) which provides bucket size and object count <a href="http://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/s3-metricscollected.html">metrics for S3</a>:<br />
+<br />
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --start-time $(date --date="yesterday" +%Y-%m-%d) --end-time $(date +%Y-%m-%d) --period 86400 --statistics Maximum --dimensions Name=BucketName,Value=$name Name=StorageType,Value=StandardStorage --query 'Datapoints[0].Maximum' | sed 's/null/0.0/' | cut -d. -f1</span><br />
+<br />
+Most of this is fairly straight forward some of the parameters worth explaining further:<br />
+--start-time: we are setting the start date to yesterday and formatting it in yyyy-mm-dd format, this ensures we get at least one data point containing the bucket size<br />
+--period: 86400 = 1 day as the bucket size metric is only published once a day (at 00:00:00)<br />
+--query: we are only interested in the the actual value for one of the metric datapoints<br />
+<br />
+The sed and cut commands are just to clean up formatting, if the bucket is empty the CloudWatch metric request will return null so we replace null with 0.0. The bucket size metric value will always end in .0 so we truncate it using cut (yes there are other ways of doing this).<br />
+<br />
+If you are only wanting to check the size of a single bucket or the bucket size on a specific date you can use a simpler version:<br />
+<br class="Apple-interchange-newline" />
+<span style="font-family: &quot;courier new&quot; , &quot;courier&quot; , monospace; font-size: x-small;">aws cloudwatch get-metric-statistics --namespace AWS/S3 --metric-name BucketSizeBytes --start-time 2017-11-15 --end-time 2017-11-16 --period 86400 --statistics Maximum --dimensions Name=BucketName,Value=MY_BUCKET_NAME Name=StorageType,Value=StandardStorage --query 'Datapoints[0].Maximum'</span>
+  </div><a class="u-url" href="/2017/11/16/extracting-s3-bucket-sizes-using-aws-cli.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

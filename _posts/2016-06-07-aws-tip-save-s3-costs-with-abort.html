@@ -1,0 +1,50 @@
+---
+layout: post
+title: 'AWS Tip: Save S3 costs with abort multipart lifecycle policy'
+date: '2016-06-07T17:41:00.001+01:00'
+author: Craig Watcham
+tags:
+- multipart upload
+- S3
+- aws
+modified_time: '2016-06-07T17:41:27.330+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-2922657396392999727
+blogger_orig_url: https://www.deplication.net/2016/06/aws-tip-save-s3-costs-with-abort.html
+---
+
+<h3>
+Introduction</h3>
+<div>
+S3 multipart uploads provide a number of <a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/uploadobjusingmpu.html">benefits</a>&nbsp;--&nbsp;better throughput, recovery from network errors -- and a number of tools will automatically use multipart uploads for larger uploads. The AWS CLI cp, mv, and sync commands all make use of multipart uploads and make a&nbsp;<a href="http://docs.aws.amazon.com/cli/latest/userguide/using-s3-commands.html#using-s3-commands-managing-objects">note</a>&nbsp;that "If the process is interrupted by a kill command or system failure, the in-progress multipart upload remains in Amazon S3 and must be cleaned up manually..."</div>
+<div>
+<br /></div>
+<div>
+The reason you would want to clean up these failed multipart uploads is because you will be charged for the storage they use while waiting for the upload to be completed (or aborted). This post provides some detail on how to find the incomplete uploads and options for removing them to save storage costs.</div>
+<div>
+<br /></div>
+<h3>
+Finding incomplete multipart uploads</h3>
+<div>
+If you have relatively few buckets or only want to check your biggest buckets (<a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/cloudwatch-monitoring.html">CloudWatch S3 metrics</a> are useful for finding these) the AWS CLI s3api <a href="http://docs.aws.amazon.com/cli/latest/reference/s3api/list-multipart-uploads.html">list-multipart-uploads</a>&nbsp;command is a simple check:</div>
+<blockquote class="tr_bq">
+<span style="font-family: &quot;georgia&quot; , &quot;times new roman&quot; , serif;">aws s3api list-multipart-uploads --bucket [bucket-name]</span></blockquote>
+No output indicates that the bucket does not contain any incomplete uploads, see the list-multipart-uploads documentation linked above for an example of the output on a bucket that does contain an incomplete upload. A simple bash script to check all your buckets:<br />
+<br />
+<script src="https://gist.github.com/watchamcb/c412482f1767cf3c3daf08996271a81c.js"></script>
+
+This script will list your buckets and the first page (out of possibly many more) incomplete multipart upload keys along with the date they were initiated. The region lookup is required to handle bucket names containing dots and buckets in eu-central-1 (SigV4).<br />
+<br />
+<h3>
+Cleaning up</h3>
+<div>
+Once you have identified the buckets containing incomplete uploads it is worth investigating some of the recent failed uploads to see whether there is an underlying issue that needs to be addressed, particularly if the uploads relate to backups or important log files. The most typical cause is instances being terminated before completing uploads (look at <a href="http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html">Lifecycle Hooks</a>&nbsp;to fix this if you are using Auto Scaling) but they may also be result of applications not performing cleanup on failures or not handling errors correctly.</div>
+<div>
+<br /></div>
+<div>
+A multipart upload can be aborted using the <a href="http://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html">abort-multipart-upload</a> s3api command in the AWS CLI using the object key and upload ID returned by list-multipart-uploads command. This can be scripted but will take time to complete for buckets containing large numbers of incomplete uploads, fortunately there is an easier way. S3 now supports a <a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/mpuoverview.html#mpu-abort-incomplete-mpu-lifecycle-config">bucket lifecycle policy</a> to automatically delete incomplete uploads after a specified period of time. Enabling the policy in the AWS console is fairly quick and easy, see <a href="https://aws.amazon.com/blogs/aws/s3-lifecycle-management-update-support-for-multipart-uploads-and-delete-markers/">Jeff's blog post</a> for details. A rather messy boto3 example script for enabling the policy on all buckets can be found <a href="https://github.com/watchamcb/aws/blob/master/set-abort-multipart.py">here</a>, it should work with most bucket configurations but it comes with no guarantees and you use it at your own risk.</div>
+<div>
+<br /></div>
+<h3>
+Conclusion (why you should do this)</h3>
+<div>
+If you are using S3 to store large (&gt; 5MB) objects and you are spending more than a few dollars a month on S3 storage then there is a fairly good chance that you are paying unnecessarily for failed/incomplete multipart uploads. It should only take a few minutes to review your buckets and could potentially have significant monthly savings.</div>

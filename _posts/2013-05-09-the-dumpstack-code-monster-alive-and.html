@@ -1,0 +1,53 @@
+---
+layout: post
+title: The dumpStack code monster - alive and scary
+date: '2013-05-09T16:42:00.000+01:00'
+author: Craig Watcham
+tags:
+modified_time: '2013-05-09T16:42:34.670+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-6511064106050805120
+blogger_orig_url: https://www.deplication.net/2013/05/the-dumpstack-code-monster-alive-and.html
+---
+
+Tracing through some critical code in a core application I stumbled across the following:<br />
+<br />
+<br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; <span style="color: #cc0000;">public boolean</span> process(PSEvent event) {</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; Thread.dumpStack();</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #cc0000;">return</span> process(event, <span style="color: #cc0000;">true</span>);</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; }</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><br /></span>
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; <span style="color: #cc0000;">public boolean</span> process(PSEvent event, <span style="color: #cc0000;">boolean </span>markAsProcessed) {</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #cc0000;">boolean </span>success = <span style="color: #cc0000;">false</span>;</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><br /></span>
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; try {</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Thread.dumpStack();</span><br />
+<span style="background-color: white; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #38761d;">// Do some stuff...</span></span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><br /></span>
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; } <span style="color: #cc0000;">catch </span>(Exception e) {</span><br />
+<span style="background-color: white; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<span style="color: #38761d;">// Do some other stuff...</span></span><br />
+<span style="background-color: white; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; success = </span><span style="color: #cc0000; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">false</span><span style="background-color: white; font-family: 'Helvetica Neue', Arial, Helvetica, sans-serif; font-size: x-small;">;</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;"><br /></span>
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #cc0000;">return </span>success;</span><br />
+<span style="background-color: white; font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; }</span><br />
+<div>
+<br /></div>
+<br />
+The javadoc on Thread.dumpStack() is very helpful:<br />
+Prints a stack trace of the current thread to the standard error stream. This 
+method is used only for debugging.<br />
+<br />
+But wait, it gets better. Searching the production logs for just one of the ten or so processes that use this code:<br />
+<br />
+<br />
+$ grep -c "java.lang.Exception: Stack trace" pickme.log<br />
+230722<br />
+<div style="font-family: inherit;">
+<br /></div>
+<div style="font-family: inherit;">
+Yes, that is 230,722 stack traces generated for one process in one day. Any surprise at the load averages: 19.33, 16.91, 16.55</div>
+<br />
+<br />
+<div>
+<br /></div>

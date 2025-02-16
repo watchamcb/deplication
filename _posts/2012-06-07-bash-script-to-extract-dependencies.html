@@ -1,0 +1,54 @@
+---
+layout: post
+title: Bash script to extract dependencies from Java WebStart
+date: '2012-06-07T12:11:00.000+01:00'
+author: Craig Watcham
+tags:
+modified_time: '2012-06-07T12:11:47.437+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-6081196348491800137
+blogger_orig_url: https://www.deplication.net/2012/06/bash-script-to-extract-dependencies.html
+---
+
+A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath:<br />
+<br />
+<br />
+<span style="color: blue; font-family: 'Courier New', Courier, monospace;">#!/bin/bash</span><br />
+<span style="font-family: 'Courier New', Courier, monospace;"><br /></span><br />
+<span style="font-family: 'Courier New', Courier, monospace;"><span style="color: cyan;">SERVER</span>=http://server:<span style="color: red;">8082</span>/e-calypso/</span><br />
+<span style="font-family: 'Courier New', Courier, monospace;">wget <span style="color: magenta;">-Nrq -nd $SERVER</span>/html/jaws/calypso.jnlp</span><br />
+<span style="font-family: 'Courier New', Courier, monospace;"><span style="color: cyan;">CP</span>=<span style="color: orange;">""</span></span><br />
+<span style="font-family: 'Courier New', Courier, monospace;"><span style="color: orange;">for</span> jar <span style="color: orange;">in</span> <span style="color: magenta;">`cat calypso.jnlp</span> <span style="color: orange;">| grep</span> jar <span style="color: orange;">|</span> <span style="color: magenta;">cut -d</span><span style="color: orange;">"</span><span style="color: magenta;">\"</span><span style="color: orange;">"</span> <span style="color: magenta;">-f</span> <span style="color: red;">2</span><span style="color: magenta;">`</span></span><br />
+<span style="color: orange; font-family: 'Courier New', Courier, monospace;">do</span><br />
+<span style="font-family: 'Courier New', Courier, monospace;">&nbsp; &nbsp; &nbsp; &nbsp; <span style="color: cyan;">CP</span>=<span style="color: orange;">"</span><span style="color: magenta;">$CP</span><span style="color: red;">:./lib/</span><span style="color: orange;">"</span><span style="color: magenta;">`echo $jar</span> <span style="color: orange;">|</span> <span style="color: magenta;">cut -d</span>"<span style="color: magenta;">/</span>" <span style="color: magenta;">-f</span> <span style="color: red;">3</span><span style="color: magenta;">`</span></span><br />
+<span style="font-family: 'Courier New', Courier, monospace;">&nbsp; &nbsp; &nbsp; &nbsp; wget -Nrq -nd <span style="color: magenta;">$SERVER$jar</span></span><br />
+<span style="color: red; font-family: 'Courier New', Courier, monospace;">done</span><br />
+<span style="font-family: 'Courier New', Courier, monospace;"><span style="color: orange;">echo </span><span style="color: magenta;">$CP</span> <span style="color: orange;">&gt;</span> classpath</span><br />
+<div>
+<br /></div>
+<div>
+<br /></div>
+<div>
+The function of the script is pretty simple, it retrieves the JNLP file from the server and then extracts all jar references in the file to retrieve the corresponding JAR files. As the JAR files are being retrieved they are added (in the correct order) to a variable to be used as the classpath.&nbsp;</div>
+<div>
+<br /></div>
+<div>
+The need for this script arose from a requirement to have a client application launch using the correct dependencies and classpath ordering as used by the WebStart application. An alternative approach would have been to create a new WebStart JNLP with the new application as the entry point, unfortunately this was not practical given the organisational constraints (no access to deploy the change and 6+ week lead time for deployment via the approved process).</div>
+<div>
+<br /></div>
+<div>
+Some useful side effects of this approach:</div>
+<div>
+<ul>
+<li>It can be used to launch the application in the JNLP without requiring a WebStart launcher</li>
+<li>The application can be launched with additional JVM arguments not supported by WebStart</li>
+</ul>
+<div>
+A few notes on the script (as always):</div>
+</div>
+<div>
+<ol>
+<li>The -Nrq command line option to wget uses time stamps (-N) to ensure only new files are downloaded. The existing files are overwritten (-r) with the latest version, rather than having a number appended to the file name as is the default behaviour for wget. The output from wget is suppressed by the -q option so as not to print out unnecessary information.</li>
+<li>The -nd command line option prevents wget from creating directory structures when retrieving the files, this simplifies the classpath creation.</li>
+<li>The generation of the classpath could be improved with a regular expression rather than expecting a specific format in the JNLP file.</li>
+</ol>
+</div>

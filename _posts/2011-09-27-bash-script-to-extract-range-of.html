@@ -1,0 +1,29 @@
+---
+layout: post
+title: Bash script to extract a range of revision diffs
+date: '2011-09-27T18:10:00.000+01:00'
+author: Craig Watcham
+tags:
+- bash
+- CVS
+modified_time: '2011-09-27T18:10:24.010+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-4783425104519126913
+blogger_orig_url: https://www.deplication.net/2011/09/bash-script-to-extract-range-of.html
+---
+
+A quick Bash script hack to extract all CVS/SVN diffs from a range of revisions:<br />
+<br />
+for start_ver in {1..25};<br />
+do end_ver=`echo "$start_ver + 1" | bc`;<br />
+cvs diff -kk -c -r 1.$start_ver -r 1.$end_ver source.file &gt;&gt; diff_output.txt;<br />
+done;<br />
+<br />
+This script will incrementally extract all differences between version 1.1 and 1.26 and write them to the diff_output.txt file. Incremental in this context means changes between each revision, so the output will contain the diff between version 1.1 and 1.2 followed by the diff between 1.2 and 1.3, then 1.3 and 1.4 etc.<br />
+<br />
+A few notes (as always):<br />
+<br />
+<ul><li>The script should be run in the directory containing the file the diff is being run for (source.file in the example)</li>
+<li>The physical revision numbers can be replaced with tags (assuming sequential numerical naming of the tags)</li>
+<li>The diff options (-kk -c) can be changed for the required diff output format</li>
+<li>This was a quick hack and can almost certainly be improved</li>
+</ul>

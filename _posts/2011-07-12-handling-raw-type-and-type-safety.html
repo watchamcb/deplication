@@ -1,0 +1,66 @@
+---
+layout: post
+title: Handling raw type and type safety warnings when using legacy code
+date: '2011-07-12T12:38:00.001+01:00'
+author: Craig Watcham
+tags:
+- Java
+- generics
+- raw types
+modified_time: '2011-07-13T18:54:41.349+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-8097473321687209930
+blogger_orig_url: https://www.deplication.net/2011/07/handling-raw-type-and-type-safety.html
+---
+
+The addition of generics to Java 5 enabled type checking at compile time. This assists in preventing a ClassCastException at runtime but to maintain backward compatibility generics also came with <a href="http://download.oracle.com/javase/tutorial/java/generics/erasure.html%22">Type Erasure</a>:<br />
+<blockquote>Type erasure exists so that new code may continue to interface with legacy code. Using a raw type for any other reason is considered bad programming practice and should be avoided whenever possible.<br />
+<br />
+When mixing legacy code with generic code, you may encounter warning messages similar to the following:<br />
+<br />
+Note: WarningDemo.java uses unchecked or unsafe operations.<br />
+Note: Recompile with -Xlint:unchecked for details.</blockquote><br />
+Unfortunately for projects with large legacy code bases or dependencies on legacy third party libraries the raw type warnings can be a major irritation if you prefer not to have false-positive warnings. The solution is to add the @SuppressWarnings("rawtypes") annotation which works as expected, telling the compiler to ignore the raw type issue. The problem with this approach (as <a href="http://stackoverflow.com/questions/1130433/how-to-avoid-unchecked-conversion-warning-in-java-if-you-use-legacy-libraries">discussed</a> elsewhere) is that your code ends up having an annotation for each call to the legacy code which in turn reduces readability. Adding @SuppressWarnings({ "unchecked", "rawtypes" }) at the class level will also suppress all the warnings but may unintentionally mask instances that should be flagged as warnings. An alternative approach is provided below.<br />
+<br />
+Lets assume that you have a legacy code method (which you are not able to change) as defined below:<br />
+<pre class="brush: java">/**
+     * Retrieve the list of values
+     * @return A vector of string values
+     */
+    public static Vector getValues();
+</pre><br />
+In your code you would like to use generics to process the returned vector as below:<br />
+<pre class="brush: java">public static void main(String[] args) {
+        Vector&lt;String&gt; safeVector = getValues();
+        for (String value : safeVector) {
+            System.out.println(value);
+        }
+    }
+</pre><br />
+Compiling your code gives the "uses unchecked or unsafe operations" warning. Rather than adding the suppress warnings to every line where getValues() is being called you can instead define a wrapper method returning the typed vector as below:<br />
+<pre class="brush: java">@SuppressWarnings({ "unchecked", "rawtypes" })
+    public static &lt;T&gt; Vector&lt;T&gt; castType(Vector v) {
+        return (Vector&lt;T&gt;) v;        
+    }
+</pre><br />
+This means your code is changed as follows:<br />
+<pre class="brush: java">public static void main(String[] args) {
+        Vector&lt;String&gt; safeVector = castType(getValues());
+        for (String value : safeVector) {
+            System.out.println(value);
+        }
+    }
+</pre><br />
+The warning messages are no longer a problem and the code functions as expected. A few notes on the implementation:<br />
+<br />
+<ul><li>The type T is inferred from the Vector&lt;String&gt; declaration, the castType method would work equally well for an integer vector (Vector&lt;Integer&gt;) .</li>
+<li>The warning is merely being suppressed, the castType method is not actually checking the type of the vector elements. A runtime exception will occur when accessing an element if the vector passed to the method is not actually of the declared type.</li>
+<li>The castType method should only be used when you are certain of the type of elements contained in the vector (restating the above point).</li>
+<li>The castType implementation is using vectors to demonstrate the concept but can be extended to other types (or even generalised to use the Collection interface)</li>
+<li>An argument can be made against the overhead of castType method call instead of a class level @SuppressWarnings annotation, this implementation merely provides an alternative.</li>
+</ul><br />
+For completeness the generalised method would look as follows:<br />
+<pre class="brush: java">@SuppressWarnings({ "unchecked", "rawtypes" })
+    public static &lt;T&gt; Collection&lt;T&gt; castType(Collection v) {
+        return (Collection&lt;T&gt;) v;        
+    }
+</pre>

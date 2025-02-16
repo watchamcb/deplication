@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>The importance of choosing the right data structure | Your awesome title</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="The importance of choosing the right data structure" />
+<meta name="author" content="Craig Watcham" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post demonstrates the importance of data structure selection with a contrived problem posed in a technical interview and a real world application. The problem posed is as follows. Imagine you have a list of unsorted positive integers greater than zero. The list can be of arbitrary size but your algorithm must cater for extremely large lists (think millions or hundreds of millions of items). The list consists of items such that the number of occurrences of any particular integer is always even. One (and only one) integer in the list has an odd number of occurrences, how would you find that integer? So for example, the list consisting of the following integers 5, 73, 8, 24, 24, 5, 73, 1, 24, 24, 5, 1, 8 has 5 as the number occurring an odd number of times (3 in this case but could be any odd number). This is a great interview question as it allows the interviewer to get a feel for how an applicant approaches a problem and opens up various other branches of investigation. For example the applicants knowledge of algorithm efficiency (Big O notation) and sorting algorithms can be explored. The key point in solving the problem revolves around how many times each of the items needs to be accessed to find a solution: Every item needs to be visited at least once, no conclusion can be drawn until the last number is known. There is no benefit to sorting the items, after sorting the problem is not solved and it will have incurred the additional cost of sorting Using a map is not efficient for extremely large inputs and still requires an additional step for iterating over each of the unique values to check oddness The ideal data structure to solve the problem is actually a Set. For each item add it to the set if it is not already present, if it is present the remove it, after processing all the items the set will contain the integer occurring an odd number of times. Ironically (for a post about data structures) there is an even simpler algebraic solution to the problem, performing a bitwise XOR (the ^ operator in Java) on all the input numbers results in the same solution without the use of a data structure. As stated above this example is contrived specifically for use in technical interviews, a real world application of data structure selection is as follows. A functional requirement for a critical component of the system is that no two threads try and update an object (with a unique identifier) simultaneously. The system is multi-threaded and event driven, with certain events triggering the object updates. Simultaneous updates would result in a version exception and require manual intervention to correct. An initial (optimistic) solution is to add the synchronized keyword to the method responsible for performing the update, thus ensuring sequential execution of updates. While this approach should work as desired it incurs the cost of class level locking and prevents any kind of concurrency, even for update requests to distinct objects which could actually be executed in parallel. This raises the non-functional requirement of the component namely performance. The component is responsible for cash movements in the system and at peak times can have thousands of events generated every second. While there is no real-time requirement, the delay introduced by the synchronized method could lead to the last events being processed minutes after they were received, a situation that was not acceptable to the business. After closer investigation it was identified that in the worst case only a fraction of the updates would ever attempt simultaneous updates. To restate the problem, how can duplicate requests be blocked while allowing distinct requests to process concurrently? public class LockTest { protected static Set&lt;Integer&gt; ID_LOCK = Collections.synchronizedSet(new TreeSet&lt;Integer&gt;());" />
+<meta property="og:description" content="A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post demonstrates the importance of data structure selection with a contrived problem posed in a technical interview and a real world application. The problem posed is as follows. Imagine you have a list of unsorted positive integers greater than zero. The list can be of arbitrary size but your algorithm must cater for extremely large lists (think millions or hundreds of millions of items). The list consists of items such that the number of occurrences of any particular integer is always even. One (and only one) integer in the list has an odd number of occurrences, how would you find that integer? So for example, the list consisting of the following integers 5, 73, 8, 24, 24, 5, 73, 1, 24, 24, 5, 1, 8 has 5 as the number occurring an odd number of times (3 in this case but could be any odd number). This is a great interview question as it allows the interviewer to get a feel for how an applicant approaches a problem and opens up various other branches of investigation. For example the applicants knowledge of algorithm efficiency (Big O notation) and sorting algorithms can be explored. The key point in solving the problem revolves around how many times each of the items needs to be accessed to find a solution: Every item needs to be visited at least once, no conclusion can be drawn until the last number is known. There is no benefit to sorting the items, after sorting the problem is not solved and it will have incurred the additional cost of sorting Using a map is not efficient for extremely large inputs and still requires an additional step for iterating over each of the unique values to check oddness The ideal data structure to solve the problem is actually a Set. For each item add it to the set if it is not already present, if it is present the remove it, after processing all the items the set will contain the integer occurring an odd number of times. Ironically (for a post about data structures) there is an even simpler algebraic solution to the problem, performing a bitwise XOR (the ^ operator in Java) on all the input numbers results in the same solution without the use of a data structure. As stated above this example is contrived specifically for use in technical interviews, a real world application of data structure selection is as follows. A functional requirement for a critical component of the system is that no two threads try and update an object (with a unique identifier) simultaneously. The system is multi-threaded and event driven, with certain events triggering the object updates. Simultaneous updates would result in a version exception and require manual intervention to correct. An initial (optimistic) solution is to add the synchronized keyword to the method responsible for performing the update, thus ensuring sequential execution of updates. While this approach should work as desired it incurs the cost of class level locking and prevents any kind of concurrency, even for update requests to distinct objects which could actually be executed in parallel. This raises the non-functional requirement of the component namely performance. The component is responsible for cash movements in the system and at peak times can have thousands of events generated every second. While there is no real-time requirement, the delay introduced by the synchronized method could lead to the last events being processed minutes after they were received, a situation that was not acceptable to the business. After closer investigation it was identified that in the worst case only a fraction of the updates would ever attempt simultaneous updates. To restate the problem, how can duplicate requests be blocked while allowing distinct requests to process concurrently? public class LockTest { protected static Set&lt;Integer&gt; ID_LOCK = Collections.synchronizedSet(new TreeSet&lt;Integer&gt;());" />
+<link rel="canonical" href="http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html" />
+<meta property="og:url" content="http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html" />
+<meta property="og:site_name" content="Your awesome title" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2011-07-13T20:54:00+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The importance of choosing the right data structure" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2011-07-13T20:54:00+01:00","datePublished":"2011-07-13T20:54:00+01:00","description":"A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post demonstrates the importance of data structure selection with a contrived problem posed in a technical interview and a real world application. The problem posed is as follows. Imagine you have a list of unsorted positive integers greater than zero. The list can be of arbitrary size but your algorithm must cater for extremely large lists (think millions or hundreds of millions of items). The list consists of items such that the number of occurrences of any particular integer is always even. One (and only one) integer in the list has an odd number of occurrences, how would you find that integer? So for example, the list consisting of the following integers 5, 73, 8, 24, 24, 5, 73, 1, 24, 24, 5, 1, 8 has 5 as the number occurring an odd number of times (3 in this case but could be any odd number). This is a great interview question as it allows the interviewer to get a feel for how an applicant approaches a problem and opens up various other branches of investigation. For example the applicants knowledge of algorithm efficiency (Big O notation) and sorting algorithms can be explored. The key point in solving the problem revolves around how many times each of the items needs to be accessed to find a solution: Every item needs to be visited at least once, no conclusion can be drawn until the last number is known. There is no benefit to sorting the items, after sorting the problem is not solved and it will have incurred the additional cost of sorting Using a map is not efficient for extremely large inputs and still requires an additional step for iterating over each of the unique values to check oddness The ideal data structure to solve the problem is actually a Set. For each item add it to the set if it is not already present, if it is present the remove it, after processing all the items the set will contain the integer occurring an odd number of times. Ironically (for a post about data structures) there is an even simpler algebraic solution to the problem, performing a bitwise XOR (the ^ operator in Java) on all the input numbers results in the same solution without the use of a data structure. As stated above this example is contrived specifically for use in technical interviews, a real world application of data structure selection is as follows. A functional requirement for a critical component of the system is that no two threads try and update an object (with a unique identifier) simultaneously. The system is multi-threaded and event driven, with certain events triggering the object updates. Simultaneous updates would result in a version exception and require manual intervention to correct. An initial (optimistic) solution is to add the synchronized keyword to the method responsible for performing the update, thus ensuring sequential execution of updates. While this approach should work as desired it incurs the cost of class level locking and prevents any kind of concurrency, even for update requests to distinct objects which could actually be executed in parallel. This raises the non-functional requirement of the component namely performance. The component is responsible for cash movements in the system and at peak times can have thousands of events generated every second. While there is no real-time requirement, the delay introduced by the synchronized method could lead to the last events being processed minutes after they were received, a situation that was not acceptable to the business. After closer investigation it was identified that in the worst case only a fraction of the updates would ever attempt simultaneous updates. To restate the problem, how can duplicate requests be blocked while allowing distinct requests to process concurrently? public class LockTest { protected static Set&lt;Integer&gt; ID_LOCK = Collections.synchronizedSet(new TreeSet&lt;Integer&gt;());","headline":"The importance of choosing the right data structure","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html"},"url":"http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Your awesome title" />
+</head>
+<body><header class="site-header">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Your awesome title</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">The importance of choosing the right data structure</h1>
+    <p class="post-meta"><time class="dt-published" datetime="2011-07-13T20:54:00+01:00" itemprop="datePublished">
+        Jul 13, 2011
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post&nbsp;demonstrates the importance of data structure selection&nbsp;with a contrived problem posed in a technical interview and a real world application.<br />
+<br />
+<blockquote>The problem posed is as follows. Imagine you have a list of unsorted positive integers greater than zero. The list can be of arbitrary size but your algorithm must cater for extremely large lists (think millions or hundreds of millions of items). The list consists of items such that the number of occurrences of any particular integer is always even. One (and only one) integer in the list has an odd number of occurrences, how would you find that integer?<br />
+<br />
+So for example, the list consisting of the following integers<br />
+<br />
+5, 73, 8, 24, 24, 5, 73, 1, 24, 24, 5, 1, 8<br />
+<br />
+has 5 as the number occurring an odd number of times (3 in this case but could be any odd number).</blockquote><br />
+This is a great interview question as it allows the interviewer to get a feel for how an applicant approaches a problem and opens up various other branches of investigation. For example the applicants knowledge of algorithm efficiency (<a href="http://en.wikipedia.org/wiki/Big_O_notation">Big O notation</a>) and sorting algorithms can be explored.<br />
+<br />
+The key point in solving the problem revolves around how many times each of the items needs to be accessed to find a solution:<br />
+<ul><li>Every item needs to be visited at least once, no conclusion can be drawn until the last number is known.</li>
+<li>There is no benefit to sorting the items, after sorting the problem is not solved and it will have incurred the additional cost of sorting</li>
+<li>Using a map is not efficient for extremely large inputs and still requires an additional step for iterating over each of the unique values to check oddness</li>
+</ul><br />
+The ideal data structure to solve the problem is actually a Set. For each item add it to the set if it is not already present, if it is present the remove it, after processing all the items the set will contain the integer occurring an odd number of times. Ironically (for a post about data structures) there is an even simpler algebraic solution to the problem, performing a bitwise XOR (the ^ operator in Java) on all the input numbers results in the same solution without the use of a data structure.&nbsp;As stated above this example is contrived specifically for use in technical interviews, a real world application of data structure selection is as follows.<br />
+<br />
+A functional requirement for a critical component of the system is that no two threads try and update an object (with a unique identifier) simultaneously. The system is multi-threaded and event driven, with certain events triggering the object updates. Simultaneous updates would result in a version exception and require manual intervention to correct. An initial (optimistic) solution is to add the synchronized keyword to the method responsible for performing the update, thus ensuring sequential execution of updates. While this approach should work as desired it incurs the cost of class level locking and prevents any kind of concurrency, even for update requests to distinct objects which could actually be executed in parallel. This raises the non-functional requirement of the component namely performance.<br />
+<br />
+The component is responsible for cash movements in the system and at peak times can have thousands of events generated every second. While there is no real-time requirement, the delay introduced by the synchronized method could lead to the last events being processed minutes after they were received, a situation that was not acceptable to the business. After closer investigation it was identified that in the worst case only a fraction of the updates would ever attempt simultaneous updates. To restate the problem, how can duplicate requests be blocked while allowing distinct requests to process concurrently?<br />
+<br />
+<pre class="brush: java">public class LockTest {
+  protected static Set&lt;Integer&gt; ID_LOCK = Collections.synchronizedSet(new TreeSet&lt;Integer&gt;()); 
+
+    public void performUpdate(int id) {
+        if (!ID_LOCK.contains(id)) {
+            boolean addedNew = ID_LOCK.add(id);
+            if (addedNew) {
+                try {
+                    SomeObject object = loadObject(id);
+                    if (!object.isUpdated())) {
+                        object.update();
+                        object.save();
+                    }
+                } finally {
+                    ID_LOCK.remove(id);
+                }
+            }
+        }
+    }
+
+    private SomeObject loadObject(int id) {
+        // Load the object (from database/remote call)
+        return someObject;
+    }
+}
+</pre><br />
+The code above is a fair representation of the production code used to solve this problem and works as desired. A few points before looking at the implementation details. The loadObject() and object.update() calls are quite expensive and involve remote calls and over-the-wire object serialisation. It is also entirely possible for the object to be changed without the local copy being updated or notified of the change. I raise these points because they are significant for the (slightly off topic) synchronisation discussion below.<br />
+<br />
+Lets start by looking at the flow for a single threaded (non-duplicate) call to the performUpdate method.<br />
+<br />
+<ol><li>!ID_LOCK.contains(id) condition (line 5) passes as the set is empty</li>
+<li>id is added and the addedNew variable is set to true (line 6)</li>
+<li>addedNew condition is met and the object is loaded (lines 7 - 9)</li>
+<li>!object.isUpdated() condition is met and the object is updated and saved (lines 10 - 12)</li>
+<li>id is removed from the set in the finally clause (line 15)</li>
+</ol><div>This is the simplest scenario. Extending it to two (or n) concurrent calls to the performUpdate method with distinct IDs follows exactly the same flow just interleaved with the same operations potentially at different stages of execution. So for example, two concurrent calls for id1 and id2 could look as follows:</div><div><ol><li>!ID_LOCK.contains(id1) condition (line 5) passes as the set is empty</li>
+<li>id1 is added and the addedNew variable is set to true (line 6)</li>
+<li>!ID_LOCK.contains(id2) condition (line 5) passes as the set contains id1</li>
+<li>id1 addedNew condition is met and the object is loaded (lines 7 - 9)</li>
+<li>id2 is added and the addedNew variable is set to true (line 6)</li>
+<li>id2 addedNew condition is met and the object is loaded (lines 7 - 9)</li>
+<li>id2 !object.isUpdated() condition is met and the object is updated and saved (lines 10 - 12)</li>
+<li>id2 is removed from the set in the finally clause (line 15)</li>
+<li>id1 !object.isUpdated() condition is met and the object is updated and saved (lines 10 - 12)</li>
+<li>id1 is removed from the set in the finally clause (line 15)</li>
+</ol><div>The really interesting stuff happens when two concurrent calls occur with the same ID. Fortunately the code maintains the critical section condition for all permutations:</div></div><div><ul><li>Thread 1 is at line 7 (set contains id), thread 2 fails the condition at line 5</li>
+<li>Both threads execute line 6, only one of them will return true , the other thread will fail at line 7</li>
+<li>Thread 1 is at line 16 (id has been removed from the set), thread 2 will fail on line 10 (object already updated)</li>
+</ul><div>A few notes about the implementation:</div></div><div><ul><li>The try/finally block is very important to ensure the lock is always released</li>
+<li>The object.isUpdated() check is only required if the update method can't be called on an object that has already been updated</li>
+<li>The synchronisation of the set could probably be optimised (instead of using the Collections synchronisation) but it would complicate the implementation</li>
+<li>TreeSet is used for the ordering of the values, this is not strictly needed as the underlying implementation on a Set is generally a Map which will have a similar complexity for the look up as that of an insert into a SortedMap</li>
+<li>As always, this is just one solution to the problem. I am sure others exist, please feel free to comment if you have a more elegant solution</li>
+</ul><div>As you may have guessed (if you made it this far in the post), I am quite a fan of the Sets and lament the fact that they are not used more widely, particularly when they are well suited to solving a problem.</div></div>
+  </div><a class="u-url" href="/2011/07/13/importance-of-choosing-right-data.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
+        <ul class="contact-list">
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <p>Write an awesome description for your new site here. You can edit this line in _config.yml. It will appear in your document head meta (for Google search results) and in your feed.xml site description.</p>
+      </div>
+    </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

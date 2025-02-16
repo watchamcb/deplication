@@ -1,0 +1,64 @@
+---
+layout: post
+title: The MWEB uncapped ADSL myth
+date: '2013-12-05T07:07:00.000Z'
+author: Craig Watcham
+tags:
+- MWEB
+- broadband
+- South Africa
+- ADSL
+modified_time: '2013-12-05T07:07:27.639Z'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-2107033635183462151
+blogger_orig_url: https://www.deplication.net/2013/12/the-mweb-uncapped-adsl-myth.html
+---
+
+I was the unlucky recipient of an acceptable usage notification email from MWEB last night. It turns out that their 10Mbs uncapped account is actually a 125GB capped account and that R749 (my last MWEB bill) every month only actually buys a 1.5Mbps line. I can't say that I am terribly surprised, there is a trend with South African ADSL providers to start clamping down on "high usage" users, MWEB is merely notifying users via email when they have reached this lofty state.<br />
+<br />
+My only real gripe is that I am being lumped into the probably-a-pirate-downloading-24-7 group and as a result my (legal) video&nbsp;streaming is throttled to tetris block quality despite only using my line for a few hours a day. The current price war in the uncapped ADSL market is rather pointless if an uncapped account is actually subject to a throttling limit. As a user that is spending a fair amount of money on high speed internet access I would prefer if the ISP's kept their prices the same but increased their capacity. To put this in perspective lets do some theoretical bandwidth calculations.<br />
+<br />
+My ADSL line is rated as 10Mbps but in practice I only really get 8.5Mbps which is generally sufficient for streaming HD content (obviously depending on a number of other factors). For simplicity sake lets round this down to 8Mbs, please note the small b in Mb indicates megabit (transfer rate) not megabyte (storage). So:<br />
+8Mb per second * 60 seconds = 480Mb per minute<br />
+480Mb per minute * 60 minutes = 28,800Mb per hour<br />
+28,800Mb per hour / 1000Mb per Gb = 28.8Gb per hour<br />
+28.8Gb per hour * 24 hours = 691.2Gb per day<br />
+691.2Gb per day * 30 days = 20,736Gb per month<br />
+20,736Gb per month / 1000Gb per Tb = 20.736Tb per month<br />
+<br />
+And finally converting data transmission rate (small b) to data storage (big B) thanks to Google's handy&nbsp;<a href="https://www.google.com/search?q=terabit+to+terabyte+conversion">converter</a>:<br />
+20.763Tb per month * 0.125 Tb to TB factor = 2.592TB per month<br />
+<br />
+So at 8Mbps the theoretical maximum I could download is 2.5 terabytes of data every month. This is what a truly uncapped service would look like and lets be honest, that is a massive amount of data. I am not expecting to be able to download this amount of data and my maximum usage is unlikely to exceed 500GB per month but I am definitely not going to get that at 10Mbps with MWEB. To be fair MWEB does not cap the account, they just throttle it to such an extent that it is effectively useless for streaming video content.<br />
+<div>
+<br /></div>
+Lets see what you are actually getting with an uncapped 10Mbps MWEB account. First a few assumptions:<div>
+<ol>
+<li>The MWEB throttle level is 125GB on a 10Mb line (in other words 4GB per day, supported by anecdotal evidence)</li>
+<li>The throttle speed will be 1.5Mbps</li>
+<li>The throttle will be removed when the rolling 30 day average drops below 100GB (no evidence for this but taking 80% of the throttle level as it makes a nice round number)</li>
+<li>Average daily usage of 4 hours (14.4GB at 28.8Gb/h)</li>
+<li>Starting at the beginning of the month with a 0GB 30 day average</li>
+</ol>
+<div>
+Using these assumptions you will reach the throttle level after 9 days (8.68 rounded up). From that point onwards you are throttled to 1.5Mbs resulting in a maximum download rate of 5.4Gb/h and data usage of 2.7GB per day (maintaining the 4 hours usage per day). At this rate the rolling average will reduce at 11.7GB per day (14.4GB - 2.7GB) and take just over 2 days to fall below the assumed throttle removal level. Reverting back to the non-throttled level it will then take another 3 days before the throttle is reactivated. This cycle will repeat and effectively means that you are paying for a 10Mb line but getting a 1.5Mb line 40% of the time, I don't like those odds.</div>
+</div>
+<div>
+<br /></div>
+<div>
+If you drop the 4 hour daily usage assumption and try to maximise data usage the calculations are even more bleak. After two days at 86.4GB per day the account will be throttled, after that the maximum daily data transfer is limited to 16.2GB (again assuming the 1.5Mbs throttle stays constant). This means the total data capacity of the account is 626.4GB made up of 172.8GB (2 days at 86.4GB per day) +&nbsp;453.6 (28 days at 16.2GB per day). Using the line capacity calculation detailed earlier this means you can only actually get 23.58% (626GB out of 2654GB) of the "uncapped"&nbsp;capacity that you are paying for.&nbsp;</div>
+<div>
+<br /></div>
+<div>
+To summarise:</div>
+<div>
+<ul>
+<li>The MWEB 10Mb uncapped account is actually a throttled account with a maximum 5GB daily usage limit.&nbsp;</li>
+<li>The account will be throttled after 2 days of uninterrupted use at maximum capacity</li>
+<li>The account only provides 24% of the capacity suggested by the "uncapped" label</li>
+<li>The account will only provide full speed connectivity 60% of the time under normal usage (after the first month)</li>
+<li>This account is not suited for consistent high quality video streaming</li>
+<li>If you want to use your line at full speed for more than 2 hours a day this account is not for you</li>
+</ul>
+<div>
+Needless to say I am in the process of cancelling my "uncapped" MWEB account.</div>
+</div>

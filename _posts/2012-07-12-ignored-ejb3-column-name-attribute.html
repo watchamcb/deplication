@@ -1,0 +1,117 @@
+---
+layout: post
+title: Ignored EJB3 @Column name attribute
+date: '2012-07-12T12:10:00.001+01:00'
+author: Craig Watcham
+tags:
+- JBoss
+- Java
+- EJB3
+- Hibernate
+- annotation
+modified_time: '2012-07-12T12:10:46.922+01:00'
+blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-7785210321760524723
+blogger_orig_url: https://www.deplication.net/2012/07/ignored-ejb3-column-name-attribute.html
+---
+
+I am working on an EJB3 project after a few months on other work and I ran into a small issue with the EJB3 @Column name attribute. The attribute is meant to allow the mapping of a column to a different name in an entity. If your database table has an unusable (or just unfriendly) column name you can map it to a more logical field name in the entity.<br />
+<br />
+In my case the table is a mapping table that I am creating an object model against and I wanted to map the "sub_account_name" column to "name". My initial implementation was as follows:<br />
+<br />
+<br />
+<span style="color: #999999;">@Entity</span><br />
+<span style="color: #999999;">@Table</span>(name = "<span style="color: blue;">portfolio_subaccount</span>")<br />
+<span style="color: #990000;">public class</span> Portfolio <span style="color: #990000;">implements</span> Serializable {<br />
+&nbsp; &nbsp; <span style="color: #990000;">private static final long</span> <span style="color: blue;">serialVersionUID </span>= 3450488234689579105L;<br />
+<br />
+&nbsp; &nbsp; <span style="color: #999999;">@Id</span><br />
+<span style="color: #999999;">&nbsp; &nbsp; @GeneratedValue</span><br />
+&nbsp; &nbsp; <span style="color: #990000;">private long </span><span style="color: blue;">id</span>;<br />
+<span style="background-color: white;">&nbsp; &nbsp; <span style="color: #990000;">private </span>String <span style="color: blue;">name</span>;</span><br />
+<br />
+&nbsp; &nbsp; <span style="color: #990000;">public long</span> getId() {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #990000;">return </span><span style="color: blue;">id</span>;<br />
+&nbsp; &nbsp; }<br />
+<br />
+&nbsp; &nbsp; <span style="color: #990000;">public void</span> setId(<span style="color: #990000;">long </span>id) {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #990000;">this</span>.<span style="color: blue;">id </span>= <span style="color: blue;">id</span>;<br />
+&nbsp; &nbsp; }<br />
+<br />
+&nbsp; &nbsp; <span style="color: #999999;">@Column</span>(name = "<span style="color: blue;">sub_account_name</span>", nullable = <span style="color: #990000;">true</span>)<br />
+&nbsp; &nbsp; <span style="color: #990000;">public </span>String getName() {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #990000;">return </span><span style="color: blue;">name</span>;<br />
+&nbsp; &nbsp; }<br />
+<br />
+&nbsp; &nbsp; <span style="color: #990000;">public void</span> setName(String name) {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; this.<span style="color: blue;">name </span>= <span style="color: blue;">name</span>;<br />
+&nbsp; &nbsp; }<br />
+}<br />
+<br />
+<br />
+The deployment does not report any errors however the test client code below causes a GenericJDBCException to be thrown.<br />
+<br />
+<br />
+<span style="color: #990000;">public class </span>Client {<br />
+<br />
+&nbsp; &nbsp; <span style="color: #990000;">public static void </span>main(String[] args) {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; try {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Context context = getInitialContext();<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; BeanRemote remote = (BeanRemote) context.lookup("<span style="color: blue;">SomeBean/remot</span>e");<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Portfolio portfolio = remote.getPortfolio(352);<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; System.<span style="color: blue;">out</span>.println(portfolio.getId() + <span style="color: blue;">": "</span> + portfolio.getName());<br />
+&nbsp; &nbsp; &nbsp; &nbsp; } <span style="color: #990000;">catch </span>(Exception e) {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; e.printStackTrace();<br />
+&nbsp; &nbsp; &nbsp; &nbsp; }<br />
+&nbsp; &nbsp; }<br />
+<br />
+&nbsp; &nbsp; <span style="color: #990000;">private static</span> Context getInitialContext() <span style="color: #990000;">throws </span>NamingException {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; Properties props = new Properties();<br />
+&nbsp; &nbsp; &nbsp; &nbsp; props.put(Context.<span style="color: blue;">PROVIDER_URL</span>, "<span style="color: blue;">jnp://server:1099</span>");<br />
+&nbsp;&nbsp;<span style="background-color: white;">&nbsp; &nbsp; &nbsp; props.put(Context.<span style="color: blue;">URL_PKG_PREFIXES</span>, "<span style="color: blue;">org.jboss.naming:org.jnp.interfaces</span>");</span><br />
+&nbsp; &nbsp; &nbsp; &nbsp; props.put(Context.<span style="color: blue;">INITIAL_CONTEXT_FACTORY</span>, "<span style="color: blue;">org.jnp.interfaces.NamingContextFactory</span>");<br />
+<br />
+&nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #990000;">return new</span> InitialContext(props);<br />
+&nbsp; &nbsp; }<br />
+<span style="background-color: white;">}</span><br />
+<br />
+The exception (from the server logs) indicates that the name column is not found on the table:<br />
+<br />
+2012-07-12 11:37:28,049 ERROR [org.hibernate.util.JDBCExceptionReporter] (WorkerThread#2[172.19.216.159:34038]) Invalid column name 'name'.<br />
+<div>
+<br /></div>
+<div>
+Which is quite interesting given the annotation indicating the column is actually called "sub_account_name". The problem is caused by the location of the annotation, it seems that Hibernate does not handle some annotations being on the variable declaration while others are on the accessor methods. Moving the @Column annotation to the variable declaration corrects the problem. The corrected class is below.</div>
+<div>
+<br /></div>
+<div>
+<span style="color: #999999;">@Entity</span><br />
+<span style="color: #999999;">@Table</span>(name = "<span style="color: blue;">portfolio_subaccount</span>")<br />
+<span style="color: #990000;">public class</span>&nbsp;Portfolio&nbsp;<span style="color: #990000;">implements</span>&nbsp;Serializable {<br />
+&nbsp; &nbsp;&nbsp;<span style="color: #990000;">private static final long</span>&nbsp;<span style="color: blue;">serialVersionUID&nbsp;</span>= 3450488234689579105L;<br />
+<br />
+&nbsp; &nbsp;&nbsp;<span style="color: #999999;">@Id</span><br />
+<span style="color: #999999;">&nbsp; &nbsp; @GeneratedValue</span><br />
+&nbsp; &nbsp;&nbsp;<span style="color: #990000;">private long&nbsp;</span><span style="color: blue;">id</span>;<br />
+<br />
+&nbsp; &nbsp;&nbsp;<span style="color: #999999;">@Column</span>(name = "<span style="color: blue;">sub_account_name</span>", nullable =&nbsp;<span style="color: #990000;">true</span>)<br />
+<span style="background-color: white;">&nbsp; &nbsp;&nbsp;<span style="color: #990000;">private&nbsp;</span>String&nbsp;<span style="color: blue;">name</span>;</span><br />
+<br />
+&nbsp; &nbsp;&nbsp;<span style="color: #990000;">public long</span>&nbsp;getId() {<br />
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<span style="color: #990000;">return&nbsp;</span><span style="color: blue;">id</span>;<br />
+&nbsp; &nbsp; }<br />
+<br />
+&nbsp; &nbsp;&nbsp;<span style="color: #990000;">public void</span>&nbsp;setId(<span style="color: #990000;">long&nbsp;</span>id) {<br />
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<span style="color: #990000;">this</span>.<span style="color: blue;">id&nbsp;</span>=&nbsp;<span style="color: blue;">id</span>;<br />
+&nbsp; &nbsp; }<br />
+<br />
+<span style="background-color: white;">&nbsp; &nbsp;</span><span style="background-color: white;">&nbsp;</span><span style="background-color: white; color: #990000;">public&nbsp;</span><span style="background-color: white;">String getName() {</span><br />
+&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<span style="color: #990000;">return&nbsp;</span><span style="color: blue;">name</span>;<br />
+&nbsp; &nbsp; }<br />
+<br />
+&nbsp; &nbsp;&nbsp;<span style="color: #990000;">public void</span>&nbsp;setName(String name) {<br />
+&nbsp; &nbsp; &nbsp; &nbsp; this.<span style="color: blue;">name&nbsp;</span>=&nbsp;<span style="color: blue;">name</span>;<br />
+&nbsp; &nbsp; }<br />
+}<br />
+</div>
+<br />
+<br />
