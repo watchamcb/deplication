@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>Java application patch deployment | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="Java application patch deployment" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2011-07-18T19:58:00+01:00","datePublished":"2011-07-18T19:58:00+01:00","description":"This post explains a few mechanisms for deploying patches to production Java applications whilst trying to minimise downtime and user impact. Class path update The simplest deployment is to create a new JAR file with the patched classes in the correct package structure and add it to the front of the class path used to start the application. So for example if your application was started with the following command: java -cp application.jar:somelib.jar com.blogspot.deplication.MainClass  You could modify it as below to use the patched versions of your classes in the patch.jar file: java -cp patch.jar:application.jar:somelib.jar com.blogspot.deplication.MainClass This is the basic class path functionality inherent to Java and enables the loading of the patch classes from the patch.jar before the application.jar because patch.jar occurs first in the class path. This is the simplest deployment and requires the application to be restarted with the new class path for the patch to take effect. As the application needs to be restarted for this change to take effect, there is not much of a case for this approach over a full deployment. This approach does however allow you to override classes in one of the other JAR files, which may be useful for deploying a version of a class with additional logging (for example) without the need for a full deployment. Once the log data has been generated the patch file can be removed and the application restarted as its original deployment. Class file deployment The second option is to deploy compiled class files to a directory specified in the class path. This approach is almost identical to the class path update method but does not require the command line or class path environment variable to be updated with the new patch JAR file name. So for example, starting the application with the following command: java -cp .:application.jar:somelib.jar com.blogspot.deplication.MainClass Would allow new classes to be copied to the correct package structure in the working directory and after restart the patch class would be used. In this case, copying a new MainClass to ./com/blogspot/deplication/ would result in the class in the directory being used instead of the version in the application.jar. Once again, this approach requires a restart to take effect and has the added complexity of keeping track of the individual class files rather than just the patch JAR file. Dynamic class reloading The third option is the implementation of a custom class loader to enable dynamic class reloading. Unfortunately this option requires code changes and imposes various restrictions where the classes being loaded either need to extend a super class or implement an interface. Interesting points The class path and class file deployment can be quite useful on distributed systems where only a single VM requires the patched files and the nodes can be stopped and restarted independently. Remember to cleanup the deployed classes/JARs when doing a full deployment to prevent them from overriding the new code Solaris (and apparently AIX) may use memory mapped JAR files, expect very strange behaviour if you replace the JAR files in a running VM on these platforms For configurable applications that use reflection to load classes it is possible to deploy a patched class with a new (unique) name and configure the application to use the new class, thus avoiding the need for a restart Client applications launched via Java Web Start can be updated by adding the patch jar at the top of the resources section, the main=&quot;true&quot; attribute must be excluded for the order of the resources to be used in Java 1.6 Overriding classes using the class path is far from ideal and should be avoided where possible As always there are almost certainly different approaches, feel free to add comments with what has worked for you.","headline":"Java application patch deployment","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2011/07/18/java-application-patch-deployment.html"},"url":"http://localhost:4000/2011/07/18/java-application-patch-deployment.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Java application patch deployment</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2011-07-18T19:58:00+01:00" itemprop="datePublished">Jul 18, 2011
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2011-07-18T19:58:00+01:00" itemprop="datePublished">
+        Jul 18, 2011
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -83,21 +87,31 @@ The third option is the implementation of a custom class loader to enable<br />
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 

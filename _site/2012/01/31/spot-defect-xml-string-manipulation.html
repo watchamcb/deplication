@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>Spot the defect - XML string manipulation | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="Spot the defect - XML string manipulation" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2012-01-31T05:56:00+00:00","datePublished":"2012-01-31T05:56:00+00:00","description":"So I have been a bit lazy about posting recently, time to look at a defect found in some production code:             String details = XPathReader.getValueAt(detailPath, xml);             if (details != null &amp;&amp; details.length() &gt; 0) {                 String mappedDetails = getFormattedDetails(details, accId, pay);                 logger.info(“Details [” + details + “] replaced with [” + mappedDetails + “]”);                 xml = xml.replace(“Details=&quot;” + details + “&quot;”, “Details=&quot;” + mappedDetails + “&quot;”);             }             return xml; At first glance there is nothing particularly wrong with this code, the XPathReader class extracts a value from a specific path in the XML, some mapping is done on the value and the original value us replaced with the updated details. Unfortunately there is a sneaky defect in this code. The log message printed for the problematic input is: INFO  [MappingSessionBean] Details [Book##VALUE&amp;DEV] replaced with [Book VALUE 111111111] Take a moment to see if you are able to spot the problem… Not yet apparent? The input XML (with some details replaced): &lt;RequestXML xmlns:xsi=”http://www.w3.org/2001/XMLSchema-instance”&gt;       &lt;Header Sending_System=”SOURCE” Message_Identifier=”Update”             Message_Status=”New” Message_Name=”Nostro Update” /&gt;       &lt;AccountingInfo BICCode=”XXXXXXXX” CurrencyCode=”USD”             TradingArea=”Book” Amount=”12345.67/NEW/11111111/444444.44”             ValueDate=”2011-11-11+0200” Details=”Book##VALUE&amp;amp;DEV”             TransactionReference=”111111111” AccountType=”PRINCIPAL” /&gt; &lt;/RequestXML&gt; Still not clear? Notice the difference between the input XML Details field and the log message? Details=&quot;Book##VALUE&amp;amp;DEV&quot;&nbsp; Details [Book##VALUE&amp;DEV] The Details value in the XML has the ampersand escaped as &quot;&amp;amp;&quot; while the call to XPathReader.getValueAt() returns the attribute value without the escaping. The getFormattedDetails method merrily goes about its job enriching the details string to be &quot;Book VALUE 111111111&quot; but then the code fails when trying to do the replace call: &nbsp; &nbsp; &nbsp; &nbsp; xml = xml.replace(&quot;Details=\\&quot;&quot; + details + &quot;\\&quot;&quot;, &quot;Details=\\&quot;&quot; + mappedDetails + &quot;\\&quot;&quot;); The contents of the details variable are now &quot;Book##VALUE&amp;DEV&quot; instead of the original &quot;Book##VALUE&amp;amp;DEV&quot; so no replacement is performed. Given that this code is due to be replaced shortly the quick and easy fix is to use the Apache commons-lang StringEscapeUtils.escapeXml() method. Thus the replace call becomes: &nbsp; &nbsp; &nbsp; &nbsp; xml = xml.replace(&quot;Details=\\&quot;&quot; + StringEscapeUtils.escapeXml(details) + &quot;\\&quot;&quot;, &quot;Details=\\&quot;&quot;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; + StringEscapeUtils.escapeXml(mappedDetails) + &quot;\\&quot;&quot;); The alternative (and more correct solution) would be to convert the XML to an object using your favourite XML library and then perform the data manipulation on the object before converting back to XML.","headline":"Spot the defect - XML string manipulation","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2012/01/31/spot-defect-xml-string-manipulation.html"},"url":"http://localhost:4000/2012/01/31/spot-defect-xml-string-manipulation.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Spot the defect - XML string manipulation</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2012-01-31T05:56:00+00:00" itemprop="datePublished">Jan 31, 2012
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2012-01-31T05:56:00+00:00" itemprop="datePublished">
+        Jan 31, 2012
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -92,21 +96,31 @@ Take a moment to see if you are able to spot the problem... Not yet apparent? Th
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 

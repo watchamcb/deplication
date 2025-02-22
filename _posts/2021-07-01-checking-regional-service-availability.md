@@ -6,10 +6,8 @@ author: Craig Watcham
 tags:
 - SSM
 - CLI
-- aws
+- AWS
 modified_time: '2021-07-01T09:52:54.661+01:00'
-blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-55511872116160899
-blogger_orig_url: https://www.deplication.net/2021/07/checking-regional-service-availability.html
 ---
 
 Using [System Manager public parameters][ssm-params] a quick CLI one liner for checking if an AWS service is available in a region:

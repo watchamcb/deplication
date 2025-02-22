@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>AWS tip: Wildcard characters in S3 lifecycle policy prefixes | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="AWS tip: Wildcard characters in S3 lifecycle policy prefixes" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2019-02-16T15:21:00+00:00","datePublished":"2019-02-16T15:21:00+00:00","description":"A quick word of warning regarding S3’s treatment of asterisks () in object lifecycle policies. In S3 asterisks are valid ‘special’ characters and can be used in object key names, this can lead to a lifecycle action not being applied as expected when the prefix contains an asterisk. Historically an asterisk is treated as a wildcard to pattern match ‘any’, so you would be able to conveniently match all files for a certain pattern: ‘rm *’ as an example, would delete all files. This is NOT how an asterisk behaves in S3 lifecycle prefixes. If you specify a prefix of ‘’ or ‘/’ it will only be applied to objects that start with an asterisk and not all objects. The ‘’ prefix rule would be applied to these objects: example-bucket//key example-bucket/yek But would not be applied to: example-bucket/object example-bucket/directory/key example-bucket/tcejbo* It is not an error to specify an asterisk and it will merely result in the policy not being applied so you may not even know this as an issue. Fortunately it is fairly easy to check for this configuration with the CLI, the following bash one liner will iterate through all buckets owned by the caller and check if the bucket has any policies with an asterisk in their name. It will print out the bucket name and policy if affected or a ‘.’ (to show progress) if not.","headline":"AWS tip: Wildcard characters in S3 lifecycle policy prefixes","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2019/02/16/aws-tip-wildcard-characters-in-s3.html"},"url":"http://localhost:4000/2019/02/16/aws-tip-wildcard-characters-in-s3.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">AWS tip: Wildcard characters in S3 lifecycle policy prefixes</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2019-02-16T15:21:00+00:00" itemprop="datePublished">Feb 16, 2019
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2019-02-16T15:21:00+00:00" itemprop="datePublished">
+        Feb 16, 2019
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -75,21 +79,31 @@ You can also check the S3 console, it should display 'Whole bucket' under the 'A
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 

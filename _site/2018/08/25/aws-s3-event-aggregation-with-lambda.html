@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>AWS S3 event aggregation with Lambda and DynamoDB | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="AWS S3 event aggregation with Lambda and DynamoDB" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2018-08-25T17:23:00+01:00","datePublished":"2018-08-25T17:23:00+01:00","description":"Introduction S3 has had event notifications since 2014 and for individual object notifications these events work well with Lambda, allowing you to perform an action on every object event in a bucket. It is harder to use this approach when you want to perform an action a limited number of times or at an aggregated bucket level. An example use case would be refreshing a dependency (like Storage Gateway RefreshCache) when you are expecting a large number of objects events in a bucket. Performing a relatively expensive action for every event is not practical or efficient in this case. This post provides a solution for aggregating these events using Lambda, DynamoDB, and SQS.&lt;div&gt;&lt;h4 style=&quot;text-align: left;&quot;&gt;Update (June/July 2020)&lt;/h4&gt;&lt;div&gt;Cache refresh can now be automated. The event aggregation approach below may still be useful depending on your requirements.&lt;/div&gt;&lt;h4&gt;&lt;/h4&gt;&lt;h4&gt; The problem&lt;/h4&gt; We want to call RefreshCache on our Storage Gateway (SGW) whenever the contents of the S3 bucket it exposes are updated by an external process. If the external process is updating a large number of (small) S3 objects then a large number of S3 events will be triggered. We don&#39;t want to overload our SGW with refresh requests so we need a way to aggregate these events to only send occasional refresh requests. The solution The solution is fairly simple and uses DynamoDB’s Conditional Writes for synchronisation and SQS Message Timers to enable aggregation. When the Lambda function processes a new object event it first checks to see if the event falls within the window of the currently active refresh request. If the event is within the window it will automatically be included when the refresh executes and the event can be ignored. If the event occurred after the last refresh then a new refresh request is sent to an SQS queue with a message timer equal to the refresh window period. This allows for all messages received within a refresh window to be included in a single refresh operation. Implementation At a high level we need to create resources (SQS queue, DynamoDB table, Lambda functions), set up permissions (create and assign IAM roles), and apply some configuration (linking Lambda to S3 event notification and SQS queues). This implementation really belongs in a CloudFormation template (and I may actually create one) but I was interested to try and do this entirely via the AWS CLI, masochistic as that may be. If you are not interested in the gory implementation details then skip ahead to &#39;Creation and deletion script&#39; section","headline":"AWS S3 event aggregation with Lambda and DynamoDB","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2018/08/25/aws-s3-event-aggregation-with-lambda.html"},"url":"http://localhost:4000/2018/08/25/aws-s3-event-aggregation-with-lambda.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">AWS S3 event aggregation with Lambda and DynamoDB</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2018-08-25T17:23:00+01:00" itemprop="datePublished">Aug 25, 2018
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2018-08-25T17:23:00+01:00" itemprop="datePublished">
+        Aug 25, 2018
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -532,21 +536,31 @@ And so ends this post, well done for reading to the end. I quite enjoyed buildin
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 

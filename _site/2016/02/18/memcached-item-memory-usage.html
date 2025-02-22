@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>Memcached item memory usage | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="Memcached item memory usage" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2016-02-18T09:03:00+00:00","datePublished":"2016-02-18T09:03:00+00:00","description":"Introduction I was recently involved with an investigation into a Memcached cluster running on AWS ElastiCache and discovered a few interesting details about Memcached. This post looks at the memory overhead of storing items in Memcached and demonstrates the impact of disabling CAS (check and set) on memory utilisation. Background - Memcached item overhead Before getting into the details some background might be useful. Starting with the basics, how much memory does Memcached actually need to store an item? Lets spin up a cluster to check, for simplicity I am using a single m3.large ElastiCache node (running memcached 1.4.24) which according to the AWS docs&nbsp;provides around 6.2GB of memory for cache items. The easiest way to look at our new cache is by telnetting to the cluster (from within the VPC) and running commands directly. To start, what does the slab allocation look like: &gt; stats slabs &lt; STAT active_slabs 0 &lt;&nbsp;STAT total_malloced 0 &lt;&nbsp;END As expected, our empty cache has 0 active slabs and no memory allocated. Lets add a value and see how this changes things: &gt; set k 0 500 1 &gt; v &lt; STORED Above, we have set an item with a key of &#39;k&#39;, no flags, a 500 second expiry time and a 1 byte value of &#39;v&#39;. Looking at the slab stats we now see: &gt; stats slabs &lt;&nbsp;STAT 1:chunk_size 96 &lt;&nbsp;STAT 1:chunks_per_page 10922 &lt;&nbsp;STAT 1:total_pages 1 &lt;&nbsp;STAT 1:total_chunks 10922 &lt;&nbsp;STAT 1:used_chunks 1 &lt;&nbsp;STAT 1:free_chunks 10921 &lt;&nbsp;STAT 1:free_chunks_end 0 &lt;&nbsp;STAT 1:mem_requested 67 &lt;&nbsp;STAT 1:get_hits 0 &lt;&nbsp;STAT 1:cmd_set 1 &lt;&nbsp;STAT 1:delete_hits 0 &lt;&nbsp;STAT 1:incr_hits 0 &lt;&nbsp;STAT 1:decr_hits 0 &lt;&nbsp;STAT 1:cas_hits 0 &lt;&nbsp;STAT 1:cas_badval 0 &lt;&nbsp;STAT 1:touch_hits 0 &lt;&nbsp;STAT active_slabs 1 &lt;&nbsp;STAT total_malloced 1048512 &lt;&nbsp;END Lots of information here but lets focus on the chunks and memory stats for the moment. We now have 1 active slab with a chunk size of 96 bytes and &nbsp;one of these chunks (used_chunks) has been used to store our item, all expected except the relatively large size of the chunk used. We can see the actual memory requested was 67 bytes which means that 65 bytes of overhead are required to store the 2 byte item. Looking into the memcached code we can see that the item struct defined in memcached.h&nbsp;requires 48 bytes plus another 8 bytes for CAS. The remaining 11 bytes consist of: The null terminated key (2 bytes, 1 byte of overhead, &quot;k\\0&quot;&nbsp;in our example) The CRLF terminated data (3&nbsp;bytes, 2 bytes of overhead, &quot;v\\r\\n&quot; in our example) The item header which is a formatted string containing the flags, data length and terminated with CRLF (6 bytes, the minimum, in our example &quot;_0_1\\r\\n&quot; with underscores to make the spaces more visible) The header is created in the item_make_header function in items.c, the relevant part being: &nbsp; &nbsp; *nsuffix = (uint8_t) snprintf(suffix, 40, &quot; %d %d\\r\\n&quot;, flags, nbytes - 2); The header formats the flags and data length as integers in a string so this overhead will increase as the data size and flag values increase. For example, setting the flag to 10 will require an extra byte of to store the extra digit in the header: &gt; set k 10 500 1 &gt; v &lt; STORED &gt; stats slabs &lt;&nbsp;STAT 1:chunk_size 96 &lt;&nbsp;STAT 1:used_chunks 1 &lt;&nbsp;STAT 1:free_chunks 10921 &lt;&nbsp;STAT 1:mem_requested 68 ... &lt;&nbsp;STAT active_slabs 1 &lt;&nbsp;STAT total_malloced 1048512 &lt; END So you can expect at least 65 bytes of overhead per item. Disable CAS if you don&#39;t need it CAS stands for &#39;Check And Set&#39; which the Memcached protocol docs describe as: &quot;store this data but only if no one else has updated since I last fetched it.&quot; For a fair number of Memcached use cases CAS will not be used and as a result can be disabled with no impact. You can check your cluster using the stats command and looking at the cas_* values: &gt; stats ... &lt; STAT cas_misses 0 &lt;&nbsp;STAT cas_hits 0 &lt;&nbsp;STAT cas_badval 0 ... Sounds simple enough, lets test it out. After setting cas_disabled to 1 on our cluster and rebooting for the change to take effect, we set our key again: &gt; set k 0 500 1 &gt; v &lt; STORED &gt; stats slabs &lt;&nbsp;STAT 1:chunk_size 96 &lt;&nbsp;STAT 1:used_chunks 1 &lt;&nbsp;STAT 1:free_chunks 10921 &lt; STAT 1:mem_requested 59 ... &lt; STAT active_slabs 1 &lt; STAT total_malloced 1048512 &lt; END Not much difference except for the requested memory reducing by 8 bytes. Disabling CAS will NOT reduce the wasted memory on its own but it will allow an item to contain an extra 8 bytes of data where previously it would have needed to use a larger chunk which might be wasting significantly more memory. Lets look at an example. Assume that you are wanting to cache an item of 32 bytes, a 16 byte key and a 16 byte value. From the background section above we know that this will take 66 bytes of overhead pushing the total item size to 98 bytes, 2 bytes more than the chunk size of the first slab (using Memcached defaults), on a CAS enabled node this shows: &gt; set 0123456789ABCDEF 0 500 16 &gt; 0123456789ABCDEF &lt;&nbsp;STORED &gt; stats slabs &lt;&nbsp;STAT 2:chunk_size 120 &lt;&nbsp;STAT 2:used_chunks 1 &lt;&nbsp;STAT 2:free_chunks 8737 &lt;&nbsp;STAT 2:mem_requested 98 ... &lt; STAT active_slabs 1 &lt;&nbsp;STAT total_malloced 1048560 &lt;&nbsp;END Whereas with CAS disabled the overhead is reduced to 58 bytes, allowing the item to fit into the original slab: &gt; set 0123456789ABCDEF 0 500 16 &gt; 0123456789ABCDEF &lt; STORED &gt; stats slabs &gt; STAT 1:chunk_size 96 &gt;&nbsp;STAT 1:used_chunks 1 &gt;&nbsp;STAT 1:free_chunks 10921 &gt;&nbsp;STAT 1:mem_requested 90 ... &gt;&nbsp;STAT active_slabs 1 &gt;&nbsp;STAT total_malloced 1048512 &gt;&nbsp;END This means that with CAS enabled we are wasting 18% of the memory in each chunk of this slab (22 out of 120 bytes lost per item) compared to just 6% (6 out of 96 bytes) lost with CAS disabled. If the entire cache consisted of items this size, it would result in more than 1 GB of wasted memory compared to 372 MB wasted with CAS disabled. To put this differently, disabling CAS would allow you to store approximately 7 million additional 90 byte items resulting in better cache hit rates and lower eviction rates. This is of course an artificial example so lets look at a more realistic example where the cache item sizes are not quite so uniform. The following stats are based on a production CAS enabled node&#39;s stats adjusted by a factor of ten to fit on an m3.large (the production node had around 59 million items in slab 11 this was scaled to 5.9 million for testing). The test code used to generate this data is relatively simple and distributes the items in a slab fairly evenly across the item sizes of a slab, each item&#39;s size is slightly weighted to try and match the average item size in production. &lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt; SlabChunk SizeChunks UsedMemory AllocatedMemory RequestedAverage Item SizeMemory Wasted 4192139,81026,843,52025,706,5461841,136,974 524055,92413,421,76011,399,7762042,021,984 10752232,025174,482,800162,673,51570111,809,285 119445,985,7355,650,533,8404,643,546,6397761,006,987,201 121,18410,95112,965,98411,429,9651,0441,536,019 131,4807,17710,621,9609,421,6131,3131,200,347 141,8566,07111,267,77610,148,6641,6721,119,112 152,3205,32512,354,00011,094,2912,0831,259,709 162,9044,62113,419,38411,947,5742,5851,471,810 173,6323,69513,420,24011,906,6343,2221,513,606 184,5445,20123,633,34421,025,6094,0432,607,735 195,6804,52325,690,64023,038,0125,0942,652,628 207,1043,77826,838,91223,778,0176,2943,060,895 218,8803,02226,835,36023,630,9797,8203,204,381 2211,1042,41726,838,36823,754,9449,8283,083,424 2313,8801,93326,830,04023,092,97011,9473,737,070 2417,3521,10719,208,66415,554,07514,0513,654,589 6,473,3156,115,206,5925,063,149,8231,052,056,769 The table shows that we are caching around 6.4 million items with the majority of them falling in slabs 4, 10, and 11 and that around 1 GB of memory is being wasted. Average item size is computed from (memory requested / chunks used, rounded to the nearest byte) and is an indicator of the actual item sizes (including overhead) within each slab. An interesting point relevant to the CAS discussion is that the average item size for slab 11 is 776 bytes which is only marginally bigger than the chunk size for slab 10. Running the test code against a node with CAS disabled yields the following results: &lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt; SlabChunk SizeChunks UsedMemory AllocatedMemory RequestedAverage Item SizeMemory Wasted 4192165,99031,870,08029,471,7291782,398,351 524029,7447,138,5606,068,7212041,069,839 107523,365,9262,531,176,3522,496,542,13274234,634,220 119442,853,0792,693,306,5762,261,103,795793432,202,781 121,18410,33112,231,90410,910,8291,0561,321,075 131,4806,6039,772,4408,703,3011,3181,069,139 141,8566,11611,351,29610,202,5071,6681,148,789 152,3205,46912,688,08011,429,1952,0901,258,885 162,9044,65113,506,50412,137,6202,6101,368,884 173,6323,62913,180,52811,834,3843,2611,346,144 184,5445,08923,124,41620,661,8494,0602,462,567 195,6804,55725,883,76023,299,1945,1132,584,566 207,1043,78626,895,74423,983,9656,3352,911,779 218,8803,05627,137,28024,146,4697,9012,990,811 2211,1042,37626,383,10423,654,2359,9552,728,869 2313,8802,29731,882,36028,479,83012,3993,402,530 2417,35261610,688,8328,733,54814,1781,955,284 6,473,3155,508,217,8165,011,363,303496,854,513 As expected, the extra 8 bytes per slab has allowed a large number of items to be moved to slabs having smaller chunk sizes with more than half of the items in slab 11 now fitting into slab 10 and saving almost 600 MB of memory. The average item size being closer to the slab chunk size is another indicator that we are making more efficient use of the memory in each slab. For reference, the size of the items each slab can contain are below. The chunk sizes are displayed when running &#39;memcached -vv&#39;, reformatting this into a table and calculating the maximum item size gives: &lt;/col&gt;&lt;/col&gt;&lt;/col&gt;&lt;/col&gt; SlabChunk sizeMax dataMin data 196301 21205431 31528655 419212587 5240173126 6304237174 7384317238 8480413318 9600533414 10752685534 11944877686 1211841116878 13148014121117 14185617881413 15232022521789 16290428362253 17363235642837 18454444763565 19568056124477 20710470365613 21888088127037 2211104110358813 23138801381111036 24173521728313812 25216962162717284 26271202705121628 27339043383527052 28423844231533836 29529845291542316 30662326616352916 31827928272366164 3210349610342682724 33129376129306103427 34161720161650129307 35202152202082161651 36252696252626202083 37315872315802252627 38394840394770315803 39493552493482394771 40616944616874493483 41771184771114616875 4210485761048505771115 This table is using the default Memcached config settings (48 min item, 1.25 growth factor, cas enabled). The &quot;Max data&quot; column is the maximum number of bytes that can be used to store both the key and the value for an item in this slab. The &quot;Min data&quot; column is the minimum data size required for an item to be put in a slab and is simply the maximum data size from the previous slab&nbsp;+ 1. With CAS disabled the max and min data values would be increased by 8 bytes for all items with the exception of the minimum data for slab 1 remaining at 1 byte. The following Python function can be used for calculating the maximum item size (key + value)&nbsp;per slab:","headline":"Memcached item memory usage","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2016/02/18/memcached-item-memory-usage.html"},"url":"http://localhost:4000/2016/02/18/memcached-item-memory-usage.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Memcached item memory usage</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2016-02-18T09:03:00+00:00" itemprop="datePublished">Feb 18, 2016
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2016-02-18T09:03:00+00:00" itemprop="datePublished">
+        Feb 18, 2016
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -447,21 +451,31 @@ In this post we have had a look at the details of Memcached item overhead and id
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 

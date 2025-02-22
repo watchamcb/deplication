@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>Python cx_Oracle on Ubuntu 12.04 | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="Python cx_Oracle on Ubuntu 12.04" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2013-11-20T09:57:00+00:00","datePublished":"2013-11-20T09:57:00+00:00","description":"There are some older articles on getting cx_Oracle working using RPMs and alien but it seems Oracle are now providing non-RPM downloads. Below are the (quick and dirty) steps I followed to get it installed on Ubuntu 12.04 x64. Download both the &quot;Instant Client Package - Basic Lite&quot; and &quot;Instant Client Package - SDK&quot; ZIP files from the Oracle Instant Client download page (taking note of the version of Oracle you are connecting to) Unzip both the files, they will create a directory correponding to the Oracle version, instantclient_11_2 for example Change to the instantclient directory created in the previous step and: Create symbolic links to the version specific files:&nbsp; libclntsh.so -&gt; libclntsh.so.11.1&nbsp; libocci.so -&gt; libocci.so.11.1 Create a lib directory (mkdir lib) Move lib* to the lib directory (mv lib* lib) Move header files from ./sdk/include to . (mv ./sdk/include/*.h .) Optionally move the instantclient directory to another location Sudo to root (sudo -s) and build the module: Install the python-dev package (apt-get install python-dev) Export environment variables:&nbsp; export ORACLE_HOME=&quot;path/to/instantclient&quot; export LD_LIBRARY_PATH=&quot;$LD_LIBRARY_PATH:$ORACLE_HOME/lib&quot; Install the cx_oracle module using pip (pip install cx_oracle) Hopefully get a &quot;Successfully installed cx-oracle&quot; message Exit the root shell (Ctrl-D) Add the ORACLE_HOME and LD_LIBRARY_PATH environment variables to your profile (or just manually export them) Launch python and test: &gt;&gt;&gt; import cx_Oracle&gt;&gt;&gt; dsn = cx_Oracle.makedsn(‘host’, port, ‘sid’)&gt;&gt;&gt; connection = cx_Oracle.connect(‘user’,’password’,dsn)&gt;&gt;&gt; cursor = connection.cursor()&gt;&gt;&gt; results = cursor.execute(“select id from table where ROWNUM &lt;= 10”)&gt;&gt;&gt; cursor.fetchall()[(705,), (718,), (719,), (721,), (725,), (726,), (727,), (737,), (748,), (769,)]&gt;&gt;&gt; cursor.close()&gt;&gt;&gt; connection.close()&lt;ol&gt;&lt;ul&gt; &lt;/ul&gt; &lt;/ol&gt;","headline":"Python cx_Oracle on Ubuntu 12.04","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2013/11/20/python-cxoracle-on-ubuntu-1204.html"},"url":"http://localhost:4000/2013/11/20/python-cxoracle-on-ubuntu-1204.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Python cx_Oracle on Ubuntu 12.04</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2013-11-20T09:57:00+00:00" itemprop="datePublished">Nov 20, 2013
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2013-11-20T09:57:00+00:00" itemprop="datePublished">
+        Nov 20, 2013
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -93,21 +97,31 @@
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 

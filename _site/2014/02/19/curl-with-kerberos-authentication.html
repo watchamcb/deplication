@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>Curl with Kerberos authentication | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="Curl with Kerberos authentication" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2014-02-19T08:24:00+00:00","datePublished":"2014-02-19T08:24:00+00:00","description":"Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don’t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (–negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V. $ curl “https://your-secure-url/path/query?param=1&amp;value=2” -u : –negotiate This will return the requested page and print it to console Doing the same thing in Python (with pycurl - ‘pip install pycurl’): import pycurl curl = pycurl.Curl() curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE) curl.setopt(pycurl.USERPWD, &#39;:&#39;) curl.setopt(pycurl.URL, &#39;https://your-secure-url/path/query?param=1&amp;value=2&#39;) curl.perform() curl.close() And finally in PHP: $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, &quot;https://your-secure-url/path/query?param=1&amp;value=2&quot;); curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE); curl_setopt($ch, CURLOPT_USERPWD, &quot;:&quot;); curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); $page = curl_exec($ch); curl_close($ch);","headline":"Curl with Kerberos authentication","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html"},"url":"http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Curl with Kerberos authentication</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2014-02-19T08:24:00+00:00" itemprop="datePublished">Feb 19, 2014
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2014-02-19T08:24:00+00:00" itemprop="datePublished">
+        Feb 19, 2014
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -108,21 +112,31 @@ curl_close($ch);</div>
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 

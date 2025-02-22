@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>AWS script of the day: Cascade delete of security groups | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="AWS script of the day: Cascade delete of security groups" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2014-09-13T14:19:00+01:00","datePublished":"2014-09-13T14:19:00+01:00","description":"A common bug bear of AWS security groups is having to delete all references to a security group before deleting the group itself. Here is a quick boto script to simplify this process, you will need to have configured boto as per these instructions. After which ‘python sg_cascade_delete -h’ will give you: usage: sg_cascade_delete.py [-h] [–region REGION] [–quick] [–force]                             [–quiet]                             group_ids [group_ids …] Remove all references to a security group and then delete it positional arguments:   group_ids        The ID of the security group to delete, eg. sg-xxxxxxx optional arguments:   -h, –help       show this help message and exit   –region REGION  AWS region name the security group is in, default: us-                    east-1   –quick          Skip checks for whether or not the group is used by                    RDS/ElastiCache. Faster but may cause error on delete if                    the group is referenced.   –force          Force delete without requiring confirmation   –quiet          Do not print references or success message An example of usage would be: python sg_cascade_delete --region eu-west-1 sg-1231234 This will find all references to the sg-1231234 security group in the region and display them before asking for confirmation to delete the group. Note that you will be prevented from deleting any groups used in ElastiCache or RDS security groups as doing so tends to break things in unexpected ways. If you don&#39;t want to have to confirm the deletion (for a large number of groups for example) you can specify the --force option, this will skip the confirmation question and simply delete the groups after displaying their references. For example: python sg_cascade_delete --force --region eu-west-1 sg-1231234 sg-33221133 If you prefer your deletion silent then the --quiet option is for you, specifying this will prevent any messages being printed (other than the confirmation question and errors that occur). For no interaction at all use with --force to magically delete the groups without a sound. A non-zero process exit code indicates an error. If you have a large number of ElastiCache clusters and RDS instances you can skip the reference checks by specifying the --quick &nbsp;option, this may result in errors (in VPC) if the group is actually referenced when trying to delete and will cause some strange behaviour in EC2 classic as you are actually able to delete the group leaving a dangling authorisation on the ElastiCache/RDS security group. As such it is advised that you use this option with care or when you are truly certain that the security group is not used anywhere but in EC2. As this code is mutating (it changes your stuff) it would be wise to run it in a test environment before making changes in production. In other words: use at your own risk.","headline":"AWS script of the day: Cascade delete of security groups","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2014/09/13/aws-script-of-day-cascade-delete-of.html"},"url":"http://localhost:4000/2014/09/13/aws-script-of-day-cascade-delete-of.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">AWS script of the day: Cascade delete of security groups</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2014-09-13T14:19:00+01:00" itemprop="datePublished">Sep 13, 2014
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2014-09-13T14:19:00+01:00" itemprop="datePublished">
+        Sep 13, 2014
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -108,21 +112,31 @@ As this code is mutating (it changes your stuff) it would be wise to run it in a
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 

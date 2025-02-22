@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
 <title>Missing the A in Asynchronous - Part 1 | Deplication</title>
-<meta name="generator" content="Jekyll v3.10.0" />
+<meta name="generator" content="Jekyll v4.3.4" />
 <meta property="og:title" content="Missing the A in Asynchronous - Part 1" />
 <meta name="author" content="Craig Watcham" />
 <meta property="og:locale" content="en_US" />
@@ -20,8 +20,10 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2013-03-26T12:33:00+00:00","datePublished":"2013-03-26T12:33:00+00:00","description":"Few things are more irritating in software development than when people use a kludge rather than taking the time to implement a properly designed and robust solution. The peeve I am exercising today relates to the code snippet that follows:     private BOTransfer getTransferInefficiently(Trade trade) throws RemoteException {   // There is some delay between when a trade and corresponsing transfer is created   BOTransfer transfer = null; int cnt = 0; do {            try { Thread.sleep(500l);           } catch (Exception e) { return null;           }           transfer = getFirstTransfer(trade); } while (cnt++ &lt; 10 &amp;&amp; transfer == null); return transfer;     } The code is pretty simple. Wait 500ms and try and load a transfer object from the trade, repeat until the transfer object is loaded or the number of load attempts reaches 10. In a single threaded or single user environment this code might be excusable. In a multi-user production trading system processing hundreds of transactions a second this implementation is totally unacceptable. Some well meaning soul has added a comment further explaining the method: &nbsp; &nbsp; // This implementation is fundamentally broken in many ways. The transfer creation is &nbsp; &nbsp; // asynchronous and this logic should be triggered off the transfer creation event (instead of &nbsp; &nbsp; // looping and sleeping). This approach prevents this engine thread from processing any other &nbsp; &nbsp; // events and will not find the transfer in the case where the TransferEngine is under heavy &nbsp; &nbsp; // load. useInefficientWaitForTransfer method added to the interface to allow correct &nbsp; &nbsp; // implementation on new classes This person at least understood that the code was a problem and tried to mitigate the risks by extracting it into a separate method and adding the explanatory comment. Unfortunately for whatever reason (time constraints, lack of automated regression testing, indifference, ...) they only raised the visibility of the problem rather than fixing it entirely. Issues Increased system load - the call to getFirstTransfer actually does a remote call and a database query each time it is executed. This means that in the worst case (when the system is probably already overloaded) 10 database queries are executed at half a second intervals for 5 seconds (per thread), a great way to further degrade performance. Poor thread pool usage - the&nbsp;getTransferInefficiently&nbsp;method is run from a static sized thread pool responsible for handling all requests queued for this process (typically between a few hundred and a few thousand per second). For each thread looping in this method there are numerous other requests that could have been processed instead. In the worst case if all threads are handling requests requiring this method then for a few seconds potentially thousands of requests will be queued unnecessarily. Poor transparency - under heavy load most of the invocations of the method will return null as the transfer object will not have been created and consequently can&#39;t be loaded in the timeout (despite adding significant load to the already strained system). There is also no mechanism for measuring the average time taken for the object to be created and no backoff policy to try and reduce server load. Solution The correct implementation to achieve the desired behaviour asynchronously is relatively simple. A separate process should register/subscribe to BOTransfer events, on successful transfer creation perform the processing currently performed on the object returned by the&nbsp;getTransferInefficiently&nbsp;method.","headline":"Missing the A in Asynchronous - Part 1","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2013/03/26/missing-a-in-asynchronous-part-1.html"},"url":"http://localhost:4000/2013/03/26/missing-a-in-asynchronous-part-1.html"}</script>
 <!-- End Jekyll SEO tag -->
-<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
-<body><header class="site-header" role="banner">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@latest/css/all.min.css">
+  <link rel="stylesheet" href="/assets/css/style.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" />
+</head>
+<body><header class="site-header">
 
   <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
         <input type="checkbox" id="nav-trigger" class="nav-trigger" />
@@ -33,7 +35,7 @@
           </span>
         </label>
 
-        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+        <div class="trigger"></div>
       </nav></div>
 </header>
 <main class="page-content" aria-label="Content">
@@ -42,9 +44,11 @@
 
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Missing the A in Asynchronous - Part 1</h1>
-    <p class="post-meta">
-      <time class="dt-published" datetime="2013-03-26T12:33:00+00:00" itemprop="datePublished">Mar 26, 2013
-      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+    <p class="post-meta"><time class="dt-published" datetime="2013-03-26T12:33:00+00:00" itemprop="datePublished">
+        Mar 26, 2013
+      </time>• 
+          <span itemprop="author" itemscope itemtype="http://schema.org/Person">
+            <span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
@@ -120,21 +124,31 @@ The correct implementation to achieve the desired behaviour asynchronously is re
 
   <div class="wrapper">
 
-    <h2 class="footer-heading">Deplication</h2>
-
     <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
+      <div class="footer-col">
+        <p class="feed-subscribe">
+          <a href="http://localhost:4000/feed.xml">
+            <svg class="svg-icon orange">
+              <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194
+                11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0
+                13.806c0-1.21.983-2.195 2.194-2.195zM10.606
+                16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"
+              />
+            </svg><span>Subscribe</span>
+          </a>
+        </p>
         <ul class="contact-list">
-          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+          <li class="p-name">GitHub User</li>
+          <li><a class="u-email" href="mailto:your-email@domain.com">your-email@domain.com</a></li>
+        </ul>
       </div>
-
-      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
-</div>
-
-      <div class="footer-col footer-col-3">
+      <div class="footer-col">
         <p>Simpler is better.</p>
       </div>
     </div>
+
+    <div class="social-links"><ul class="social-media-list"></ul>
+</div>
 
   </div>
 
