@@ -20,23 +20,21 @@
 
 
 title: Deplication
-author: Craig Watcham
+email: craig@deplication.net
 description: >- # this means to ignore newlines until "baseurl:"
   Simpler is better.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "" # the base hostname & protocol for your site, e.g. http://example.com
+#twitter_username: jekyllrb
+github_username:  watchamcb
 
 # Build settings
-remote_theme: daattali/beautiful-jekyll@6.0.1
+theme: minima
+minima:
+  skin: auto
+  show_excerpts: true
 plugins:
-  # - jekyll-feed
-  - Jekyll-remote-theme
-  - jekyll-paginate
-  - jekyll-sitemap
-
-social-network-links:
-  email: craig@deplication.net
-  github:  watchamcb
+  - jekyll-feed
 
 
 # Exclude from processing.
@@ -47,14 +45,14 @@ social-network-links:
 # Excluded items can be processed by explicitly listing the directories or
 # their entries' file path in the `include:` list.
 #
-exclude:
-  - .sass-cache/
-  - .jekyll-cache/
-  - gemfiles/
-  - Gemfile
-  - Gemfile.lock
-  - node_modules/
-  - vendor/bundle/
-  - vendor/cache/
-  - vendor/gems/
-  - vendor/ruby/
+# exclude:
+#   - .sass-cache/
+#   - .jekyll-cache/
+#   - gemfiles/
+#   - Gemfile
+#   - Gemfile.lock
+#   - node_modules/
+#   - vendor/bundle/
+#   - vendor/cache/
+#   - vendor/gems/
+#   - vendor/ruby/

@@ -1,180 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
-<!-- Beautiful Jekyll 6.0.1 | Copyright Dean Attali 2023 -->
-<head>
+<html lang="en"><head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Curl with Kerberos authentication | Deplication</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Curl with Kerberos authentication" />
+<meta name="author" content="Craig Watcham" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don’t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (–negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V. $ curl “https://your-secure-url/path/query?param=1&amp;value=2” -u : –negotiate This will return the requested page and print it to console Doing the same thing in Python (with pycurl - ‘pip install pycurl’): import pycurl curl = pycurl.Curl() curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE) curl.setopt(pycurl.USERPWD, &#39;:&#39;) curl.setopt(pycurl.URL, &#39;https://your-secure-url/path/query?param=1&amp;value=2&#39;) curl.perform() curl.close() And finally in PHP: $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, &quot;https://your-secure-url/path/query?param=1&amp;value=2&quot;); curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE); curl_setopt($ch, CURLOPT_USERPWD, &quot;:&quot;); curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); $page = curl_exec($ch); curl_close($ch);" />
+<meta property="og:description" content="Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don’t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (–negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V. $ curl “https://your-secure-url/path/query?param=1&amp;value=2” -u : –negotiate This will return the requested page and print it to console Doing the same thing in Python (with pycurl - ‘pip install pycurl’): import pycurl curl = pycurl.Curl() curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE) curl.setopt(pycurl.USERPWD, &#39;:&#39;) curl.setopt(pycurl.URL, &#39;https://your-secure-url/path/query?param=1&amp;value=2&#39;) curl.perform() curl.close() And finally in PHP: $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, &quot;https://your-secure-url/path/query?param=1&amp;value=2&quot;); curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE); curl_setopt($ch, CURLOPT_USERPWD, &quot;:&quot;); curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); $page = curl_exec($ch); curl_close($ch);" />
+<link rel="canonical" href="http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html" />
+<meta property="og:url" content="http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html" />
+<meta property="og:site_name" content="Deplication" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2014-02-19T08:24:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Curl with Kerberos authentication" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2014-02-19T08:24:00+00:00","datePublished":"2014-02-19T08:24:00+00:00","description":"Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don’t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (–negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V. $ curl “https://your-secure-url/path/query?param=1&amp;value=2” -u : –negotiate This will return the requested page and print it to console Doing the same thing in Python (with pycurl - ‘pip install pycurl’): import pycurl curl = pycurl.Curl() curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE) curl.setopt(pycurl.USERPWD, &#39;:&#39;) curl.setopt(pycurl.URL, &#39;https://your-secure-url/path/query?param=1&amp;value=2&#39;) curl.perform() curl.close() And finally in PHP: $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, &quot;https://your-secure-url/path/query?param=1&amp;value=2&quot;); curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE); curl_setopt($ch, CURLOPT_USERPWD, &quot;:&quot;); curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); $page = curl_exec($ch); curl_close($ch);","headline":"Curl with Kerberos authentication","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html"},"url":"http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
+<body><header class="site-header" role="banner">
 
-  
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
 
-  
-
-  <title>Curl with Kerberos authentication</title>
-
-  
-  <meta name="author" content="Craig Watcham">
-  
-
-  <meta name="description" content="Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don&apos;t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next...">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-
-  
-    
-      
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
-
-    
-      
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
-
-
-    
-      
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
-
-
-    
-      
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800">
-
-
-    
-  
-
-  
-    
-      <link rel="stylesheet" href="/assets/css/bootstrap-social.css">
-    
-      <link rel="stylesheet" href="/assets/css/beautifuljekyll.css">
-    
-  
-
-  
-
-  
-  
-  
-
-  
-
-  
-  <meta property="og:site_name" content="Deplication">
-  <meta property="og:title" content="Curl with Kerberos authentication">
-  <meta property="og:description" content="Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don&apos;t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next...">
-
-  
-
-  
-  <meta property="og:type" content="article">
-  <meta property="og:article:author" content="Craig Watcham">
-  <meta property="og:article:published_time" content="2014-02-19T08:24:00+00:00">
-  <meta property="og:url" content="http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html">
-  <link rel="canonical" href="http://localhost:4000/2014/02/19/curl-with-kerberos-authentication.html">
-  
-
-  
-  <meta name="twitter:card" content="summary">
-  
-  <meta name="twitter:site" content="@">
-  <meta name="twitter:creator" content="@">
-
-  <meta property="twitter:title" content="Curl with Kerberos authentication">
-  <meta property="twitter:description" content="Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don&apos;t have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding: $ kinit -f You may need to enter your password to authenticate yourself. Next...">
-
-  
-
-  
-
-
-  
-
-  
-
-</head>
-
-
-<body>
-
-  
-
-
-  <nav class="navbar navbar-expand-xl navbar-light fixed-top navbar-custom top-nav-regular"><a class="navbar-brand" href="http://localhost:4000/">Deplication</a><button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="main-navbar">
-    <ul class="navbar-nav ml-auto"></ul>
-  </div>
-
-  
-
-  
-
-</nav>
-
-
-
-
-
-  <!-- TODO this file has become a mess, refactor it -->
-
-
-
-
-
-
-
-<header class="header-section ">
-
-<div class="intro-header no-img">
-  <div class="container-md">
-    <div class="row">
-      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-        <div class="post-heading">
-          <h1>Curl with Kerberos authentication</h1>
-          
-
-          
-            <span class="post-meta">Posted on February 19, 2014</span>
-            
-            
-          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
 </header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Curl with Kerberos authentication</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2014-02-19T08:24:00+00:00" itemprop="datePublished">Feb 19, 2014
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+  </header>
 
-
-
-
-<div class=" container-md ">
-  <div class="row">
-    <div class=" col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 ">
-
-      
-
-      
-
-      <article role="main" class="blog-post">
-        Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don't have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding:<br />
+  <div class="post-content e-content" itemprop="articleBody">
+    Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don't have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding:<br />
 <br />
 $ kinit -f<br />
 <br />
@@ -225,127 +99,34 @@ curl_close($ch);</div>
 <div>
 <br /></div>
 
-      </article>
+  </div><a class="u-url" href="/2014/02/19/curl-with-kerberos-authentication.html" hidden></a>
+</article>
 
-      
-        <div class="blog-tags">
-          <span>Tags:</span>
-          
-            <a href="/tags#Kerberos">Kerberos</a>
-          
-            <a href="/tags#python">python</a>
-          
-            <a href="/tags#Curl">Curl</a>
-          
-            <a href="/tags#PHP">PHP</a>
-          
-        </div>
-      
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
 
-      
+  <div class="wrapper">
 
-      
+    <h2 class="footer-heading">Deplication</h2>
 
-      <ul class="pagination blog-pager">
-        
-        <li class="page-item previous">
-          <a class="page-link" href="/2014/01/08/python-gotcha-bound-method.html" data-toggle="tooltip" data-placement="top" title="Python gotcha: bound method">&larr; Previous Post</a>
-        </li>
-        
-        
-        <li class="page-item next">
-          <a class="page-link" href="/2014/03/26/data-formatting-with-vim-regular.html" data-toggle="tooltip" data-placement="top" title="Data formatting with vim regular expressions">Next Post &rarr;</a>
-        </li>
-        
-      </ul>
-      
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+      </div>
 
-    </div>
-  </div>
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
 </div>
 
-
-  <footer>
-  <div class="container-md beautiful-jekyll-footer">
-    <div class="row">
-      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-      <ul class="list-inline text-center footer-links"><li class="list-inline-item">
-    <a href="mailto:craig@deplication.net" title="Email me">
-      <span class="fa-stack fa-lg" aria-hidden="true">
-        <i class="fas fa-circle fa-stack-2x"></i>
-        <i class="fas fa-envelope fa-stack-1x fa-inverse"></i>
-      </span>
-      <span class="sr-only">Email me</span>
-   </a>
-  </li><li class="list-inline-item">
-    <a href="https://github.com/watchamcb" title="GitHub">
-      <span class="fa-stack fa-lg" aria-hidden="true">
-        <i class="fas fa-circle fa-stack-2x"></i>
-        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
-      </span>
-      <span class="sr-only">GitHub</span>
-   </a>
-  </li></ul>
-
-      
-      <p class="copyright text-muted">
-      
-        Craig Watcham
-        &nbsp;&bull;&nbsp;
-      
-      2025
-
-      
-
-      
-
-      
-
-      </p>
-      <p class="theme-by text-muted">
-        Powered by
-        <a href="https://beautifuljekyll.com">Beautiful Jekyll</a>
-      </p>
+      <div class="footer-col footer-col-3">
+        <p>Simpler is better.</p>
       </div>
     </div>
+
   </div>
+
 </footer>
-
-
-  
-  
-    
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
-
-
-  
-    
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-
-
-  
-    
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-
-
-  
-
-
-
-  
-    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
-    
-      <script src="/assets/js/beautifuljekyll.js"></script>
-    
-  
-
-
-
-
-
-
-
-
-
 </body>
+
 </html>

@@ -1,180 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
-<!-- Beautiful Jekyll 6.0.1 | Copyright Dean Attali 2023 -->
-<head>
+<html lang="en"><head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Bash script to extract dependencies from Java WebStart | Deplication</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Bash script to extract dependencies from Java WebStart" />
+<meta name="author" content="Craig Watcham" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath: #!/bin/bash SERVER=http://server:8082/e-calypso/ wget -Nrq -nd $SERVER/html/jaws/calypso.jnlp CP=”” for jar in cat calypso.jnlp&lt;/span&gt; &lt;span style=&quot;color: orange;&quot;&gt;| grep&lt;/span&gt; jar &lt;span style=&quot;color: orange;&quot;&gt;|&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;cut -d&lt;/span&gt;&lt;span style=&quot;color: orange;&quot;&gt;&quot;&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt;\&quot;&lt;/span&gt;&lt;span style=&quot;color: orange;&quot;&gt;&quot;&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;-f&lt;/span&gt; &lt;span style=&quot;color: red;&quot;&gt;2&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt; do         CP=”$CP:./lib/”echo $jar&lt;/span&gt; &lt;span style=&quot;color: orange;&quot;&gt;|&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;cut -d&lt;/span&gt;&quot;&lt;span style=&quot;color: magenta;&quot;&gt;/&lt;/span&gt;&quot; &lt;span style=&quot;color: magenta;&quot;&gt;-f&lt;/span&gt; &lt;span style=&quot;color: red;&quot;&gt;3&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt;         wget -Nrq -nd $SERVER$jar done echo $CP &gt; classpath The function of the script is pretty simple, it retrieves the JNLP file from the server and then extracts all jar references in the file to retrieve the corresponding JAR files. As the JAR files are being retrieved they are added (in the correct order) to a variable to be used as the classpath.&nbsp; The need for this script arose from a requirement to have a client application launch using the correct dependencies and classpath ordering as used by the WebStart application. An alternative approach would have been to create a new WebStart JNLP with the new application as the entry point, unfortunately this was not practical given the organisational constraints (no access to deploy the change and 6+ week lead time for deployment via the approved process). Some useful side effects of this approach: It can be used to launch the application in the JNLP without requiring a WebStart launcher The application can be launched with additional JVM arguments not supported by WebStart A few notes on the script (as always): The -Nrq command line option to wget uses time stamps (-N) to ensure only new files are downloaded. The existing files are overwritten (-r) with the latest version, rather than having a number appended to the file name as is the default behaviour for wget. The output from wget is suppressed by the -q option so as not to print out unnecessary information. The -nd command line option prevents wget from creating directory structures when retrieving the files, this simplifies the classpath creation. The generation of the classpath could be improved with a regular expression rather than expecting a specific format in the JNLP file." />
+<meta property="og:description" content="A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath: #!/bin/bash SERVER=http://server:8082/e-calypso/ wget -Nrq -nd $SERVER/html/jaws/calypso.jnlp CP=”” for jar in cat calypso.jnlp&lt;/span&gt; &lt;span style=&quot;color: orange;&quot;&gt;| grep&lt;/span&gt; jar &lt;span style=&quot;color: orange;&quot;&gt;|&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;cut -d&lt;/span&gt;&lt;span style=&quot;color: orange;&quot;&gt;&quot;&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt;\&quot;&lt;/span&gt;&lt;span style=&quot;color: orange;&quot;&gt;&quot;&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;-f&lt;/span&gt; &lt;span style=&quot;color: red;&quot;&gt;2&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt; do         CP=”$CP:./lib/”echo $jar&lt;/span&gt; &lt;span style=&quot;color: orange;&quot;&gt;|&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;cut -d&lt;/span&gt;&quot;&lt;span style=&quot;color: magenta;&quot;&gt;/&lt;/span&gt;&quot; &lt;span style=&quot;color: magenta;&quot;&gt;-f&lt;/span&gt; &lt;span style=&quot;color: red;&quot;&gt;3&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt;         wget -Nrq -nd $SERVER$jar done echo $CP &gt; classpath The function of the script is pretty simple, it retrieves the JNLP file from the server and then extracts all jar references in the file to retrieve the corresponding JAR files. As the JAR files are being retrieved they are added (in the correct order) to a variable to be used as the classpath.&nbsp; The need for this script arose from a requirement to have a client application launch using the correct dependencies and classpath ordering as used by the WebStart application. An alternative approach would have been to create a new WebStart JNLP with the new application as the entry point, unfortunately this was not practical given the organisational constraints (no access to deploy the change and 6+ week lead time for deployment via the approved process). Some useful side effects of this approach: It can be used to launch the application in the JNLP without requiring a WebStart launcher The application can be launched with additional JVM arguments not supported by WebStart A few notes on the script (as always): The -Nrq command line option to wget uses time stamps (-N) to ensure only new files are downloaded. The existing files are overwritten (-r) with the latest version, rather than having a number appended to the file name as is the default behaviour for wget. The output from wget is suppressed by the -q option so as not to print out unnecessary information. The -nd command line option prevents wget from creating directory structures when retrieving the files, this simplifies the classpath creation. The generation of the classpath could be improved with a regular expression rather than expecting a specific format in the JNLP file." />
+<link rel="canonical" href="http://localhost:4000/2012/06/07/bash-script-to-extract-dependencies.html" />
+<meta property="og:url" content="http://localhost:4000/2012/06/07/bash-script-to-extract-dependencies.html" />
+<meta property="og:site_name" content="Deplication" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2012-06-07T12:11:00+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Bash script to extract dependencies from Java WebStart" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2012-06-07T12:11:00+01:00","datePublished":"2012-06-07T12:11:00+01:00","description":"A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath: #!/bin/bash SERVER=http://server:8082/e-calypso/ wget -Nrq -nd $SERVER/html/jaws/calypso.jnlp CP=”” for jar in cat calypso.jnlp&lt;/span&gt; &lt;span style=&quot;color: orange;&quot;&gt;| grep&lt;/span&gt; jar &lt;span style=&quot;color: orange;&quot;&gt;|&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;cut -d&lt;/span&gt;&lt;span style=&quot;color: orange;&quot;&gt;&quot;&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt;\\&quot;&lt;/span&gt;&lt;span style=&quot;color: orange;&quot;&gt;&quot;&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;-f&lt;/span&gt; &lt;span style=&quot;color: red;&quot;&gt;2&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt; do         CP=”$CP:./lib/”echo $jar&lt;/span&gt; &lt;span style=&quot;color: orange;&quot;&gt;|&lt;/span&gt; &lt;span style=&quot;color: magenta;&quot;&gt;cut -d&lt;/span&gt;&quot;&lt;span style=&quot;color: magenta;&quot;&gt;/&lt;/span&gt;&quot; &lt;span style=&quot;color: magenta;&quot;&gt;-f&lt;/span&gt; &lt;span style=&quot;color: red;&quot;&gt;3&lt;/span&gt;&lt;span style=&quot;color: magenta;&quot;&gt;         wget -Nrq -nd $SERVER$jar done echo $CP &gt; classpath The function of the script is pretty simple, it retrieves the JNLP file from the server and then extracts all jar references in the file to retrieve the corresponding JAR files. As the JAR files are being retrieved they are added (in the correct order) to a variable to be used as the classpath.&nbsp; The need for this script arose from a requirement to have a client application launch using the correct dependencies and classpath ordering as used by the WebStart application. An alternative approach would have been to create a new WebStart JNLP with the new application as the entry point, unfortunately this was not practical given the organisational constraints (no access to deploy the change and 6+ week lead time for deployment via the approved process). Some useful side effects of this approach: It can be used to launch the application in the JNLP without requiring a WebStart launcher The application can be launched with additional JVM arguments not supported by WebStart A few notes on the script (as always): The -Nrq command line option to wget uses time stamps (-N) to ensure only new files are downloaded. The existing files are overwritten (-r) with the latest version, rather than having a number appended to the file name as is the default behaviour for wget. The output from wget is suppressed by the -q option so as not to print out unnecessary information. The -nd command line option prevents wget from creating directory structures when retrieving the files, this simplifies the classpath creation. The generation of the classpath could be improved with a regular expression rather than expecting a specific format in the JNLP file.","headline":"Bash script to extract dependencies from Java WebStart","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2012/06/07/bash-script-to-extract-dependencies.html"},"url":"http://localhost:4000/2012/06/07/bash-script-to-extract-dependencies.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
+<body><header class="site-header" role="banner">
 
-  
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
 
-  
-
-  <title>Bash script to extract dependencies from Java WebStart</title>
-
-  
-  <meta name="author" content="Craig Watcham">
-  
-
-  <meta name="description" content="A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath: #!/bin/bash SERVER=http://server:8082/e-calypso/ wget -Nrq -nd $SERVER/html/jaws/calypso.jnlp CP=&quot;&quot; for jar in `cat calypso.jnlp | grep jar | cut -d&quot;\&quot;&quot; -f 2` do &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; CP=&quot;$CP:./lib/&quot;`echo $jar | cut -d&quot;/&quot; -f 3`...">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-
-  
-    
-      
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
-
-    
-      
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
-
-
-    
-      
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
-
-
-    
-      
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800">
-
-
-    
-  
-
-  
-    
-      <link rel="stylesheet" href="/assets/css/bootstrap-social.css">
-    
-      <link rel="stylesheet" href="/assets/css/beautifuljekyll.css">
-    
-  
-
-  
-
-  
-  
-  
-
-  
-
-  
-  <meta property="og:site_name" content="Deplication">
-  <meta property="og:title" content="Bash script to extract dependencies from Java WebStart">
-  <meta property="og:description" content="A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath: #!/bin/bash SERVER=http://server:8082/e-calypso/ wget -Nrq -nd $SERVER/html/jaws/calypso.jnlp CP=&quot;&quot; for jar in `cat calypso.jnlp | grep jar | cut -d&quot;\&quot;&quot; -f 2` do &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; CP=&quot;$CP:./lib/&quot;`echo $jar | cut -d&quot;/&quot; -f 3`...">
-
-  
-
-  
-  <meta property="og:type" content="article">
-  <meta property="og:article:author" content="Craig Watcham">
-  <meta property="og:article:published_time" content="2012-06-07T12:11:00+01:00">
-  <meta property="og:url" content="http://localhost:4000/2012/06/07/bash-script-to-extract-dependencies.html">
-  <link rel="canonical" href="http://localhost:4000/2012/06/07/bash-script-to-extract-dependencies.html">
-  
-
-  
-  <meta name="twitter:card" content="summary">
-  
-  <meta name="twitter:site" content="@">
-  <meta name="twitter:creator" content="@">
-
-  <meta property="twitter:title" content="Bash script to extract dependencies from Java WebStart">
-  <meta property="twitter:description" content="A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath: #!/bin/bash SERVER=http://server:8082/e-calypso/ wget -Nrq -nd $SERVER/html/jaws/calypso.jnlp CP=&quot;&quot; for jar in `cat calypso.jnlp | grep jar | cut -d&quot;\&quot;&quot; -f 2` do &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; CP=&quot;$CP:./lib/&quot;`echo $jar | cut -d&quot;/&quot; -f 3`...">
-
-  
-
-  
-
-
-  
-
-  
-
-</head>
-
-
-<body>
-
-  
-
-
-  <nav class="navbar navbar-expand-xl navbar-light fixed-top navbar-custom top-nav-regular"><a class="navbar-brand" href="http://localhost:4000/">Deplication</a><button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="main-navbar">
-    <ul class="navbar-nav ml-auto"></ul>
-  </div>
-
-  
-
-  
-
-</nav>
-
-
-
-
-
-  <!-- TODO this file has become a mess, refactor it -->
-
-
-
-
-
-
-
-<header class="header-section ">
-
-<div class="intro-header no-img">
-  <div class="container-md">
-    <div class="row">
-      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-        <div class="post-heading">
-          <h1>Bash script to extract dependencies from Java WebStart</h1>
-          
-
-          
-            <span class="post-meta">Posted on June 7, 2012</span>
-            
-            
-          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
 </header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Bash script to extract dependencies from Java WebStart</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2012-06-07T12:11:00+01:00" itemprop="datePublished">Jun 7, 2012
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+  </header>
 
-
-
-
-<div class=" container-md ">
-  <div class="row">
-    <div class=" col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 ">
-
-      
-
-      
-
-      <article role="main" class="blog-post">
-        A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath:<br />
+  <div class="post-content e-content" itemprop="articleBody">
+    A quick script to retrieve all the WebStart artifacts from a JNLP file and generate a corresponding classpath:<br />
 <br />
 <br />
 <span style="color: blue; font-family: 'Courier New', Courier, monospace;">#!/bin/bash</span><br />
@@ -217,114 +91,34 @@ A few notes on the script (as always):</div>
 <li>The generation of the classpath could be improved with a regular expression rather than expecting a specific format in the JNLP file.</li>
 </ol>
 </div>
-      </article>
+  </div><a class="u-url" href="/2012/06/07/bash-script-to-extract-dependencies.html" hidden></a>
+</article>
 
-      
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
 
-      
+  <div class="wrapper">
 
-      
+    <h2 class="footer-heading">Deplication</h2>
 
-      <ul class="pagination blog-pager">
-        
-        <li class="page-item previous">
-          <a class="page-link" href="/2012/04/12/calypso-v12-api-changes-disconnecting.html" data-toggle="tooltip" data-placement="top" title="Calypso v12 API changes - Disconnecting a client from the DataServer">&larr; Previous Post</a>
-        </li>
-        
-        
-        <li class="page-item next">
-          <a class="page-link" href="/2012/06/08/getting-intranet-website-authentication.html" data-toggle="tooltip" data-placement="top" title="Getting intranet website authentication wrong">Next Post &rarr;</a>
-        </li>
-        
-      </ul>
-      
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+      </div>
 
-    </div>
-  </div>
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
 </div>
 
-
-  <footer>
-  <div class="container-md beautiful-jekyll-footer">
-    <div class="row">
-      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-      <ul class="list-inline text-center footer-links"><li class="list-inline-item">
-    <a href="mailto:craig@deplication.net" title="Email me">
-      <span class="fa-stack fa-lg" aria-hidden="true">
-        <i class="fas fa-circle fa-stack-2x"></i>
-        <i class="fas fa-envelope fa-stack-1x fa-inverse"></i>
-      </span>
-      <span class="sr-only">Email me</span>
-   </a>
-  </li><li class="list-inline-item">
-    <a href="https://github.com/watchamcb" title="GitHub">
-      <span class="fa-stack fa-lg" aria-hidden="true">
-        <i class="fas fa-circle fa-stack-2x"></i>
-        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
-      </span>
-      <span class="sr-only">GitHub</span>
-   </a>
-  </li></ul>
-
-      
-      <p class="copyright text-muted">
-      
-        Craig Watcham
-        &nbsp;&bull;&nbsp;
-      
-      2025
-
-      
-
-      
-
-      
-
-      </p>
-      <p class="theme-by text-muted">
-        Powered by
-        <a href="https://beautifuljekyll.com">Beautiful Jekyll</a>
-      </p>
+      <div class="footer-col footer-col-3">
+        <p>Simpler is better.</p>
       </div>
     </div>
+
   </div>
+
 </footer>
-
-
-  
-  
-    
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
-
-
-  
-    
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-
-
-  
-    
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-
-
-  
-
-
-
-  
-    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
-    
-      <script src="/assets/js/beautifuljekyll.js"></script>
-    
-  
-
-
-
-
-
-
-
-
-
 </body>
+
 </html>

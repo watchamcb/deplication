@@ -1,180 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
-<!-- Beautiful Jekyll 6.0.1 | Copyright Dean Attali 2023 -->
-<head>
+<html lang="en"><head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>The importance of choosing the right data structure | Deplication</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="The importance of choosing the right data structure" />
+<meta name="author" content="Craig Watcham" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post demonstrates the importance of data structure selection with a contrived problem posed in a technical interview and a real world application. The problem posed is as follows. Imagine you have a list of unsorted positive integers greater than zero. The list can be of arbitrary size but your algorithm must cater for extremely large lists (think millions or hundreds of millions of items). The list consists of items such that the number of occurrences of any particular integer is always even. One (and only one) integer in the list has an odd number of occurrences, how would you find that integer? So for example, the list consisting of the following integers 5, 73, 8, 24, 24, 5, 73, 1, 24, 24, 5, 1, 8 has 5 as the number occurring an odd number of times (3 in this case but could be any odd number). This is a great interview question as it allows the interviewer to get a feel for how an applicant approaches a problem and opens up various other branches of investigation. For example the applicants knowledge of algorithm efficiency (Big O notation) and sorting algorithms can be explored. The key point in solving the problem revolves around how many times each of the items needs to be accessed to find a solution: Every item needs to be visited at least once, no conclusion can be drawn until the last number is known. There is no benefit to sorting the items, after sorting the problem is not solved and it will have incurred the additional cost of sorting Using a map is not efficient for extremely large inputs and still requires an additional step for iterating over each of the unique values to check oddness The ideal data structure to solve the problem is actually a Set. For each item add it to the set if it is not already present, if it is present the remove it, after processing all the items the set will contain the integer occurring an odd number of times. Ironically (for a post about data structures) there is an even simpler algebraic solution to the problem, performing a bitwise XOR (the ^ operator in Java) on all the input numbers results in the same solution without the use of a data structure. As stated above this example is contrived specifically for use in technical interviews, a real world application of data structure selection is as follows. A functional requirement for a critical component of the system is that no two threads try and update an object (with a unique identifier) simultaneously. The system is multi-threaded and event driven, with certain events triggering the object updates. Simultaneous updates would result in a version exception and require manual intervention to correct. An initial (optimistic) solution is to add the synchronized keyword to the method responsible for performing the update, thus ensuring sequential execution of updates. While this approach should work as desired it incurs the cost of class level locking and prevents any kind of concurrency, even for update requests to distinct objects which could actually be executed in parallel. This raises the non-functional requirement of the component namely performance. The component is responsible for cash movements in the system and at peak times can have thousands of events generated every second. While there is no real-time requirement, the delay introduced by the synchronized method could lead to the last events being processed minutes after they were received, a situation that was not acceptable to the business. After closer investigation it was identified that in the worst case only a fraction of the updates would ever attempt simultaneous updates. To restate the problem, how can duplicate requests be blocked while allowing distinct requests to process concurrently? public class LockTest { protected static Set&lt;Integer&gt; ID_LOCK = Collections.synchronizedSet(new TreeSet&lt;Integer&gt;());" />
+<meta property="og:description" content="A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post demonstrates the importance of data structure selection with a contrived problem posed in a technical interview and a real world application. The problem posed is as follows. Imagine you have a list of unsorted positive integers greater than zero. The list can be of arbitrary size but your algorithm must cater for extremely large lists (think millions or hundreds of millions of items). The list consists of items such that the number of occurrences of any particular integer is always even. One (and only one) integer in the list has an odd number of occurrences, how would you find that integer? So for example, the list consisting of the following integers 5, 73, 8, 24, 24, 5, 73, 1, 24, 24, 5, 1, 8 has 5 as the number occurring an odd number of times (3 in this case but could be any odd number). This is a great interview question as it allows the interviewer to get a feel for how an applicant approaches a problem and opens up various other branches of investigation. For example the applicants knowledge of algorithm efficiency (Big O notation) and sorting algorithms can be explored. The key point in solving the problem revolves around how many times each of the items needs to be accessed to find a solution: Every item needs to be visited at least once, no conclusion can be drawn until the last number is known. There is no benefit to sorting the items, after sorting the problem is not solved and it will have incurred the additional cost of sorting Using a map is not efficient for extremely large inputs and still requires an additional step for iterating over each of the unique values to check oddness The ideal data structure to solve the problem is actually a Set. For each item add it to the set if it is not already present, if it is present the remove it, after processing all the items the set will contain the integer occurring an odd number of times. Ironically (for a post about data structures) there is an even simpler algebraic solution to the problem, performing a bitwise XOR (the ^ operator in Java) on all the input numbers results in the same solution without the use of a data structure. As stated above this example is contrived specifically for use in technical interviews, a real world application of data structure selection is as follows. A functional requirement for a critical component of the system is that no two threads try and update an object (with a unique identifier) simultaneously. The system is multi-threaded and event driven, with certain events triggering the object updates. Simultaneous updates would result in a version exception and require manual intervention to correct. An initial (optimistic) solution is to add the synchronized keyword to the method responsible for performing the update, thus ensuring sequential execution of updates. While this approach should work as desired it incurs the cost of class level locking and prevents any kind of concurrency, even for update requests to distinct objects which could actually be executed in parallel. This raises the non-functional requirement of the component namely performance. The component is responsible for cash movements in the system and at peak times can have thousands of events generated every second. While there is no real-time requirement, the delay introduced by the synchronized method could lead to the last events being processed minutes after they were received, a situation that was not acceptable to the business. After closer investigation it was identified that in the worst case only a fraction of the updates would ever attempt simultaneous updates. To restate the problem, how can duplicate requests be blocked while allowing distinct requests to process concurrently? public class LockTest { protected static Set&lt;Integer&gt; ID_LOCK = Collections.synchronizedSet(new TreeSet&lt;Integer&gt;());" />
+<link rel="canonical" href="http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html" />
+<meta property="og:url" content="http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html" />
+<meta property="og:site_name" content="Deplication" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2011-07-13T20:54:00+01:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="The importance of choosing the right data structure" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","author":{"@type":"Person","name":"Craig Watcham"},"dateModified":"2011-07-13T20:54:00+01:00","datePublished":"2011-07-13T20:54:00+01:00","description":"A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post demonstrates the importance of data structure selection with a contrived problem posed in a technical interview and a real world application. The problem posed is as follows. Imagine you have a list of unsorted positive integers greater than zero. The list can be of arbitrary size but your algorithm must cater for extremely large lists (think millions or hundreds of millions of items). The list consists of items such that the number of occurrences of any particular integer is always even. One (and only one) integer in the list has an odd number of occurrences, how would you find that integer? So for example, the list consisting of the following integers 5, 73, 8, 24, 24, 5, 73, 1, 24, 24, 5, 1, 8 has 5 as the number occurring an odd number of times (3 in this case but could be any odd number). This is a great interview question as it allows the interviewer to get a feel for how an applicant approaches a problem and opens up various other branches of investigation. For example the applicants knowledge of algorithm efficiency (Big O notation) and sorting algorithms can be explored. The key point in solving the problem revolves around how many times each of the items needs to be accessed to find a solution: Every item needs to be visited at least once, no conclusion can be drawn until the last number is known. There is no benefit to sorting the items, after sorting the problem is not solved and it will have incurred the additional cost of sorting Using a map is not efficient for extremely large inputs and still requires an additional step for iterating over each of the unique values to check oddness The ideal data structure to solve the problem is actually a Set. For each item add it to the set if it is not already present, if it is present the remove it, after processing all the items the set will contain the integer occurring an odd number of times. Ironically (for a post about data structures) there is an even simpler algebraic solution to the problem, performing a bitwise XOR (the ^ operator in Java) on all the input numbers results in the same solution without the use of a data structure. As stated above this example is contrived specifically for use in technical interviews, a real world application of data structure selection is as follows. A functional requirement for a critical component of the system is that no two threads try and update an object (with a unique identifier) simultaneously. The system is multi-threaded and event driven, with certain events triggering the object updates. Simultaneous updates would result in a version exception and require manual intervention to correct. An initial (optimistic) solution is to add the synchronized keyword to the method responsible for performing the update, thus ensuring sequential execution of updates. While this approach should work as desired it incurs the cost of class level locking and prevents any kind of concurrency, even for update requests to distinct objects which could actually be executed in parallel. This raises the non-functional requirement of the component namely performance. The component is responsible for cash movements in the system and at peak times can have thousands of events generated every second. While there is no real-time requirement, the delay introduced by the synchronized method could lead to the last events being processed minutes after they were received, a situation that was not acceptable to the business. After closer investigation it was identified that in the worst case only a fraction of the updates would ever attempt simultaneous updates. To restate the problem, how can duplicate requests be blocked while allowing distinct requests to process concurrently? public class LockTest { protected static Set&lt;Integer&gt; ID_LOCK = Collections.synchronizedSet(new TreeSet&lt;Integer&gt;());","headline":"The importance of choosing the right data structure","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html"},"url":"http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="Deplication" /></head>
+<body><header class="site-header" role="banner">
 
-  
+  <div class="wrapper"><a class="site-title" rel="author" href="/">Deplication</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
 
-  
-
-  <title>The importance of choosing the right data structure</title>
-
-  
-  <meta name="author" content="Craig Watcham">
-  
-
-  <meta name="description" content="A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post&amp;nbsp;demonstrates the importance of data structure selection&amp;nbsp;with a contrived problem posed in...">
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-  
-
-
-  
-    
-      
-  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-
-
-    
-      
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css">
-
-
-    
-      
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic">
-
-
-    
-      
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800">
-
-
-    
-  
-
-  
-    
-      <link rel="stylesheet" href="/assets/css/bootstrap-social.css">
-    
-      <link rel="stylesheet" href="/assets/css/beautifuljekyll.css">
-    
-  
-
-  
-
-  
-  
-  
-
-  
-
-  
-  <meta property="og:site_name" content="Deplication">
-  <meta property="og:title" content="The importance of choosing the right data structure">
-  <meta property="og:description" content="A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post&amp;nbsp;demonstrates the importance of data structure selection&amp;nbsp;with a contrived problem posed in...">
-
-  
-
-  
-  <meta property="og:type" content="article">
-  <meta property="og:article:author" content="Craig Watcham">
-  <meta property="og:article:published_time" content="2011-07-13T20:54:00+01:00">
-  <meta property="og:url" content="http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html">
-  <link rel="canonical" href="http://localhost:4000/2011/07/13/importance-of-choosing-right-data.html">
-  
-
-  
-  <meta name="twitter:card" content="summary">
-  
-  <meta name="twitter:site" content="@">
-  <meta name="twitter:creator" content="@">
-
-  <meta property="twitter:title" content="The importance of choosing the right data structure">
-  <meta property="twitter:description" content="A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post&amp;nbsp;demonstrates the importance of data structure selection&amp;nbsp;with a contrived problem posed in...">
-
-  
-
-  
-
-
-  
-
-  
-
-</head>
-
-
-<body>
-
-  
-
-
-  <nav class="navbar navbar-expand-xl navbar-light fixed-top navbar-custom top-nav-regular"><a class="navbar-brand" href="http://localhost:4000/">Deplication</a><button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#main-navbar" aria-controls="main-navbar" aria-expanded="false" aria-label="Toggle navigation">
-    <span class="navbar-toggler-icon"></span>
-  </button>
-
-  <div class="collapse navbar-collapse" id="main-navbar">
-    <ul class="navbar-nav ml-auto"></ul>
-  </div>
-
-  
-
-  
-
-</nav>
-
-
-
-
-
-  <!-- TODO this file has become a mess, refactor it -->
-
-
-
-
-
-
-
-<header class="header-section ">
-
-<div class="intro-header no-img">
-  <div class="container-md">
-    <div class="row">
-      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-        <div class="post-heading">
-          <h1>The importance of choosing the right data structure</h1>
-          
-
-          
-            <span class="post-meta">Posted on July 13, 2011</span>
-            
-            
-          
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+        <div class="trigger"><a class="page-link" href="/about/">About</a></div>
+      </nav></div>
 </header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
 
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">The importance of choosing the right data structure</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2011-07-13T20:54:00+01:00" itemprop="datePublished">Jul 13, 2011
+      </time>• <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="p-author h-card" itemprop="name">Craig Watcham</span></span></p>
+  </header>
 
-
-
-
-<div class=" container-md ">
-  <div class="row">
-    <div class=" col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 ">
-
-      
-
-      
-
-      <article role="main" class="blog-post">
-        A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post&nbsp;demonstrates the importance of data structure selection&nbsp;with a contrived problem posed in a technical interview and a real world application.<br />
+  <div class="post-content e-content" itemprop="articleBody">
+    A data structure is used for storing and organising data in system. Selecting the correct data structure for a particular problem is an important part of software design and will influence efficiency and maintainability of the code. This post&nbsp;demonstrates the importance of data structure selection&nbsp;with a contrived problem posed in a technical interview and a real world application.<br />
 <br />
 <blockquote>The problem posed is as follows. Imagine you have a list of unsorted positive integers greater than zero. The list can be of arbitrary size but your algorithm must cater for extremely large lists (think millions or hundreds of millions of items). The list consists of items such that the number of occurrences of any particular integer is always even. One (and only one) integer in the list has an odd number of occurrences, how would you find that integer?<br />
 <br />
@@ -250,125 +124,34 @@ Lets start by looking at the flow for a single threaded (non-duplicate) call to 
 <li>TreeSet is used for the ordering of the values, this is not strictly needed as the underlying implementation on a Set is generally a Map which will have a similar complexity for the look up as that of an insert into a SortedMap</li>
 <li>As always, this is just one solution to the problem. I am sure others exist, please feel free to comment if you have a more elegant solution</li>
 </ul><div>As you may have guessed (if you made it this far in the post), I am quite a fan of the Sets and lament the fact that they are not used more widely, particularly when they are well suited to solving a problem.</div></div>
-      </article>
+  </div><a class="u-url" href="/2011/07/13/importance-of-choosing-right-data.html" hidden></a>
+</article>
 
-      
-        <div class="blog-tags">
-          <span>Tags:</span>
-          
-            <a href="/tags#data structure">data structure</a>
-          
-            <a href="/tags#Java">Java</a>
-          
-            <a href="/tags#Set">Set</a>
-          
-        </div>
-      
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
 
-      
+  <div class="wrapper">
 
-      
+    <h2 class="footer-heading">Deplication</h2>
 
-      <ul class="pagination blog-pager">
-        
-        <li class="page-item previous">
-          <a class="page-link" href="/2011/07/12/handling-raw-type-and-type-safety.html" data-toggle="tooltip" data-placement="top" title="Handling raw type and type safety warnings when using legacy code">&larr; Previous Post</a>
-        </li>
-        
-        
-        <li class="page-item next">
-          <a class="page-link" href="/2011/07/16/bash-script-to-automate-report-checking.html" data-toggle="tooltip" data-placement="top" title="Bash script to automate report checking">Next Post &rarr;</a>
-        </li>
-        
-      </ul>
-      
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">Deplication</li><li><a class="u-email" href="mailto:craig@deplication.net">craig@deplication.net</a></li></ul>
+      </div>
 
-    </div>
-  </div>
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/watchamcb"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">watchamcb</span></a></li></ul>
 </div>
 
-
-  <footer>
-  <div class="container-md beautiful-jekyll-footer">
-    <div class="row">
-      <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-      <ul class="list-inline text-center footer-links"><li class="list-inline-item">
-    <a href="mailto:craig@deplication.net" title="Email me">
-      <span class="fa-stack fa-lg" aria-hidden="true">
-        <i class="fas fa-circle fa-stack-2x"></i>
-        <i class="fas fa-envelope fa-stack-1x fa-inverse"></i>
-      </span>
-      <span class="sr-only">Email me</span>
-   </a>
-  </li><li class="list-inline-item">
-    <a href="https://github.com/watchamcb" title="GitHub">
-      <span class="fa-stack fa-lg" aria-hidden="true">
-        <i class="fas fa-circle fa-stack-2x"></i>
-        <i class="fab fa-github fa-stack-1x fa-inverse"></i>
-      </span>
-      <span class="sr-only">GitHub</span>
-   </a>
-  </li></ul>
-
-      
-      <p class="copyright text-muted">
-      
-        Craig Watcham
-        &nbsp;&bull;&nbsp;
-      
-      2025
-
-      
-
-      
-
-      
-
-      </p>
-      <p class="theme-by text-muted">
-        Powered by
-        <a href="https://beautifuljekyll.com">Beautiful Jekyll</a>
-      </p>
+      <div class="footer-col footer-col-3">
+        <p>Simpler is better.</p>
       </div>
     </div>
+
   </div>
+
 </footer>
-
-
-  
-  
-    
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha256-4+XzXVhsDmqanXGHaHvgh1gMQKX40OUvDEBTu8JcmNs=" crossorigin="anonymous"></script>
-
-
-  
-    
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-
-
-  
-    
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-
-
-  
-
-
-
-  
-    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
-    
-      <script src="/assets/js/beautifuljekyll.js"></script>
-    
-  
-
-
-
-
-
-
-
-
-
 </body>
+
 </html>
