@@ -9,11 +9,15 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-47394456538994121
 blogger_orig_url: https://www.deplication.net/2014/04/aws-net-sdk-on-monolinux.html
 ---
 
-A quick guide to getting an AWS .NET console program running on Linux. Starting with the hard part, compiling the SDK from source.<br />
+<p>A quick guide to getting an AWS .NET console program running on Linux. Starting with the hard part, compiling the SDK
+from source.</p>
+
 <br />
-Update: NuGet can also be used if you are running Mono 3.2+, see&nbsp;<a href="http://www.deplication.net/2014/06/installing-aws-net-sdk-on-monolinux.html">this post</a><br />
+Update: NuGet can also be used if you are running Mono 3.2+, see&nbsp;<a
+    href="http://www.deplication.net/2014/06/installing-aws-net-sdk-on-monolinux.html">this post</a><br />
 <br />
-1. Install mono and associated tools (on Ubuntu/Debian), mozroots downloads root certificates to enable SSL via mono:<br />
+1. Install mono and associated tools (on Ubuntu/Debian), mozroots downloads root certificates to enable SSL via
+mono:<br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">sudo apt-get update</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">sudo apt-get install mono-complete git</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">mozroots --import --sync</span><br />
@@ -24,25 +28,35 @@ Update: NuGet can also be used if you are running Mono 3.2+, see&nbsp;<a href="h
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">cd mono-aws</span><br />
 <br />
 3. Retrieve the SDK source:<br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">git clone https://github.com/aws/aws-sdk-net.git</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">git clone
+    https://github.com/aws/aws-sdk-net.git</span><br />
 <br />
-4. Fix some file names (case is important to real operating systems). Update:&nbsp;this should be fixed in the next release of the SDK in which case it can be skipped:<br />
+4. Fix some file names (case is important to real operating systems). Update:&nbsp;this should be fixed in the next
+release of the SDK in which case it can be skipped:<br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">cd aws-sdk-net/AWSSDK_DotNet35/</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">mv Amazon.S3/Model/PUtACLResponse.cs Amazon.S3/Model/PutACLResponse.cs</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">mv Amazon.S3/IAmazonS3.extensions.cs Amazon.S3/IAmazonS3.Extensions.cs</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">mv Amazon.S3/Model/PUtACLResponse.cs
+    Amazon.S3/Model/PutACLResponse.cs</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">mv Amazon.S3/IAmazonS3.extensions.cs
+    Amazon.S3/IAmazonS3.Extensions.cs</span><br />
 <br />
-5. Compile core library, the command line parameters are to default the compile to use .NET 3.5 and not warn on anything other than compile errors (still in aws-sdk-net/AWSSDK_DotNet35):<br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">xbuild /p:TargetFrameworkProfile="" /p:WarningLevel=0</span><br />
+5. Compile core library, the command line parameters are to default the compile to use .NET 3.5 and not warn on anything
+other than compile errors (still in aws-sdk-net/AWSSDK_DotNet35):<br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">xbuild /p:TargetFrameworkProfile=""
+    /p:WarningLevel=0</span><br />
 <br />
 6. Compile extensions (still in aws-sdk-net/AWSSDK_DotNet35):<br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">cd ../AWS.Extensions/</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">xbuild /p:TargetFrameworkProfile="" /p:WarningLevel=0</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">xbuild /p:TargetFrameworkProfile=""
+    /p:WarningLevel=0</span><br />
 <br />
 7. Install libraries (from aws-sdk-net/AWS.Extentions):<br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">cd ../..</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">cp aws-sdk-net/AWS.Extensions/SessionProvider/bin/Debug\ v3.5/AWS.SessionProvider.dll lib</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">cp aws-sdk-net/AWS.Extensions/TraceListener/bin/Debug\ v3.5/AWS.TraceListener.dll lib</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">cp aws-sdk-net/AWSSDK_DotNet35/bin/Debug/AWSSDK.dll lib</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">cp
+    aws-sdk-net/AWS.Extensions/SessionProvider/bin/Debug\ v3.5/AWS.SessionProvider.dll lib</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">cp
+    aws-sdk-net/AWS.Extensions/TraceListener/bin/Debug\ v3.5/AWS.TraceListener.dll lib</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">cp aws-sdk-net/AWSSDK_DotNet35/bin/Debug/AWSSDK.dll
+    lib</span><br />
 <br />
 8. Create a command line program for example in s3.cs:<br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">using System;</span><br />
@@ -51,45 +65,61 @@ Update: NuGet can also be used if you are running Mono 3.2+, see&nbsp;<a href="h
 <span style="font-family: Verdana, sans-serif; font-size: x-small;"><br /></span>
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">class Upload</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">{</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; public static void Main(string[] args)</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; public static void Main(string[]
+    args)</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; {</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; // Create a client</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; AmazonS3Client client = new AmazonS3Client(Amazon.RegionEndpoint.USWest2);</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; AmazonS3Client client = new
+    AmazonS3Client(Amazon.RegionEndpoint.USWest2);</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;"><br /></span>
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; // Create a PutObject request</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; PutObjectRequest request = new PutObjectRequest</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; // Create a PutObject
+    request</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; PutObjectRequest request = new
+    PutObjectRequest</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; {</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; BucketName = "SampleBucket",</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; BucketName =
+    "SampleBucket",</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; Key = "Item1",</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; ContentBody = "This is sample content..."</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; ContentBody = "This is sample
+    content..."</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; };</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;"><br /></span>
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; // Put object</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; PutObjectResponse response = client.PutObject(request);</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; PutObjectResponse response =
+    client.PutObject(request);</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; }</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">}</span><br />
 <br />
 9. Compile your program:<br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">mcs s3.cs -r:./lib/AWSSDK.dll -r:./lib/AWS.TraceListener.dll -r:./lib/AWS.SessionProvider.dll</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">mcs s3.cs -r:./lib/AWSSDK.dll
+    -r:./lib/AWS.TraceListener.dll -r:./lib/AWS.SessionProvider.dll</span><br />
 <br />
 10. Set the Mono path<br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">export MONO_PATH=`pwd`/lib:.</span><br />
 <br />
-11. Create an application configuration (must be named to match the compiled program) for example in&nbsp;s3.exe.config:<br />
+11. Create an application configuration (must be named to match the compiled program) for example
+in&nbsp;s3.exe.config:<br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&lt;?xml version="1.0"?&gt;</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&lt;configuration&gt;</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &lt;appSettings&gt;</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &lt;add key="AWSAccessKey" value="AKXXXXXXXXXXXXXX"/&gt;</span><br />
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &lt;add key="AWSSecretKey" value="XXXXXXXXXXXXXXXXXXXXXXXX"/&gt;</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &lt;add
+    key="AWSAccessKey" value="AKXXXXXXXXXXXXXX"/&gt;</span><br />
+<span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &lt;add
+    key="AWSSecretKey" value="XXXXXXXXXXXXXXXXXXXXXXXX"/&gt;</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&nbsp; &nbsp; &lt;/appSettings&gt;</span><br />
 <span style="font-family: Verdana, sans-serif; font-size: x-small;">&lt;/configuration&gt;</span><br />
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-12. Run your program:</div>
+    12. Run your program:</div>
 <div>
-<span style="font-family: Verdana, sans-serif; font-size: x-small;">mono s3.exe</span></div>
+    <span style="font-family: Verdana, sans-serif; font-size: x-small;">mono s3.exe</span>
+</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-Of course there is also an easier approach that does not require the SDK to be compiled, you can just copy the DLLs from a Windows machine that has the SDK installed (typically into C:\Program Files (x86)\AWS SDK for .NET\bin\Net35). This allows you to skip steps 3 - 7.</div>
+    Of course there is also an easier approach that does not require the SDK to be compiled, you can just copy the DLLs
+    from a Windows machine that has the SDK installed (typically into C:\Program Files (x86)\AWS SDK for
+    .NET\bin\Net35). This allows you to skip steps 3 - 7.</div>

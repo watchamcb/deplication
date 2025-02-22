@@ -11,6 +11,10 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-42830570101808046
 blogger_orig_url: https://www.deplication.net/2013/11/self-contained-jar-file-creation-using.html
 ---
 
-Trick for the day. Adding the Maven Shade Plugin (as described <a href="http://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html">here</a>) to your pom.xml allows you to generate a self-contained executable JAR file including all libraries and dependencies.<br />
+<p>Trick for the day. Adding the Maven Shade Plugin (as described <a
+        href="http://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html">here</a>) to your pom.xml
+    allows you to generate a self-contained executable JAR file including all libraries and dependencies.</p>
+
 <br />
-"mvn package" to generate the JAR and then "java -jar mypackage.jar" to run. Useful for creating self-contained artifacts for offline distribution or for locking dependency versions.
+"mvn package" to generate the JAR and then "java -jar mypackage.jar" to run. Useful for creating self-contained
+artifacts for offline distribution or for locking dependency versions.

@@ -5,344 +5,581 @@ date: '2018-10-14T12:14:00.002+01:00'
 author: Craig Watcham
 tags:
 modified_time: '2019-02-14T21:22:53.384Z'
-thumbnail: https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEicqyJR3bVMAK9WZJje_DhhmUibchHe63cewImTcKtavLOQW9aEkJN460Xch5-hsycJJ6aHf00MwxKFwa0muLfbn5F5ElogevzGe_D_V6T0hxaSIDyhlxnoveNfaybNKLi3bD9MbNiToOU/s72-c/create_trail.png
-blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-4092594816022201376
-blogger_orig_url: https://www.deplication.net/2018/10/finding-s3-api-requests-from-previous.html
 ---
 
 <div class="separator" style="clear: both; text-align: center;">
 </div>
-<h3>
-Introduction</h3>
-Earlier this year the S3 team <span class="MsoHyperlink"><a href="https://forums.aws.amazon.com/ann.jspa?annID=5816">announced</a></span>
-that S3 will stop accepting API requests <span class="MsoHyperlink"><a href="https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html">signed</a></span>
+<p>
+Earlier this year the S3 team <span class="MsoHyperlink"><a
+    href="https://forums.aws.amazon.com/ann.jspa?annID=5816">announced</a></span>
+that S3 will stop accepting API requests <span class="MsoHyperlink"><a
+    href="https://docs.aws.amazon.com/general/latest/gr/signing_aws_api_requests.html">signed</a></span>
 using AWS Signature Version 2 after June 24th, 2019. Customers will need to
-update their SDKs, CLIs, and custom implementations to make use of <span class="MsoHyperlink"><a href="https://docs.aws.amazon.com/general/latest/gr/sigv4_changes.html">AWS
-Signature Version 4</a></span> to avoid impact after this date. It might be
+update their SDKs, CLIs, and custom implementations to make use of <span class="MsoHyperlink"><a
+    href="https://docs.aws.amazon.com/general/latest/gr/sigv4_changes.html">AWS
+    Signature Version 4</a></span> to avoid impact after this date. It might be
 difficult to find older applications or instances using outdated versions of
 the AWS CLI or SDKs that need to be updated, the purpose of this post is to
-explain how AWS CloudTrail <span class="MsoHyperlink"><a href="https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-management-and-data-events-with-cloudtrail.html#logging-data-events">data
-events</a></span> and Amazon Athena can be used to help identify applications
+explain how AWS CloudTrail <span class="MsoHyperlink"><a
+    href="https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-management-and-data-events-with-cloudtrail.html#logging-data-events">data
+    events</a></span> and Amazon Athena can be used to help identify applications
 that may need to be updated. We will cover the setup of the CloudTrail data
 events, the Athena table creation, and some Athena queries to filter and refine
-the results to help with this process.<br />
+the results to help with this process.</p>
+
 <br />
 <div class="separator" style="clear: both; text-align: center;">
 </div>
 <h3>
-Update (January/February 2019)</h3>
+  Update (January/February 2019)</h3>
 <div>
-S3 <a href="https://forums.aws.amazon.com/ann.jspa?annID=6551">recently added</a> a&nbsp;SignatureVersion item to the AdditionalEventData field in the S3 data events, this significantly simplifies the process of finding clients using SigV2. The SQL queries below have been updated to exclude events with a SigV4 signature (additionaleventdata NOT LIKE '%SigV4%'). You can equally search for only '%SigV2%' and skip the CLI version string munging entirely.</div>
+  S3 <a href="https://forums.aws.amazon.com/ann.jspa?annID=6551">recently added</a> a&nbsp;SignatureVersion item to the
+  AdditionalEventData field in the S3 data events, this significantly simplifies the process of finding clients using
+  SigV2. The SQL queries below have been updated to exclude events with a SigV4 signature (additionaleventdata NOT LIKE
+  '%SigV4%'). You can equally search for only '%SigV2%' and skip the CLI version string munging entirely.</div>
 <div>
-<br /></div>
+  <br />
+</div>
 <div class="MsoNormal">
-<o:p></o:p></div>
+  <o:p></o:p>
+</div>
 <h3>
-Setting up CloudTrail data events in the AWS console</h3>
+  Setting up CloudTrail data events in the AWS console</h3>
 <h1>
-<o:p></o:p></h1>
+  <o:p></o:p>
+</h1>
 <div class="MsoNormal">
-The first step is to create a trail to capture S3 data
-events. This should be done in the region you plan on running your Athena
-queries in order to avoid unnecessary data transfer charges. In the CloudTrail console
-for the region, create a new trail specifying the trail name. The ‘Apply trail
-to all regions’ option should be left as ‘Yes’ unless you plan on running
-separate analyses for each region. Given that we are creating a data events
-trail, select ‘None’ under the Management Events section and check the “Select
-all S3 buckets in your account” checkbox. Finally select the S3 location where
-the CloudTrail data will be written, we will create new bucket for simplicity:<o:p></o:p><br />
-<br /></div>
+  The first step is to create a trail to capture S3 data
+  events. This should be done in the region you plan on running your Athena
+  queries in order to avoid unnecessary data transfer charges. In the CloudTrail console
+  for the region, create a new trail specifying the trail name. The ‘Apply trail
+  to all regions’ option should be left as ‘Yes’ unless you plan on running
+  separate analyses for each region. Given that we are creating a data events
+  trail, select ‘None’ under the Management Events section and check the “Select
+  all S3 buckets in your account” checkbox. Finally select the S3 location where
+  the CloudTrail data will be written, we will create new bucket for simplicity:<o:p></o:p><br />
+  <br />
+</div>
 <div class="separator" style="clear: both; text-align: center;">
-<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEicqyJR3bVMAK9WZJje_DhhmUibchHe63cewImTcKtavLOQW9aEkJN460Xch5-hsycJJ6aHf00MwxKFwa0muLfbn5F5ElogevzGe_D_V6T0hxaSIDyhlxnoveNfaybNKLi3bD9MbNiToOU/s1600/create_trail.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="873" data-original-width="1128" height="494" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEicqyJR3bVMAK9WZJje_DhhmUibchHe63cewImTcKtavLOQW9aEkJN460Xch5-hsycJJ6aHf00MwxKFwa0muLfbn5F5ElogevzGe_D_V6T0hxaSIDyhlxnoveNfaybNKLi3bD9MbNiToOU/s640/create_trail.png" width="640" /></a></div>
+  <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEicqyJR3bVMAK9WZJje_DhhmUibchHe63cewImTcKtavLOQW9aEkJN460Xch5-hsycJJ6aHf00MwxKFwa0muLfbn5F5ElogevzGe_D_V6T0hxaSIDyhlxnoveNfaybNKLi3bD9MbNiToOU/s1600/create_trail.png"
+    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="873"
+      data-original-width="1128" height="494"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEicqyJR3bVMAK9WZJje_DhhmUibchHe63cewImTcKtavLOQW9aEkJN460Xch5-hsycJJ6aHf00MwxKFwa0muLfbn5F5ElogevzGe_D_V6T0hxaSIDyhlxnoveNfaybNKLi3bD9MbNiToOU/s640/create_trail.png"
+      width="640" /></a>
+</div>
 <br />
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <h3>
-Setting up CloudTrail data events using the AWS CLI</h3>
+  Setting up CloudTrail data events using the AWS CLI</h3>
 <h1>
-<o:p></o:p></h1>
+  <o:p></o:p>
+</h1>
 <div class="MsoNormal">
-If you prefer to create the trail using the AWS CLI then you
-can use the <span class="MsoHyperlink"><a href="https://docs.aws.amazon.com/cli/latest/reference/cloudtrail/create-subscription.html">create-subscription</a></span>
-command to create the S3 bucket and trail with the correct permissions,
-updating it to be a global trail and then adding the S3 data event
-configuration:<o:p></o:p></div>
+  If you prefer to create the trail using the AWS CLI then you
+  can use the <span class="MsoHyperlink"><a
+      href="https://docs.aws.amazon.com/cli/latest/reference/cloudtrail/create-subscription.html">create-subscription</a></span>
+  command to create the S3 bucket and trail with the correct permissions,
+  updating it to be a global trail and then adding the S3 data event
+  configuration:<o:p></o:p>
+</div>
 <script src="https://gist.github.com/watchamcb/6afc2efe1e6b287d4007c17e696cfc1c.js"></script>
 
 <br />
 <div class="MsoNormal">
-<br />
-<br /></div>
+  <br />
+  <br />
+</div>
 <h3>
-A word on cost</h3>
+  A word on cost</h3>
 <h1>
-<o:p></o:p></h1>
+  <o:p></o:p>
+</h1>
 <div class="MsoNormal">
-Once the trail has been created, CloudTrail will start
-recording S3 data events and delivering them to the configured S3 bucket. Data
-events are currently priced at $0.10 per 100,000 events with the storage costs
-being the standard S3 data storage charges for the (compressed) events, see the&nbsp;<span class="MsoHyperlink"><a href="https://aws.amazon.com/cloudtrail/pricing/">CloudTrail pricing</a></span> page for additional details. It is recommend that you disable the data event trail once you are satisfied that you have gathered sufficient
-request data, it can be re-enabled if further analysis is required at a later stage.<o:p></o:p></div>
+  Once the trail has been created, CloudTrail will start
+  recording S3 data events and delivering them to the configured S3 bucket. Data
+  events are currently priced at $0.10 per 100,000 events with the storage costs
+  being the standard S3 data storage charges for the (compressed) events, see the&nbsp;<span class="MsoHyperlink"><a
+      href="https://aws.amazon.com/cloudtrail/pricing/">CloudTrail pricing</a></span> page for additional details. It is
+  recommend that you disable the data event trail once you are satisfied that you have gathered sufficient
+  request data, it can be re-enabled if further analysis is required at a later stage.<o:p></o:p>
+</div>
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <h3>
-Creating the Athena table</h3>
+  Creating the Athena table</h3>
 <h1>
-<o:p></o:p></h1>
+  <o:p></o:p>
+</h1>
 <div class="MsoNormal">
-The CloudTrail team simplified the process for using Athena
-to analyse CloudTrail logs by <span class="MsoHyperlink"><a href="https://aws.amazon.com/about-aws/whats-new/2018/03/aws-cloudtrail-log-search-using-amazon-athena/">adding
-a feature</a></span> to allow customers to create an Athena table directly from
-the CloudTrail console event history page by simply clicking on the ‘Run
-advanced queries in Amazon Athena’ link and selecting the corresponding S3
-CloudTrail bucket:<o:p></o:p></div>
+  The CloudTrail team simplified the process for using Athena
+  to analyse CloudTrail logs by <span class="MsoHyperlink"><a
+      href="https://aws.amazon.com/about-aws/whats-new/2018/03/aws-cloudtrail-log-search-using-amazon-athena/">adding
+      a feature</a></span> to allow customers to create an Athena table directly from
+  the CloudTrail console event history page by simply clicking on the ‘Run
+  advanced queries in Amazon Athena’ link and selecting the corresponding S3
+  CloudTrail bucket:<o:p></o:p>
+</div>
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <div class="separator" style="clear: both; text-align: center;">
-<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi9yd9A9WTbwlw_y5Cb30_efrqjg3x3KZDZDkq32rQkIGn7hUVc_8bjvjJTpYnZny6xdFlHTM3B4RYVfBuroR6hj1fKuKiHUut6ZLc-sNPnRB5LbMV3jd17MYRFjGMP6D16_5km1-hGHS8/s1600/create_table.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="277" data-original-width="1329" height="132" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi9yd9A9WTbwlw_y5Cb30_efrqjg3x3KZDZDkq32rQkIGn7hUVc_8bjvjJTpYnZny6xdFlHTM3B4RYVfBuroR6hj1fKuKiHUut6ZLc-sNPnRB5LbMV3jd17MYRFjGMP6D16_5km1-hGHS8/s640/create_table.png" width="640" /></a></div>
+  <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi9yd9A9WTbwlw_y5Cb30_efrqjg3x3KZDZDkq32rQkIGn7hUVc_8bjvjJTpYnZny6xdFlHTM3B4RYVfBuroR6hj1fKuKiHUut6ZLc-sNPnRB5LbMV3jd17MYRFjGMP6D16_5km1-hGHS8/s1600/create_table.png"
+    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="277"
+      data-original-width="1329" height="132"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi9yd9A9WTbwlw_y5Cb30_efrqjg3x3KZDZDkq32rQkIGn7hUVc_8bjvjJTpYnZny6xdFlHTM3B4RYVfBuroR6hj1fKuKiHUut6ZLc-sNPnRB5LbMV3jd17MYRFjGMP6D16_5km1-hGHS8/s640/create_table.png"
+      width="640" /></a>
+</div>
 <br />
 <br />
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <div class="separator" style="clear: both; text-align: center;">
-<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2hrhGinV_7AQJNtF3h7AY56L_XemUFifhgjoxGNgGaHeu2KyMMrwlg9t6erxHQa0qRSiCphbqmnrGHnjDPmT5cGgTnlLcDh6UqzYFfUu03Wa53idDKh6hLDUfSttL6XBYx-UWOlXE1QQ/s1600/enable_athena.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="790" data-original-width="806" height="626" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2hrhGinV_7AQJNtF3h7AY56L_XemUFifhgjoxGNgGaHeu2KyMMrwlg9t6erxHQa0qRSiCphbqmnrGHnjDPmT5cGgTnlLcDh6UqzYFfUu03Wa53idDKh6hLDUfSttL6XBYx-UWOlXE1QQ/s640/enable_athena.png" width="640" /></a></div>
+  <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2hrhGinV_7AQJNtF3h7AY56L_XemUFifhgjoxGNgGaHeu2KyMMrwlg9t6erxHQa0qRSiCphbqmnrGHnjDPmT5cGgTnlLcDh6UqzYFfUu03Wa53idDKh6hLDUfSttL6XBYx-UWOlXE1QQ/s1600/enable_athena.png"
+    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="790"
+      data-original-width="806" height="626"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2hrhGinV_7AQJNtF3h7AY56L_XemUFifhgjoxGNgGaHeu2KyMMrwlg9t6erxHQa0qRSiCphbqmnrGHnjDPmT5cGgTnlLcDh6UqzYFfUu03Wa53idDKh6hLDUfSttL6XBYx-UWOlXE1QQ/s640/enable_athena.png"
+      width="640" /></a>
+</div>
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <div class="MsoNormal">
-An explanation of how to create the Athena table manually
-can be found in the <span class="MsoHyperlink"><a href="https://docs.aws.amazon.com/athena/latest/ug/cloudtrail-logs.html#create-cloudtrail-table-ct">Athena
-CloudTrail documentation</a></span>.<o:p></o:p><br />
-<br /></div>
+  An explanation of how to create the Athena table manually
+  can be found in the <span class="MsoHyperlink"><a
+      href="https://docs.aws.amazon.com/athena/latest/ug/cloudtrail-logs.html#create-cloudtrail-table-ct">Athena
+      CloudTrail documentation</a></span>.<o:p></o:p><br />
+  <br />
+</div>
 <h3>
-Analysing the data events with Athena</h3>
+  Analysing the data events with Athena</h3>
 <h1>
-<o:p></o:p></h1>
+  <o:p></o:p>
+</h1>
 <div class="MsoNormal">
-We now have all the components needed to begin searching for
-clients that may need to be updated. Starting with a basic query that filters
-out most of the AWS requests (for example the AWS Console, CloudTrail, Athena, Storage
-Gateway, CloudFront):<o:p></o:p></div>
+  We now have all the components needed to begin searching for
+  clients that may need to be updated. Starting with a basic query that filters
+  out most of the AWS requests (for example the AWS Console, CloudTrail, Athena, Storage
+  Gateway, CloudFront):<o:p></o:p>
+</div>
 <br />
 <script src="https://gist.github.com/watchamcb/f544054890f86dca6a43748e83405ec4.js"></script>
 
 <br />
 <div class="MsoNormal">
-<o:p><br /></o:p></div>
+  <o:p><br /></o:p>
+</div>
 <div class="separator" style="clear: both; text-align: center;">
-<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj8SjfozLYB5VoM-t9j6sYnRBTy-EOiwUzv-V5O60NyY38osOUQj18ujaVlIsC97yGtaJcsYaV5PjWYCXuxXEzftunjWEdyhxYWkXhAwnXuQ47wUK0pJ3lOOUdrGip7DwV2Yd6rQdOYH68/s1600/query2.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="502" data-original-width="867" height="370" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj8SjfozLYB5VoM-t9j6sYnRBTy-EOiwUzv-V5O60NyY38osOUQj18ujaVlIsC97yGtaJcsYaV5PjWYCXuxXEzftunjWEdyhxYWkXhAwnXuQ47wUK0pJ3lOOUdrGip7DwV2Yd6rQdOYH68/s640/query2.png" width="640" /></a></div>
+  <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj8SjfozLYB5VoM-t9j6sYnRBTy-EOiwUzv-V5O60NyY38osOUQj18ujaVlIsC97yGtaJcsYaV5PjWYCXuxXEzftunjWEdyhxYWkXhAwnXuQ47wUK0pJ3lOOUdrGip7DwV2Yd6rQdOYH68/s1600/query2.png"
+    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="502"
+      data-original-width="867" height="370"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj8SjfozLYB5VoM-t9j6sYnRBTy-EOiwUzv-V5O60NyY38osOUQj18ujaVlIsC97yGtaJcsYaV5PjWYCXuxXEzftunjWEdyhxYWkXhAwnXuQ47wUK0pJ3lOOUdrGip7DwV2Yd6rQdOYH68/s640/query2.png"
+      width="640" /></a>
+</div>
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <div class="MsoNormal">
-These results should mostly be client API/CLI requests but the
-large number of requests can still be refined by only including regions that
-actually support AWS Signature Version 2. From the <span class="MsoHyperlink"><a href="https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region">region
-and endpoint documentation for S3</a></span> we can see that we only need to
-check eight of the regions. We can safely exclude the AWS Signature Version 4
-(SigV4) regions as clients would not work correctly against these regions if
-they did not already have SigV4 support. Let’s also look at distinct user
-agents and extract the version from the user agent string:<o:p></o:p></div>
+  These results should mostly be client API/CLI requests but the
+  large number of requests can still be refined by only including regions that
+  actually support AWS Signature Version 2. From the <span class="MsoHyperlink"><a
+      href="https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region">region
+      and endpoint documentation for S3</a></span> we can see that we only need to
+  check eight of the regions. We can safely exclude the AWS Signature Version 4
+  (SigV4) regions as clients would not work correctly against these regions if
+  they did not already have SigV4 support. Let’s also look at distinct user
+  agents and extract the version from the user agent string:<o:p></o:p>
+</div>
 <br />
 <script src="https://gist.github.com/watchamcb/448e7a0f9419dca53392bfd20198527e.js"></script>
 
 <br />
 <div class="separator" style="clear: both; text-align: center;">
-<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9N32SwpunF63o4vlfC4FdzpulJXiyLczFFPDIksluBfMF8D1a8OMdjVlqvphZQRrwbpnvOknfJC99a6TNR9Le78GvlxiqanMnFDychXHIeEuDDbezH9E6FusPwd3RMOWqX-OX58z4TxI/s1600/query3.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="497" data-original-width="919" height="346" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9N32SwpunF63o4vlfC4FdzpulJXiyLczFFPDIksluBfMF8D1a8OMdjVlqvphZQRrwbpnvOknfJC99a6TNR9Le78GvlxiqanMnFDychXHIeEuDDbezH9E6FusPwd3RMOWqX-OX58z4TxI/s640/query3.png" width="640" /></a></div>
+  <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9N32SwpunF63o4vlfC4FdzpulJXiyLczFFPDIksluBfMF8D1a8OMdjVlqvphZQRrwbpnvOknfJC99a6TNR9Le78GvlxiqanMnFDychXHIeEuDDbezH9E6FusPwd3RMOWqX-OX58z4TxI/s1600/query3.png"
+    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="497"
+      data-original-width="919" height="346"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEj9N32SwpunF63o4vlfC4FdzpulJXiyLczFFPDIksluBfMF8D1a8OMdjVlqvphZQRrwbpnvOknfJC99a6TNR9Le78GvlxiqanMnFDychXHIeEuDDbezH9E6FusPwd3RMOWqX-OX58z4TxI/s640/query3.png"
+      width="640" /></a>
+</div>
 <div class="separator" style="clear: both; text-align: center;">
 </div>
 <br />
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <div class="MsoNormal">
-We are unfortunately not able to filter on the calculated
-‘version’ column and as it is a string it is also difficult to perform direct
-numerical version comparison. We can use some arithmetic to create a version
-number that can be compared. Using the AWS CLI requests as an example for the moment and
-adding back the source IP address and user identity<o:p></o:p></div>
+  We are unfortunately not able to filter on the calculated
+  ‘version’ column and as it is a string it is also difficult to perform direct
+  numerical version comparison. We can use some arithmetic to create a version
+  number that can be compared. Using the AWS CLI requests as an example for the moment and
+  adding back the source IP address and user identity<o:p></o:p>
+</div>
 <br />
 <script src="https://gist.github.com/watchamcb/4759d6bc9f1dc8b1304590c0be793972.js"></script>
 
 <br />
 <div class="MsoNormal">
-The version comparison number (10110108) translates to the
-version string 1.11.108 which is the first version of AWS CLI supporting SigV4
-by default. This results in a list of clients accessing S3 objects in this
-account using a version of the AWS CLI that needs to be updated:<o:p></o:p></div>
+  The version comparison number (10110108) translates to the
+  version string 1.11.108 which is the first version of AWS CLI supporting SigV4
+  by default. This results in a list of clients accessing S3 objects in this
+  account using a version of the AWS CLI that needs to be updated:<o:p></o:p>
+</div>
 <div class="separator" style="clear: both; text-align: center;">
-<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhdmsDfVaHUK-6pJ4-HjEopfiaW3uZagAN4gu3_nZUSCzF3J5C3rKPsKfpWjkZNnQdXMMQZVN9sQUAyhaAykkhfGYSmlI95PC-nx54Nhk7BMVle2abpRXnTSXpSvltt05MbAIYnhkJZbGQ/s1600/query4.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="429" data-original-width="920" height="298" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhdmsDfVaHUK-6pJ4-HjEopfiaW3uZagAN4gu3_nZUSCzF3J5C3rKPsKfpWjkZNnQdXMMQZVN9sQUAyhaAykkhfGYSmlI95PC-nx54Nhk7BMVle2abpRXnTSXpSvltt05MbAIYnhkJZbGQ/s640/query4.png" width="640" /></a></div>
+  <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhdmsDfVaHUK-6pJ4-HjEopfiaW3uZagAN4gu3_nZUSCzF3J5C3rKPsKfpWjkZNnQdXMMQZVN9sQUAyhaAykkhfGYSmlI95PC-nx54Nhk7BMVle2abpRXnTSXpSvltt05MbAIYnhkJZbGQ/s1600/query4.png"
+    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="429"
+      data-original-width="920" height="298"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhdmsDfVaHUK-6pJ4-HjEopfiaW3uZagAN4gu3_nZUSCzF3J5C3rKPsKfpWjkZNnQdXMMQZVN9sQUAyhaAykkhfGYSmlI95PC-nx54Nhk7BMVle2abpRXnTSXpSvltt05MbAIYnhkJZbGQ/s640/query4.png"
+      width="640" /></a>
+</div>
 <br />
 <br />
 <div class="MsoNormal">
-The same query can be applied to all the AWS CLI and SDK
-user agent strings by substituting the corresponding agent string and version
-number for SDK versions using SigV4 by default:<o:p></o:p><br />
-<br /></div>
-<table border="1" cellpadding="0" cellspacing="0" class="MsoTableGrid" style="border-collapse: collapse; border: none; mso-border-alt: solid windowtext .5pt; mso-padding-alt: 0cm 5.4pt 0cm 5.4pt; mso-yfti-tbllook: 1184;">
- <tbody>
-<tr style="height: 15.0pt; mso-yfti-firstrow: yes; mso-yfti-irow: 0;">
-  <td nowrap="" style="border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-<b>AWS Client<o:p></o:p></b></div>
-</td>
-  <td nowrap="" style="border-left: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-<b>SigV4 default version<o:p></o:p></b></div>
-</td>
-  <td nowrap="" style="border-left: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-<b>User Agent String<o:p></o:p></b></div>
-</td>
-  <td nowrap="" style="border-left: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-<b>Version comparator<o:p></o:p></b></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 1;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-Java<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-1.11.x<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-aws-sdk-java<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-10110000<o:p></o:p></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 2;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-.NET<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-3.1.10.0<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-aws-sdk-dotnet<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-30010010<o:p></o:p></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 3;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-Node.js<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-2.68.0<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-aws-sdk-nodejs<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-20680000<o:p></o:p></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 4;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-PHP<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-3<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-aws-sdk-php<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-30000000<o:p></o:p></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 5;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-Python Botocore<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-1.5.71<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-Botocore<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-10050071<o:p></o:p></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 6;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-Python Boto3<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-1.4.6<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-Boto3<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-10040006<o:p></o:p></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 7;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-Ruby<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-2.2.0<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-aws-sdk-ruby<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-20020000<o:p></o:p></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 8;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-AWS CLI<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-1.11.108<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-aws-cli<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-10110108<o:p></o:p></div>
-</td>
- </tr>
-<tr style="height: 15.0pt; mso-yfti-irow: 9; mso-yfti-lastrow: yes;">
-  <td nowrap="" style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;" valign="top" width="132"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-Powershell<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;" valign="top" width="119"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-3.1.10.0<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;" valign="top" width="115"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-AWSPowerShell<o:p></o:p></div>
-</td>
-  <td nowrap="" style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;" valign="top" width="88"><div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
-30010010<o:p></o:p></div>
-</td>
- </tr>
-</tbody></table>
+  The same query can be applied to all the AWS CLI and SDK
+  user agent strings by substituting the corresponding agent string and version
+  number for SDK versions using SigV4 by default:<o:p></o:p><br />
+  <br />
+</div>
+<table border="1" cellpadding="0" cellspacing="0" class="MsoTableGrid"
+  style="border-collapse: collapse; border: none; mso-border-alt: solid windowtext .5pt; mso-padding-alt: 0cm 5.4pt 0cm 5.4pt; mso-yfti-tbllook: 1184;">
+  <tbody>
+    <tr style="height: 15.0pt; mso-yfti-firstrow: yes; mso-yfti-irow: 0;">
+      <td nowrap=""
+        style="border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          <b>AWS Client<o:p></o:p></b>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-left: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          <b>SigV4 default version<o:p></o:p></b>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-left: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          <b>User Agent String<o:p></o:p></b>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-left: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          <b>Version comparator<o:p></o:p></b>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 1;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          Java<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          1.11.x<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          aws-sdk-java<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          10110000<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 2;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          .NET<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          3.1.10.0<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          aws-sdk-dotnet<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          30010010<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 3;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          Node.js<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          2.68.0<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          aws-sdk-nodejs<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          20680000<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 4;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          PHP<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          3<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          aws-sdk-php<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          30000000<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 5;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          Python Botocore<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          1.5.71<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          Botocore<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          10050071<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 6;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          Python Boto3<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          1.4.6<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          Boto3<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          10040006<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 7;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          Ruby<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          2.2.0<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          aws-sdk-ruby<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          20020000<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 8;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          AWS CLI<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          1.11.108<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          aws-cli<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          10110108<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+    <tr style="height: 15.0pt; mso-yfti-irow: 9; mso-yfti-lastrow: yes;">
+      <td nowrap=""
+        style="border-top: none; border: solid windowtext 1.0pt; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 99.0pt;"
+        valign="top" width="132">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          Powershell<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 89.0pt;"
+        valign="top" width="119">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          3.1.10.0<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 86.0pt;"
+        valign="top" width="115">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          AWSPowerShell<o:p></o:p>
+        </div>
+      </td>
+      <td nowrap=""
+        style="border-bottom: solid windowtext 1.0pt; border-left: none; border-right: solid windowtext 1.0pt; border-top: none; height: 15.0pt; mso-border-alt: solid windowtext .5pt; mso-border-left-alt: solid windowtext .5pt; mso-border-top-alt: solid windowtext .5pt; padding: 0cm 5.4pt 0cm 5.4pt; width: 65.95pt;"
+        valign="top" width="88">
+        <div class="MsoNormal" style="line-height: normal; margin-bottom: .0001pt; margin-bottom: 0cm;">
+          30010010<o:p></o:p>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
 <div class="MsoNormal">
-<br /></div>
+  <br />
+</div>
 <div class="MsoNormal">
-Note:<o:p></o:p></div>
+  Note:<o:p></o:p>
+</div>
 <div class="MsoNormal">
-.NET35,.NET45, and
-CoreCLR only, PCL, Xamarin, UWP platforms do not support SigV4 at all<o:p></o:p></div>
+  .NET35,.NET45, and
+  CoreCLR only, PCL, Xamarin, UWP platforms do not support SigV4 at all<o:p></o:p>
+</div>
 <div class="MsoNormal">
-All versions of Go and C++ SDKs support SigV4 by default<o:p></o:p></div>
+  All versions of Go and C++ SDKs support SigV4 by default<o:p></o:p>
+</div>
 <div class="MsoNormal">
-<br />
-Additional Note:<br />
-There is no need to look at the client version number for new events which will automatically include the SignatureVersion.<br />
-<br /></div>
+  <br />
+  Additional Note:<br />
+  There is no need to look at the client version number for new events which will automatically include the
+  SignatureVersion.<br />
+  <br />
+</div>
 <h3>
-Tracing the source of the requests</h3>
+  Tracing the source of the requests</h3>
 <h1>
-<o:p></o:p></h1>
+  <o:p></o:p>
+</h1>
 <div class="MsoNormal">
-The source IP address will reflect the private IP of the EC2
-instance accessing S3 through a VPC endpoint or the public IP if accessing S3
-directly. You can search for either of these IPs in EC2 AWS Console for the
-corresponding region. For non-EC2 or NAT access you should be able to use the
-ARN to track down the source of the requests.<o:p></o:p></div>
+  The source IP address will reflect the private IP of the EC2
+  instance accessing S3 through a VPC endpoint or the public IP if accessing S3
+  directly. You can search for either of these IPs in EC2 AWS Console for the
+  corresponding region. For non-EC2 or NAT access you should be able to use the
+  ARN to track down the source of the requests.<o:p></o:p>
+</div>
 <br />

@@ -9,146 +9,195 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-20249036052493900
 blogger_orig_url: https://www.deplication.net/2016/08/aws-tip-of-day-tagging-ec2-reserved.html
 ---
 
-A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on the command line of via the API and not via the console but it still allows to you tag your reservations making it easier to keep track of why a reserved instance was purchased and what component it was intended for. Of course the reservation itself is not actually tied to a running instance in any way, it is merely a billing construct that is applied to any matching instances running in your account but if you are making architectural changes or considering different instance types for specific workloads or components the tags allow you (and your team) to see why the reservation was originally purchased. So for example if you are scaling up the instance sizes of a specific component, lets say from m4.large to m4.xlarge, you can check your reserved instance tags and modify the reservations associated with the component to ensure you continue to benefit from the purchase.<br />
+<p>A quick post pointing out that EC2 reserved instances actually support tagging. This functionality is only available on
+the command line of via the API and not via the console but it still allows to you tag your reservations making it
+easier to keep track of why a reserved instance was purchased and what component it was intended for. Of course the
+reservation itself is not actually tied to a running instance in any way, it is merely a billing construct that is
+applied to any matching instances running in your account but if you are making architectural changes or considering
+different instance types for specific workloads or components the tags allow you (and your team) to see why the
+reservation was originally purchased. So for example if you are scaling up the instance sizes of a specific component,
+lets say from m4.large to m4.xlarge, you can check your reserved instance tags and modify the reservations associated
+with the component to ensure you continue to benefit from the purchase.</p>
+
+
 <br />
-The tagging of reserved instances works the same as tagging other <a href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html">EC2 resources</a>&nbsp;through the AWS CLI's ec2 <a href="http://docs.aws.amazon.com/cli/latest/reference/ec2/create-tags.html">create-tags</a> command and specifying the reserved instances ID as the resource ID. You can find the reserved instance ID using the CLI's ec2 <a href="http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-reserved-instances.html">describe-reserved-instances</a> command. Using an actual example, lets start off finding a reservation:<br />
+The tagging of reserved instances works the same as tagging other <a
+    href="http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html">EC2 resources</a>&nbsp;through the AWS
+CLI's ec2 <a href="http://docs.aws.amazon.com/cli/latest/reference/ec2/create-tags.html">create-tags</a> command and
+specifying the reserved instances ID as the resource ID. You can find the reserved instance ID using the CLI's ec2 <a
+    href="http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-reserved-instances.html">describe-reserved-instances</a>
+command. Using an actual example, lets start off finding a reservation:<br />
 <br />
-<span style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">$ aws ec2 describe-reserved-instances</span><br />
+<span style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">$ aws ec2
+    describe-reserved-instances</span><br />
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-{</div>
+    {</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; "ReservedInstances": [</div>
+    &nbsp; &nbsp; "ReservedInstances": [</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; {</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; {</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "3d092b71-5243-4e5e-b409-<wbr></wbr>86df342282ab",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId":
+    "3d092b71-5243-4e5e-b409-<wbr></wbr>86df342282ab",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "AvailabilityZone": "eu-west-1c",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "AvailabilityZone": "eu-west-1c",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-08-12T04:48:58.000Z",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-08-12T04:48:58.000Z",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-08-12T04:48:59.763Z",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-08-12T04:48:59.763Z",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; }</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; }</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; ]</div>
+    &nbsp; &nbsp; ]</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-}</div>
+    }</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-<br /></div>
+    <br />
+</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-<span style="color: black; font-family: &quot;Times New Roman&quot;; font-size: small;">Next, lets add a tag indicating that this reservation is intended for the "production" stack.:</span></div>
+    <span style="color: black; font-family: &quot;Times New Roman&quot;; font-size: small;">Next, lets add a tag
+        indicating that this reservation is intended for the "production" stack.:</span>
+</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-$ aws ec2 create-tags --resources 3d092b71-5243-4e5e-b409-<wbr></wbr>86df342282ab --tags Key=Stack,Value=production</div>
+    $ aws ec2 create-tags --resources 3d092b71-5243-4e5e-b409-<wbr></wbr>86df342282ab --tags Key=Stack,Value=production
+</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-<br /></div>
+    <br />
+</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-<br /></div>
+    <br />
+</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-<span style="color: black; font-family: &quot;Times New Roman&quot;; font-size: small;">Checking the result:</span></div>
+    <span style="color: black; font-family: &quot;Times New Roman&quot;; font-size: small;">Checking the result:</span>
+</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-$ aws ec2 describe-reserved-instances</div>
+    $ aws ec2 describe-reserved-instances</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-{</div>
+    {</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; "ReservedInstances": [</div>
+    &nbsp; &nbsp; "ReservedInstances": [</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; {</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; {</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "3d092b71-5243-4e5e-b409-<wbr></wbr>86df342282ab",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId":
+    "3d092b71-5243-4e5e-b409-<wbr></wbr>86df342282ab",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "AvailabilityZone": "eu-west-1c",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "AvailabilityZone": "eu-west-1c",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-08-12T04:48:58.000Z",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-08-12T04:48:58.000Z",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Tags": [</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Tags": [</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Value": "production",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Value": "production",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Key": "Stack"</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Key": "Stack"</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-08-12T04:48:59.763Z",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-08-12T04:48:59.763Z",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro",&nbsp;</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro",&nbsp;</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; &nbsp; &nbsp; }</div>
+    &nbsp; &nbsp; &nbsp; &nbsp; }</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-&nbsp; &nbsp; ]</div>
+    &nbsp; &nbsp; ]</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-}</div>
+    }</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-<br /></div>
+    <br />
+</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-<span style="color: black; font-family: &quot;Times New Roman&quot;; font-size: small;">Great we have a tag but what if we have hundreds of reservations, a long list of reservations is not particularly useful for quickly identifying the reservations related to a component or stack. The CLI's <a href="http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html">query and output</a> functionality can help here:</span></div>
+    <span style="color: black; font-family: &quot;Times New Roman&quot;; font-size: small;">Great we have a tag but what
+        if we have hundreds of reservations, a long list of reservations is not particularly useful for quickly
+        identifying the reservations related to a component or stack. The CLI's <a
+            href="http://docs.aws.amazon.com/cli/latest/userguide/controlling-output.html">query and output</a>
+        functionality can help here:</span>
+</div>
 <div style="background-color: white; color: #222222; font-family: arial, sans-serif; font-size: 12.8px;">
-<span style="color: black; font-family: &quot;Times New Roman&quot;; font-size: small;"><br /></span></div>
+    <span style="color: black; font-family: &quot;Times New Roman&quot;; font-size: small;"><br /></span>
+</div>
 <div style="background-color: white; color: #222222;">
-<span style="font-family: arial, sans-serif; font-size: 13.3333px;">$ aws ec2 describe-reserved-instances --query 'ReservedInstances[*].{AZ:</span><wbr style="font-size: 13.3333px;"></wbr><span style="font-family: arial, sans-serif; font-size: 13.3333px;">AvailabilityZone,Type:</span><wbr style="font-size: 13.3333px;"></wbr><span style="font-family: arial, sans-serif; font-size: 13.3333px;">InstanceType,Expiry:End,stack:</span><wbr style="font-size: 13.3333px;"></wbr><span style="font-family: arial, sans-serif; font-size: 13.3333px;">Tags[?Key==`Stack`][?Value==`</span><wbr style="font-size: 13.3333px;"></wbr><span style="font-family: arial, sans-serif; font-size: 13.3333px;">production`]}' --output=table</span><br style="font-size: 13.3333px;" /><span style="font-family: Courier New, Courier, monospace; font-size: xx-small;">------------------------------<wbr></wbr>--------------------------<br />|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; DescribeReservedInstances&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<wbr></wbr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |<br />+-------------+---------------<wbr></wbr>-------------+-----------+<br />|&nbsp;&nbsp;&nbsp;&nbsp; AZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Expiry&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; Type&nbsp;&nbsp;&nbsp; |<br />+-------------+---------------<wbr></wbr>-------------+-----------+<br />|&nbsp; eu-west-1c |&nbsp; 2017-08-12T04:48:58.000Z&nbsp; |&nbsp; t2.micro |<br />+-------------+---------------<wbr></wbr>-------------+-----------+</span><br style="font-size: 13.3333px;" /><span style="color: black;">Not quite the console view but easy enough to see that we have one reservation for the "production" Stack.</span></div>
+    <span style="font-family: arial, sans-serif; font-size: 13.3333px;">$ aws ec2 describe-reserved-instances --query
+        'ReservedInstances[*].{AZ:</span><wbr style="font-size: 13.3333px;"></wbr><span
+        style="font-family: arial, sans-serif; font-size: 13.3333px;">AvailabilityZone,Type:</span><wbr style="font-size: 13.3333px;"></wbr><span
+        style="font-family: arial, sans-serif; font-size: 13.3333px;">InstanceType,Expiry:End,stack:</span><wbr style="font-size: 13.3333px;"></wbr><span
+        style="font-family: arial, sans-serif; font-size: 13.3333px;">Tags[?Key==`Stack`][?Value==`</span><wbr style="font-size: 13.3333px;"></wbr><span
+        style="font-family: arial, sans-serif; font-size: 13.3333px;">production`]}' --output=table</span><br
+        style="font-size: 13.3333px;" /><span
+        style="font-family: Courier New, Courier, monospace; font-size: xx-small;">------------------------------<wbr></wbr>--------------------------<br />|&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        DescribeReservedInstances&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<wbr></wbr>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        |<br />+-------------+---------------<wbr></wbr>-------------+-----------+<br />|&nbsp;&nbsp;&nbsp;&nbsp;
+        AZ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        Expiry&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; |&nbsp;&nbsp; Type&nbsp;&nbsp;&nbsp;
+        |<br />+-------------+---------------<wbr></wbr>-------------+-----------+<br />|&nbsp; eu-west-1c |&nbsp;
+        2017-08-12T04:48:58.000Z&nbsp; |&nbsp; t2.micro
+        |<br />+-------------+---------------<wbr></wbr>-------------+-----------+</span><br
+        style="font-size: 13.3333px;" /><span style="color: black;">Not quite the console view but easy enough to see
+        that we have one reservation for the "production" Stack.</span>
+</div>

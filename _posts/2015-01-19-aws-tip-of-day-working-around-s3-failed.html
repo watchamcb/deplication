@@ -12,19 +12,31 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-88204302980952813
 blogger_orig_url: https://www.deplication.net/2015/01/aws-tip-of-day-working-around-s3-failed.html
 ---
 
-If you have S3 objects with Unicode characters that aren't supported by XML 1.0 you are likely to see an exception when calling <a href="http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/AmazonS3Client.html#listObjects(com.amazonaws.services.s3.model.ListObjectsRequest)" target="_blank">listObjects</a> in the AWS Java SDK:<br />
+<p>If you have S3 objects with Unicode characters that aren't supported by XML 1.0 you are likely to see an exception when
+calling <a
+    href="http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/AmazonS3Client.html#listObjects(com.amazonaws.services.s3.model.ListObjectsRequest)"
+    target="_blank">listObjects</a> in the AWS Java SDK.<br />
 <div>
-<br /></div>
-Failed to parse XML document with handler class 
+    <br />
+</div>
+Failed to parse XML document with handler class
 com.amazonaws.services.s3.model.transform.XmlResponsesSaxParser$ListBucketHandler
 <div>
-<br /></div>
+</p>
+
+    <br />
+</div>
 <div>
-The quick and simple solution to fix this is to set the <a href="http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/ListObjectsRequest.html#withPrefix(java.lang.String)" target="_blank">encoding type</a> to "url". Example code stolen from <a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysUsingAPIs.html" target="_blank">here</a>:</div>
+    The quick and simple solution to fix this is to set the <a
+        href="http://docs.aws.amazon.com/AWSJavaSDK/latest/javadoc/com/amazonaws/services/s3/model/ListObjectsRequest.html#withPrefix(java.lang.String)"
+        target="_blank">encoding type</a> to "url". Example code stolen from <a
+        href="http://docs.aws.amazon.com/AmazonS3/latest/dev/ListingKeysUsingAPIs.html" target="_blank">here</a>:</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-<script src="https://gist.github.com/watchamcb/5d1c92b3acb56a34b9ec.js"></script>
+    <script src="https://gist.github.com/watchamcb/5d1c92b3acb56a34b9ec.js"></script>
 </div>

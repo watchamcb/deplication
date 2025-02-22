@@ -9,11 +9,18 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-35184300277420949
 blogger_orig_url: https://www.deplication.net/2014/09/aws-script-of-day-cascade-delete-of.html
 ---
 
-A common bug bear of AWS security groups is having to delete all references to a security group before deleting the group itself.&nbsp;<a href="https://github.com/watchamcb/aws/blob/master/sg_cascade_delete.py" target="_blank">Here</a>&nbsp;is a quick boto script to simplify this process, you will need to have configured boto as per these&nbsp;<a href="http://docs.pythonboto.org/en/latest/getting_started.html" target="_blank">instructions</a>. After which 'python sg_cascade_delete -h' will give you:<br />
+<p>
+A common bug bear of AWS security groups is having to delete all references to a security group before deleting the
+group itself.&nbsp;<a href="https://github.com/watchamcb/aws/blob/master/sg_cascade_delete.py"
+    target="_blank">Here</a>&nbsp;is a quick boto script to simplify this process, you will need to have configured boto
+as per these&nbsp;<a href="http://docs.pythonboto.org/en/latest/getting_started.html" target="_blank">instructions</a>.
+After which 'python sg_cascade_delete -h' will give you:<br /></p>
+
 <br />
 usage: sg_cascade_delete.py [-h] [--region REGION] [--quick] [--force]<br />
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; [--quiet]<br />
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; group_ids [group_ids ...]<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; group_ids [group_ids
+...]<br />
 <br />
 Remove all references to a security group and then delete it<br />
 <br />
@@ -25,37 +32,56 @@ optional arguments:<br />
 &nbsp; --region REGION &nbsp;AWS region name the security group is in, default: us-<br />
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;east-1<br />
 &nbsp; --quick &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Skip checks for whether or not the group is used by<br />
-&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;RDS/ElastiCache. Faster but may cause error on delete if<br />
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;RDS/ElastiCache. Faster but may cause error on
+delete if<br />
 &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;the group is referenced.<br />
 &nbsp; --force &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Force delete without requiring confirmation<br />
 &nbsp; --quiet &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;Do not print references or success message<br />
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-An example of usage would be:</div>
+    An example of usage would be:</div>
 <div>
-python sg_cascade_delete --region eu-west-1 sg-1231234</div>
+    python sg_cascade_delete --region eu-west-1 sg-1231234</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-This will find all references to the sg-1231234 security group in the region and display them before asking for confirmation to delete the group. Note that you will be prevented from deleting any groups used in ElastiCache or RDS security groups as doing so tends to break things in unexpected ways.</div>
+    This will find all references to the sg-1231234 security group in the region and display them before asking for
+    confirmation to delete the group. Note that you will be prevented from deleting any groups used in ElastiCache or
+    RDS security groups as doing so tends to break things in unexpected ways.</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-If you don't want to have to confirm the deletion (for a large number of groups for example) you can specify the --force option, this will skip the confirmation question and simply delete the groups after displaying their references. For example:</div>
+    If you don't want to have to confirm the deletion (for a large number of groups for example) you can specify the
+    --force option, this will skip the confirmation question and simply delete the groups after displaying their
+    references. For example:</div>
 <div>
-python sg_cascade_delete --force --region eu-west-1 sg-1231234 sg-33221133</div>
+    python sg_cascade_delete --force --region eu-west-1 sg-1231234 sg-33221133</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-If you prefer your deletion silent then the --quiet option is for you, specifying this will prevent any messages being printed (other than the confirmation question and errors that occur). For no interaction at all use with --force to magically delete the groups without a sound. A non-zero process exit code indicates an error.</div>
+    If you prefer your deletion silent then the --quiet option is for you, specifying this will prevent any messages
+    being printed (other than the confirmation question and errors that occur). For no interaction at all use with
+    --force to magically delete the groups without a sound. A non-zero process exit code indicates an error.</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-If you have a large number of ElastiCache clusters and RDS instances you can skip the reference checks by specifying the --quick &nbsp;option, this may result in errors (in VPC) if the group is actually referenced when trying to delete and will cause some strange behaviour in EC2 classic as you are actually able to delete the group leaving a dangling authorisation on the ElastiCache/RDS security group. As such it is advised that you use this option with care or when you are truly certain that the security group is not used anywhere but in EC2.</div>
+    If you have a large number of ElastiCache clusters and RDS instances you can skip the reference checks by specifying
+    the --quick &nbsp;option, this may result in errors (in VPC) if the group is actually referenced when trying to
+    delete and will cause some strange behaviour in EC2 classic as you are actually able to delete the group leaving a
+    dangling authorisation on the ElastiCache/RDS security group. As such it is advised that you use this option with
+    care or when you are truly certain that the security group is not used anywhere but in EC2.</div>
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-As this code is mutating (it changes your stuff) it would be wise to run it in a test environment before making changes in production. In other words: use at your own risk.</div>
+    As this code is mutating (it changes your stuff) it would be wise to run it in a test environment before making
+    changes in production. In other words: use at your own risk.</div>

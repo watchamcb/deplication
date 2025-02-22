@@ -13,315 +13,586 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-40826960242477746
 blogger_orig_url: https://www.deplication.net/2016/10/aws-cli-switching-to-and-from-regional.html
 ---
 
-AWS recently announced the availability of <a href="https://aws.amazon.com/blogs/aws/ec2-reserved-instance-update-convertible-ris-and-regional-benefit/">regional reserved</a> instances, this post explains how to switch a reservation from AZ specific to regional (and back) using the AWS CLI.<br />
+<p>
+AWS recently announced the availability of <a
+    href="https://aws.amazon.com/blogs/aws/ec2-reserved-instance-update-convertible-ris-and-regional-benefit/">regional
+    reserved</a> instances, this post explains how to switch a reservation from AZ specific to regional (and back) using
+the AWS CLI.</p>
+
 <br />
 <h4>
-Step 1, find the reservation to modify</h4>
-<span style="font-size: x-small;"><span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif;">$ aws ec2 describe-reserved-instances --filters Name=state,Values=active</span></span><br />
+    Step 1, find the reservation to modify</h4>
+<span style="font-size: x-small;"><span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif;">$ aws ec2
+        describe-reserved-instances --filters Name=state,Values=active</span></span><br />
 <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; "ReservedInstances": [</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "c416aeaf-fb64-4218-970f-7426f6f32377",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "AvailabilityZone": "eu-west-1c",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-10-21T08:45:55.000Z",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Scope": "Availability Zone",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingClass": "standard",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-10-21T08:45:56.708Z",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro",&nbsp;</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; ]</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+    "ReservedInstances": [</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    {</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "ReservedInstancesId": "c416aeaf-fb64-4218-970f-7426f6f32377",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "AvailabilityZone": "eu-west-1c",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "End": "2017-10-21T08:45:55.000Z",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "Scope": "Availability Zone",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "RecurringCharges": [</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; &nbsp; {</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; ],&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "OfferingClass": "standard",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "Start": "2016-10-21T08:45:56.708Z",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "State": "active",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "Duration": 31536000,&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "InstanceType": "t2.micro",&nbsp;</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; "InstanceCount": 1</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    }</span><br />
+<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+    ]</span><br />
 <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;"><br /></span>
-The "Scope" field in the response shows that this reservation is currently specific to an Availability Zone, eu-west-1c in this case.<br />
+The "Scope" field in the response shows that this reservation is currently specific to an Availability Zone, eu-west-1c
+in this case.<br />
 <div>
-<br /></div>
+    <br />
+</div>
 <h4>
-Step 2, request the modification</h4>
+    Step 2, request the modification</h4>
 <div>
-<span style="font-size: x-small;"><span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif;">$ aws ec2 modify-reserved-instances --reserved-instances-ids c416aeaf-fb64-4218-970f-7426f6f32377 --target-configurations Scope=Region,InstanceCount=1</span></span></div>
-<div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; "ReservedInstancesModificationId": "rimod-aaada6ed-fec9-47c7-92e2-6edf7e61f2ce"</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span></div>
+    <span style="font-size: x-small;"><span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif;">$ aws ec2
+            modify-reserved-instances --reserved-instances-ids c416aeaf-fb64-4218-970f-7426f6f32377
+            --target-configurations Scope=Region,InstanceCount=1</span></span>
 </div>
 <div>
-<br /></div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            "ReservedInstancesModificationId": "rimod-aaada6ed-fec9-47c7-92e2-6edf7e61f2ce"</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span>
+    </div>
+</div>
 <div>
-The Scope=Region indicates that this reservation should be converted to a regional reservation, InstanceCount is a required parameter to indicate the number of reservations the modification should be applied to.</div>
+    <br />
+</div>
 <div>
-<br /></div>
+    The Scope=Region indicates that this reservation should be converted to a regional reservation, InstanceCount is a
+    required parameter to indicate the number of reservations the modification should be applied to.</div>
+<div>
+    <br />
+</div>
 <h4>
-Step 3, monitor progress</h4>
+    Step 3, monitor progress</h4>
 <div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2 describe-reserved-instances-modifications</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; "ReservedInstancesModifications": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Status": "processing",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ModificationResults": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "35f9b908-ae36-41ca-ac0b-4c67c887135b",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "TargetConfiguration": {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "EffectiveDate": "2016-10-21T08:45:57.000Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CreateDate": "2016-10-21T08:50:28.585Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UpdateDate": "2016-10-21T08:50:31.098Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesModificationId": "rimod-aaada6ed-fec9-47c7-92e2-6edf7e61f2ce",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesIds": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "c416aeaf-fb64-4218-970f-7426f6f32377"</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; ]</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span></div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2
+            describe-reserved-instances-modifications</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            "ReservedInstancesModifications": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "Status": "processing",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ModificationResults": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId":
+            "35f9b908-ae36-41ca-ac0b-4c67c887135b",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "TargetConfiguration": {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "EffectiveDate": "2016-10-21T08:45:57.000Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "CreateDate": "2016-10-21T08:50:28.585Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "UpdateDate": "2016-10-21T08:50:31.098Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesModificationId":
+            "rimod-aaada6ed-fec9-47c7-92e2-6edf7e61f2ce",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesIds": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId":
+            "c416aeaf-fb64-4218-970f-7426f6f32377"</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; ]</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            ]</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span>
+    </div>
 </div>
 <div>
-<br /></div>
-<div>
-The "Status" in the response will show "processing" until the modification has completed successfully, at which time it will change to "fulfilled":</div>
-<div>
-<br /></div>
-<div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2 describe-reserved-instances-modifications</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; "ReservedInstancesModifications": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Status": "fulfilled",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ModificationResults": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "35f9b908-ae36-41ca-ac0b-4c67c887135b",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "TargetConfiguration": {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "EffectiveDate": "2016-10-21T08:45:57.000Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CreateDate": "2016-10-21T08:50:28.585Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UpdateDate": "2016-10-21T09:11:33.454Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesModificationId": "rimod-aaada6ed-fec9-47c7-92e2-6edf7e61f2ce",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesIds": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "c416aeaf-fb64-4218-970f-7426f6f32377"</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; ]</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span></div>
+    <br />
 </div>
 <div>
-<br /></div>
+    The "Status" in the response will show "processing" until the modification has completed successfully, at which time
+    it will change to "fulfilled":</div>
+<div>
+    <br />
+</div>
+<div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2
+            describe-reserved-instances-modifications</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            "ReservedInstancesModifications": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "Status": "fulfilled",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ModificationResults": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId":
+            "35f9b908-ae36-41ca-ac0b-4c67c887135b",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "TargetConfiguration": {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "EffectiveDate": "2016-10-21T08:45:57.000Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "CreateDate": "2016-10-21T08:50:28.585Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "UpdateDate": "2016-10-21T09:11:33.454Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesModificationId":
+            "rimod-aaada6ed-fec9-47c7-92e2-6edf7e61f2ce",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesIds": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId":
+            "c416aeaf-fb64-4218-970f-7426f6f32377"</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; ]</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            ]</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span>
+    </div>
+</div>
+<div>
+    <br />
+</div>
 <h4>
-Step 4, success!</h4>
+    Step 4, success!</h4>
 <div>
-The new reservation is now regional (Scope=Region):</div>
+    The new reservation is now regional (Scope=Region):</div>
 <div>
-<br /></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2 describe-reserved-instances --filters Name=state,Values=active</span><br />
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; "ReservedInstances": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "35f9b908-ae36-41ca-ac0b-4c67c887135b",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-10-21T08:45:55.000Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Scope": "Region",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingClass": "standard",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-10-21T08:45:57.000Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro"</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; ]</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span></div>
+    <br />
 </div>
 <div>
-<br /></div>
+    <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2
+        describe-reserved-instances --filters Name=state,Values=active</span><br />
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            "ReservedInstances": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "35f9b908-ae36-41ca-ac0b-4c67c887135b",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-10-21T08:45:55.000Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "Scope": "Region",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "OfferingClass": "standard",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-10-21T08:45:57.000Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro"</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            ]</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span>
+    </div>
+</div>
+<div>
+    <br />
+</div>
 <h4>
-Switching back</h4>
+    Switching back</h4>
 <div>
-Follows the same process with the added requirement of specifying which AZ the reservation should be linked to:</div>
-<div>
-<br /></div>
-<div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2 modify-reserved-instances --reserved-instances-ids 35f9b908-ae36-41ca-ac0b-4c67c887135b --target-configurations Scope="Availability Zone",InstanceCount=1,AvailabilityZone=eu-west-1b</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; "ReservedInstancesModificationId": "rimod-9e490be9-55a3-48cf-81e9-2662b13db2f8"</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span></div>
+    Follows the same process with the added requirement of specifying which AZ the reservation should be linked to:
 </div>
 <div>
+    <br />
+</div>
 <div>
-<br /></div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2
+            modify-reserved-instances --reserved-instances-ids 35f9b908-ae36-41ca-ac0b-4c67c887135b
+            --target-configurations Scope="Availability Zone",InstanceCount=1,AvailabilityZone=eu-west-1b</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            "ReservedInstancesModificationId": "rimod-9e490be9-55a3-48cf-81e9-2662b13db2f8"</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span>
+    </div>
+</div>
 <div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2 describe-reserved-instances --filters Name=state,Values=active</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; "ReservedInstances": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "df70d097-2f33-4962-bca6-37af15ca819e",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "AvailabilityZone": "eu-west-1b",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-10-21T08:45:55.000Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Scope": "Availability Zone",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "OfferingClass": "standard",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-10-21T08:45:58.000Z",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro",&nbsp;</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; }</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp; ]</span></div>
-<div>
-<span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span></div>
+    <div>
+        <br />
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">$ aws ec2
+            describe-reserved-instances --filters Name=state,Values=active</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">{</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            "ReservedInstances": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ReservedInstancesId": "df70d097-2f33-4962-bca6-37af15ca819e",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "OfferingType": "No Upfront",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "AvailabilityZone": "eu-west-1b",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "End": "2017-10-21T08:45:55.000Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "ProductDescription": "Linux/UNIX",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "Scope": "Availability Zone",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "UsagePrice": 0.0,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "RecurringCharges": [</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Amount": 0.01,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Frequency": "Hourly"</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; ],&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "OfferingClass": "standard",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "Start": "2016-10-21T08:45:58.000Z",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "State": "active",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "FixedPrice": 0.0,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "CurrencyCode": "USD",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "Duration": 31536000,&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "InstanceTenancy": "default",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "InstanceType": "t2.micro",&nbsp;</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; &nbsp; &nbsp; "InstanceCount": 1</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            &nbsp; &nbsp; }</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">&nbsp; &nbsp;
+            ]</span>
+    </div>
+    <div>
+        <span style="font-family: Helvetica Neue, Arial, Helvetica, sans-serif; font-size: x-small;">}</span>
+    </div>
 </div>

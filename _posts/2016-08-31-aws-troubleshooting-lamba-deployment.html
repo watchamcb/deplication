@@ -12,158 +12,211 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-50961214176267323
 blogger_orig_url: https://www.deplication.net/2016/08/aws-troubleshooting-lamba-deployment.html
 ---
 
-When creating your own <a href="http://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html">Lambda deployment packages</a> be aware of the permissions on the files before zipping them. Lambda requires the files to have read access for all users, particularly "other", if this is missing you will receive a non-obvious error when trying to call the function. The fix is simple enough, perform a 'chmod a+r *' before creating your zip file. If the code is visible in the inline editor adding an empty line and saving will also fix the problem, presumably by overwriting the file with the correct permissions.<br />
+<p>When creating your own <a href="http://docs.aws.amazon.com/lambda/latest/dg/deployment-package-v2.html">Lambda
+    deployment packages</a> be aware of the permissions on the files before zipping them. Lambda requires the files to
+have read access for all users, particularly "other", if this is missing you will receive a non-obvious error when
+trying to call the function. The fix is simple enough, perform a 'chmod a+r *' before creating your zip file. If the
+code is visible in the inline editor adding an empty line and saving will also fix the problem, presumably by
+overwriting the file with the correct permissions.</p>
+
+
 <div>
-<br /></div>
-<div>
-Below are some examples of errors you will see in the various languages if read permissions are missing. Hopefully this post will have saved you some time debugging.</div>
-<div>
-<br /></div>
-<div>
-<b>Java CloudWatch logs:</b></div>
-<div>
---</div>
-<div>
-<div>
-Class not found: example.Hello: class java.lang.ClassNotFoundException</div>
-<div>
-java.lang.ClassNotFoundException: example.Hello</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.net.URLClassLoader$1.run(URLClassLoader.java:370)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.net.URLClassLoader$1.run(URLClassLoader.java:362)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.security.AccessController.doPrivileged(Native Method)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.net.URLClassLoader.findClass(URLClassLoader.java:361)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.lang.ClassLoader.loadClass(ClassLoader.java:424)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.lang.ClassLoader.loadClass(ClassLoader.java:357)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.lang.Class.forName0(Native Method)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.lang.Class.forName(Class.java:348)</div>
-<div>
-Caused by: java.io.FileNotFoundException: /var/task/example/Hello.class (Permission denied)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.io.FileInputStream.open0(Native Method)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.io.FileInputStream.open(FileInputStream.java:195)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.io.FileInputStream.&lt;init&gt;(FileInputStream.java:138)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at sun.misc.URLClassPath$FileLoader$1.getInputStream(URLClassPath.java:1251)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at sun.misc.Resource.cachedInputStream(Resource.java:77)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at sun.misc.Resource.getByteBuffer(Resource.java:160)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.net.URLClassLoader.defineClass(URLClassLoader.java:454)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.net.URLClassLoader.access$100(URLClassLoader.java:73)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>at java.net.URLClassLoader$1.run(URLClassLoader.java:368)</div>
-<div>
-<span class="Apple-tab-span" style="white-space: pre;"> </span>... 7 more</div>
+    <br />
 </div>
 <div>
---</div>
+    Below are some examples of errors you will see in the various languages if read permissions are missing. Hopefully
+    this post will have saved you some time debugging.</div>
 <div>
-<br /></div>
-<div>
-<b>Java execution result (testing from console):</b></div>
-<div>
-<div>
-{</div>
-<div>
-&nbsp; "errorMessage": "Class not found: example.Hello",</div>
-<div>
-&nbsp; "errorType": "class java.lang.ClassNotFoundException"</div>
-<div>
-}</div>
+    <br />
 </div>
 <div>
-<br /></div>
-<div>
-<b>Python CloudWatch logs:</b></div>
-<div>
---</div>
-<div>
-<div>
-Unable to import module 'python-hi': No module named python-hi</div>
+    <b>Java CloudWatch logs:</b>
 </div>
 <div>
---</div>
+    --</div>
 <div>
-<br /></div>
-<div>
-<b>Python execution result (testing from console):</b></div>
-<div>
-<div>
-{</div>
-<div>
-&nbsp; "errorMessage": "Unable to import module 'python-hi'"</div>
-<div>
-}</div>
+    <div>
+        Class not found: example.Hello: class java.lang.ClassNotFoundException</div>
+    <div>
+        java.lang.ClassNotFoundException: example.Hello</div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.net.URLClassLoader$1.run(URLClassLoader.java:370)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.net.URLClassLoader$1.run(URLClassLoader.java:362)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.security.AccessController.doPrivileged(Native Method)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.net.URLClassLoader.findClass(URLClassLoader.java:361)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.lang.ClassLoader.loadClass(ClassLoader.java:424)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.lang.ClassLoader.loadClass(ClassLoader.java:357)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at java.lang.Class.forName0(Native Method)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at java.lang.Class.forName(Class.java:348)
+    </div>
+    <div>
+        Caused by: java.io.FileNotFoundException: /var/task/example/Hello.class (Permission denied)</div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at java.io.FileInputStream.open0(Native Method)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.io.FileInputStream.open(FileInputStream.java:195)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.io.FileInputStream.&lt;init&gt;(FileInputStream.java:138)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        sun.misc.URLClassPath$FileLoader$1.getInputStream(URLClassPath.java:1251)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        sun.misc.Resource.cachedInputStream(Resource.java:77)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        sun.misc.Resource.getByteBuffer(Resource.java:160)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.net.URLClassLoader.defineClass(URLClassLoader.java:454)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.net.URLClassLoader.access$100(URLClassLoader.java:73)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>at
+        java.net.URLClassLoader$1.run(URLClassLoader.java:368)
+    </div>
+    <div>
+        <span class="Apple-tab-span" style="white-space: pre;"> </span>... 7 more
+    </div>
 </div>
 <div>
-<br /></div>
+    --</div>
 <div>
-<b>Node CloudWatch logs:</b></div>
-<div>
---</div>
-<div>
-<div>
-module initialization error: Error</div>
-<div>
-&nbsp; &nbsp; at Error (native)</div>
-<div>
-&nbsp; &nbsp; at Object.fs.openSync (fs.js:549:18)</div>
-<div>
-&nbsp; &nbsp; at Object.fs.readFileSync (fs.js:397:15)</div>
-<div>
-&nbsp; &nbsp; at Object.Module._extensions..js (module.js:415:20)</div>
-<div>
-&nbsp; &nbsp; at Module.load (module.js:343:32)</div>
-<div>
-&nbsp; &nbsp; at Function.Module._load (module.js:300:12)</div>
-<div>
-&nbsp; &nbsp; at Module.require (module.js:353:17)</div>
-<div>
-&nbsp; &nbsp; at require (internal/module.js:12:17)</div>
+    <br />
 </div>
 <div>
---</div>
+    <b>Java execution result (testing from console):</b>
+</div>
 <div>
-<br /></div>
+    <div>
+        {</div>
+    <div>
+        &nbsp; "errorMessage": "Class not found: example.Hello",</div>
+    <div>
+        &nbsp; "errorType": "class java.lang.ClassNotFoundException"</div>
+    <div>
+        }</div>
+</div>
 <div>
-<b>Node execution result (testing from console):</b></div>
+    <br />
+</div>
 <div>
+    <b>Python CloudWatch logs:</b>
+</div>
 <div>
-{</div>
+    --</div>
 <div>
-&nbsp; "errorMessage": "EACCES: permission denied, open '/var/task/node-hi.js'",</div>
+    <div>
+        Unable to import module 'python-hi': No module named python-hi</div>
+</div>
 <div>
-&nbsp; "errorType": "Error",</div>
+    --</div>
 <div>
-&nbsp; "stackTrace": [</div>
+    <br />
+</div>
 <div>
-&nbsp; &nbsp; "Object.fs.openSync (fs.js:549:18)",</div>
+    <b>Python execution result (testing from console):</b>
+</div>
 <div>
-&nbsp; &nbsp; "Object.fs.readFileSync (fs.js:397:15)",</div>
+    <div>
+        {</div>
+    <div>
+        &nbsp; "errorMessage": "Unable to import module 'python-hi'"</div>
+    <div>
+        }</div>
+</div>
 <div>
-&nbsp; &nbsp; "Object.Module._extensions..js (module.js:415:20)",</div>
+    <br />
+</div>
 <div>
-&nbsp; &nbsp; "Module.load (module.js:343:32)",</div>
+    <b>Node CloudWatch logs:</b>
+</div>
 <div>
-&nbsp; &nbsp; "Function.Module._load (module.js:300:12)",</div>
+    --</div>
 <div>
-&nbsp; &nbsp; "Module.require (module.js:353:17)",</div>
+    <div>
+        module initialization error: Error</div>
+    <div>
+        &nbsp; &nbsp; at Error (native)</div>
+    <div>
+        &nbsp; &nbsp; at Object.fs.openSync (fs.js:549:18)</div>
+    <div>
+        &nbsp; &nbsp; at Object.fs.readFileSync (fs.js:397:15)</div>
+    <div>
+        &nbsp; &nbsp; at Object.Module._extensions..js (module.js:415:20)</div>
+    <div>
+        &nbsp; &nbsp; at Module.load (module.js:343:32)</div>
+    <div>
+        &nbsp; &nbsp; at Function.Module._load (module.js:300:12)</div>
+    <div>
+        &nbsp; &nbsp; at Module.require (module.js:353:17)</div>
+    <div>
+        &nbsp; &nbsp; at require (internal/module.js:12:17)</div>
+</div>
 <div>
-&nbsp; &nbsp; "require (internal/module.js:12:17)"</div>
+    --</div>
 <div>
-&nbsp; ]</div>
+    <br />
+</div>
 <div>
-}</div>
+    <b>Node execution result (testing from console):</b>
+</div>
+<div>
+    <div>
+        {</div>
+    <div>
+        &nbsp; "errorMessage": "EACCES: permission denied, open '/var/task/node-hi.js'",</div>
+    <div>
+        &nbsp; "errorType": "Error",</div>
+    <div>
+        &nbsp; "stackTrace": [</div>
+    <div>
+        &nbsp; &nbsp; "Object.fs.openSync (fs.js:549:18)",</div>
+    <div>
+        &nbsp; &nbsp; "Object.fs.readFileSync (fs.js:397:15)",</div>
+    <div>
+        &nbsp; &nbsp; "Object.Module._extensions..js (module.js:415:20)",</div>
+    <div>
+        &nbsp; &nbsp; "Module.load (module.js:343:32)",</div>
+    <div>
+        &nbsp; &nbsp; "Function.Module._load (module.js:300:12)",</div>
+    <div>
+        &nbsp; &nbsp; "Module.require (module.js:353:17)",</div>
+    <div>
+        &nbsp; &nbsp; "require (internal/module.js:12:17)"</div>
+    <div>
+        &nbsp; ]</div>
+    <div>
+        }</div>
 </div>

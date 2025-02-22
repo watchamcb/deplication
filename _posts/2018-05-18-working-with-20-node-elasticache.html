@@ -9,141 +9,274 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-73152451163279369
 blogger_orig_url: https://www.deplication.net/2018/05/working-with-20-node-elasticache.html
 ---
 
-ElastiCache Memcached <a href="https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_elasticache">limits</a> the number of nodes in a cluster to 20 by default. This limit can be <a href="https://aws.amazon.com/contact-us/elasticache-node-limit-request/">increased</a>&nbsp;with ElastiCache recommending against clusters larger than 50 nodes.<br />
+<p>ElastiCache Memcached <a
+        href="https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_elasticache">limits</a> the
+    number of nodes in a cluster to 20 by default. This limit can be <a
+        href="https://aws.amazon.com/contact-us/elasticache-node-limit-request/">increased</a>&nbsp;with ElastiCache
+    recommending against clusters larger than 50 nodes.</p>
+
+
 <br />
-The increased cluster node limits don't reflect in the console so even after the limit has been increased the maximum number of nodes you can select when creating a new cluster is 20. Fortunately the CLI allows you to work around this and you can tweak the examples in the ElastiCache cluster creation documentation to achieve your desired outcome. Creating a cluster with more than 20 nodes using the <a href="https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Clusters.Create.CLI.html">CLI</a>:<br />
+The increased cluster node limits don't reflect in the console so even after the limit has been increased the maximum
+number of nodes you can select when creating a new cluster is 20. Fortunately the CLI allows you to work around this and
+you can tweak the examples in the ElastiCache cluster creation documentation to achieve your desired outcome. Creating a
+cluster with more than 20 nodes using the <a
+    href="https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Clusters.Create.CLI.html">CLI</a>:<br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;"><br /></span>
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">$ aws elasticache create-cache-cluster --cache-cluster-id my-super-cluster --cache-node-type cache.t2.micro --engine memcached --engine-version 1.4.34 --cache-parameter-group default.memcached1.4 --num-cache-nodes 30</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">$ aws elasticache create-cache-cluster
+    --cache-cluster-id my-super-cluster --cache-node-type cache.t2.micro --engine memcached --engine-version 1.4.34
+    --cache-parameter-group default.memcached1.4 --num-cache-nodes 30</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">{</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; "CacheCluster": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheClusterId": "my-super-cluster",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheNodeType": "cache.t2.micro",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "Engine": "memcached",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "EngineVersion": "1.4.34",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheClusterStatus": "creating",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "NumCacheNodes": 30,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "PreferredMaintenanceWindow": "mon:02:30-mon:03:30",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "PendingModifiedValues": {},</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheSecurityGroups": [],</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheParameterGroup": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CacheParameterGroupName": "default.memcached1.4",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ParameterApplyStatus": "in-sync",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CacheNodeIdsToReboot": []</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; },</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheSubnetGroupName": "default",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "AutoMinorVersionUpgrade": true,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "TransitEncryptionEnabled": false,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "AtRestEncryptionEnabled": false</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; "CacheCluster":
+    {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheClusterId": "my-super-cluster",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheNodeType": "cache.t2.micro",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "Engine":
+    "memcached",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "EngineVersion": "1.4.34",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheClusterStatus": "creating",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "NumCacheNodes": 30,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "PreferredMaintenanceWindow": "mon:02:30-mon:03:30",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "PendingModifiedValues": {},</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheSecurityGroups": [],</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheParameterGroup": {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "CacheParameterGroupName": "default.memcached1.4",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "ParameterApplyStatus": "in-sync",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "CacheNodeIdsToReboot": []</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    },</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheSubnetGroupName": "default",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "AutoMinorVersionUpgrade": true,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "TransitEncryptionEnabled": false,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "AtRestEncryptionEnabled": false</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; }</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">}</span><br />
 <div>
-<br /></div>
+    <br />
+</div>
 <div>
-Adding nodes can be done via the console as it allows you to specify the number of nodes rather than selecting from a drop down. For completeness this can also be done via the <a href="https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Clusters.AddNode.html#Clusters.AddNode.CLI">CLI</a>:</div>
+    Adding nodes can be done via the console as it allows you to specify the number of nodes rather than selecting from
+    a drop down. For completeness this can also be done via the <a
+        href="https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Clusters.AddNode.html#Clusters.AddNode.CLI">CLI</a>:
+</div>
 <br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">$ aws elasticache modify-cache-cluster --cache-cluster-id test-limits --num-cache-nodes 26 --apply-immediately</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">$ aws elasticache modify-cache-cluster
+    --cache-cluster-id test-limits --num-cache-nodes 26 --apply-immediately</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">{</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; "CacheCluster": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheClusterId": "test-limits",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "ConfigurationEndpoint": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Address": "test-limits.rftr8g.cfg.euw1.cache.amazonaws.com",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Port": 11211</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; },</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheNodeType": "cache.t2.micro",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "Engine": "memcached",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "EngineVersion": "1.4.34",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheClusterStatus": "modifying",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "NumCacheNodes": 6,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "PreferredAvailabilityZone": "Multiple",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheClusterCreateTime": "2018-05-18T07:10:22.530Z",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "PreferredMaintenanceWindow": "sat:23:30-sun:00:30",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "PendingModifiedValues": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "NumCacheNodes": 26</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; },</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheSecurityGroups": [],</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheParameterGroup": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CacheParameterGroupName": "default.memcached1.4",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ParameterApplyStatus": "in-sync",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CacheNodeIdsToReboot": []</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; },</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheSubnetGroupName": "default",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "AutoMinorVersionUpgrade": true,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "SecurityGroups": [</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "SecurityGroupId": "sg-5814fd37",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Status": "active"</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; ],</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "TransitEncryptionEnabled": false,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "AtRestEncryptionEnabled": false</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; "CacheCluster":
+    {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheClusterId": "test-limits",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "ConfigurationEndpoint": {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "Address": "test-limits.rftr8g.cfg.euw1.cache.amazonaws.com",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "Port": 11211</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    },</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheNodeType": "cache.t2.micro",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "Engine":
+    "memcached",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "EngineVersion": "1.4.34",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheClusterStatus": "modifying",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "NumCacheNodes": 6,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "PreferredAvailabilityZone": "Multiple",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheClusterCreateTime": "2018-05-18T07:10:22.530Z",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "PreferredMaintenanceWindow": "sat:23:30-sun:00:30",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "PendingModifiedValues": {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "NumCacheNodes": 26</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    },</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheSecurityGroups": [],</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheParameterGroup": {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "CacheParameterGroupName": "default.memcached1.4",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "ParameterApplyStatus": "in-sync",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "CacheNodeIdsToReboot": []</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    },</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheSubnetGroupName": "default",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "AutoMinorVersionUpgrade": true,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "SecurityGroups": [</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "SecurityGroupId": "sg-5814fd37",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "Status": "active"</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; }</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    ],</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "TransitEncryptionEnabled": false,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "AtRestEncryptionEnabled": false</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; }</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">}</span><br />
 <div>
-<br /></div>
+    <br />
+</div>
 <br />
-And finally <a href="https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Clusters.DeleteNode.html#Clusters.DeleteNode.CLI">removing nodes</a>&nbsp;via the CLI (note the spaces rather than commas between the node IDs):<br />
+And finally <a
+    href="https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/Clusters.DeleteNode.html#Clusters.DeleteNode.CLI">removing
+    nodes</a>&nbsp;via the CLI (note the spaces rather than commas between the node IDs):<br />
 <br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">$ aws elasticache modify-cache-cluster --cache-cluster-id test-limits --num-cache-nodes 6 --cache-node-ids-to-remove 0007 0008 0009 0010 0011 0012 0013 0014 0015 0016 0017 0018 0019 0020 0021 0022 0023 0024 0025 0026 --apply-immediately &nbsp;</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">$ aws elasticache modify-cache-cluster
+    --cache-cluster-id test-limits --num-cache-nodes 6 --cache-node-ids-to-remove 0007 0008 0009 0010 0011 0012 0013
+    0014 0015 0016 0017 0018 0019 0020 0021 0022 0023 0024 0025 0026 --apply-immediately &nbsp;</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">{</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; "CacheCluster": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheClusterId": "test-limits",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "ConfigurationEndpoint": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Address": "test-limits.rftr8g.cfg.euw1.cache.amazonaws.com",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Port": 11211</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; },</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheNodeType": "cache.t2.micro",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "Engine": "memcached",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "EngineVersion": "1.4.34",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheClusterStatus": "modifying",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "NumCacheNodes": 26,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "PreferredAvailabilityZone": "Multiple",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheClusterCreateTime": "2018-05-18T07:10:22.530Z",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "PreferredMaintenanceWindow": "sat:23:30-sun:00:30",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "PendingModifiedValues": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "NumCacheNodes": 6,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CacheNodeIdsToRemove": [</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0007",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0008",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0009",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0010",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0011",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0012",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0013",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0014",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0015",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0016",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0017",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0018",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0019",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0020",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0021",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0022",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0023",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0024",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0025",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "0026"</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ]</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; },</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheSecurityGroups": [],</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheParameterGroup": {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CacheParameterGroupName": "default.memcached1.4",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "ParameterApplyStatus": "in-sync",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "CacheNodeIdsToReboot": []</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; },</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "CacheSubnetGroupName": "default",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "AutoMinorVersionUpgrade": true,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "SecurityGroups": [</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; {</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "SecurityGroupId": "sg-5814fd37",</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; "Status": "active"</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; }</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; ],</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "TransitEncryptionEnabled": false,</span><br />
-<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "AtRestEncryptionEnabled": false</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; "CacheCluster":
+    {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheClusterId": "test-limits",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "ConfigurationEndpoint": {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "Address": "test-limits.rftr8g.cfg.euw1.cache.amazonaws.com",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "Port": 11211</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    },</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "ClientDownloadLandingPage": "https://console.aws.amazon.com/elasticache/home#client-download:",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheNodeType": "cache.t2.micro",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; "Engine":
+    "memcached",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "EngineVersion": "1.4.34",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheClusterStatus": "modifying",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "NumCacheNodes": 26,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "PreferredAvailabilityZone": "Multiple",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheClusterCreateTime": "2018-05-18T07:10:22.530Z",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "PreferredMaintenanceWindow": "sat:23:30-sun:00:30",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "PendingModifiedValues": {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "NumCacheNodes": 6,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "CacheNodeIdsToRemove": [</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0007",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0008",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0009",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0010",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0011",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0012",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0013",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0014",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0015",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0016",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0017",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0018",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0019",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0020",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0021",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0022",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0023",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0024",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0025",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "0026"</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; ]</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    },</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheSecurityGroups": [],</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheParameterGroup": {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "CacheParameterGroupName": "default.memcached1.4",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "ParameterApplyStatus": "in-sync",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; "CacheNodeIdsToReboot": []</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    },</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "CacheSubnetGroupName": "default",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "AutoMinorVersionUpgrade": true,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "SecurityGroups": [</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; {</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "SecurityGroupId": "sg-5814fd37",</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; &nbsp; &nbsp; "Status": "active"</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+    &nbsp; }</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    ],</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "TransitEncryptionEnabled": false,</span><br />
+<span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; &nbsp; &nbsp;
+    "AtRestEncryptionEnabled": false</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">&nbsp; &nbsp; }</span><br />
 <span style="font-family: Courier New, Courier, monospace; font-size: x-small;">}</span><br />
 <div>
-<br /></div>
+    <br />
+</div>

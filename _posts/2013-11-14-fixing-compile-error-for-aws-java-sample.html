@@ -12,11 +12,17 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-30656198100167887
 blogger_orig_url: https://www.deplication.net/2013/11/fixing-compile-error-for-aws-java-sample.html
 ---
 
-If you are getting an error like:<br />
-<br />
-~/aws-java-sample/src/main/java/com/amazonaws/samples/S3Sample.java:[94,31] error: for-each loops are not supported in -source 1.3<br />
-<br />
-When trying to build the aws-java-sample from GitHub you can fix it by adding the maven compile source and target (see <a href="http://maven.apache.org/plugins/maven-compiler-plugin/examples/set-compiler-source-and-target.html">link</a>). Something like:<br />
+<p>If you are getting an error like:<br />
+    <br />
+    ~/aws-java-sample/src/main/java/com/amazonaws/samples/S3Sample.java:[94,31] error: for-each loops are not supported
+    in -source 1.3<br />
+    <br />
+    When trying to build the aws-java-sample from GitHub you can fix it by adding the maven compile source and target
+    (see <a
+        href="http://maven.apache.org/plugins/maven-compiler-plugin/examples/set-compiler-source-and-target.html">link</a>).
+</p>
+
+Something like:<br />
 <br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;plugin&gt;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;<br />
@@ -28,4 +34,5 @@ When trying to build the aws-java-sample from GitHub you can fix it by adding th
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/configuration&gt;<br />
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &lt;/plugin&gt;<br />
 <br />
-<a href="https://github.com/mvrueden/aws-java-sample/commit/5797268d9ad34ad2605ac41e8ea5cb07050e4974">Fix</a> submitted on GitHub by mvrueden.
+<a href="https://github.com/mvrueden/aws-java-sample/commit/5797268d9ad34ad2605ac41e8ea5cb07050e4974">Fix</a> submitted
+on GitHub by mvrueden.

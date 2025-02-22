@@ -9,8 +9,10 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-25985445966776035
 blogger_orig_url: https://www.deplication.net/2011/09/generating-sql-insert-commands-using.html
 ---
 
-A quick hack for generating a list of SQL insert commands from an existing data set. Useful for copying specific data between databases/tables.<br />
-<br />
+<p>A quick hack for generating a list of SQL insert commands from an existing data set. Useful for copying specific data
+    between databases/tables.</p>
+
+
 select 'insert into DestTable values(''' + Value1 + ''',''' + Value2 + ''')' from SourceTable<br />
 <br />
 This query will return a result set in the format:<br />
@@ -18,7 +20,8 @@ insert into DestTable values('a','b')<br />
 insert into DestTable values('x','y')<br />
 <br />
 A few notes:<br />
-<ul><li>The '+' might need to be replaced with a concat function on certain databases.</li>
-<li>A convert or cast operation may be required for non-character values</li>
-<li>The result set can be limited by adding a where class to the select query</li>
+<ul>
+    <li>The '+' might need to be replaced with a concat function on certain databases.</li>
+    <li>A convert or cast operation may be required for non-character values</li>
+    <li>The result set can be limited by adding a where class to the select query</li>
 </ul>

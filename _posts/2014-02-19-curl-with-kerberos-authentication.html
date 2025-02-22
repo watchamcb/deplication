@@ -13,53 +13,64 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-99789559533804566
 blogger_orig_url: https://www.deplication.net/2014/02/curl-with-kerberos-authentication.html
 ---
 
-Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don't have to reread the man page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding:<br />
+<p>
+Quick note on retrieving content using curl from Kerberos authenticated sites (so that I don't have to reread the man
+page every 6 months to figure it out). Firstly request a valid Kerberos ticket for forwarding:</p>
+
 <br />
 $ kinit -f<br />
 <br />
-You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate authentication (--negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V.<br />
+You may need to enter your password to authenticate yourself. Next tell curl to retrieve the URL using GSS-Negotiate
+authentication (--negotiate) and no username or password (-u : ) as they are not used. Note that curl needs to have been
+compiled with support for this, check that you see GSS-Negotiate in the features list when doing a curl -V.<br />
 <br />
-$ curl "https://your-secure-url/path/query?param=1&amp;value=2" -u : --negotiate 
+$ curl "https://your-secure-url/path/query?param=1&amp;value=2" -u : --negotiate
 <br />
 <br />
-This will return the requested page and print it to console Doing the same thing in Python (with pycurl - 'pip install pycurl'):<br />
+This will return the requested page and print it to console Doing the same thing in Python (with pycurl - 'pip install
+pycurl'):<br />
 <br />
 import pycurl<br />
 <br />
 curl = pycurl.Curl()<br />
 curl.setopt(pycurl.HTTPAUTH, pycurl.HTTPAUTH_GSSNEGOTIATE)<br />
 <div>
-curl.setopt(pycurl.USERPWD, ':')</div>
+    curl.setopt(pycurl.USERPWD, ':')</div>
 <div>
-curl.setopt(pycurl.URL, 'https://your-secure-url/path/query?param=1&amp;value=2')</div>
+    curl.setopt(pycurl.URL, 'https://your-secure-url/path/query?param=1&amp;value=2')</div>
 <div>
-curl.perform()</div>
+    curl.perform()</div>
 <div>
-curl.close()</div>
+    curl.close()</div>
 <div>
-<br /></div>
-<div>
-And finally in PHP:<br />
-<br /></div>
-<div>
-<div>
-$ch = curl_init();</div>
-<div>
-<br /></div>
-<div>
-curl_setopt($ch, CURLOPT_URL, "https://your-secure-url/path/query?param=1&amp;value=2");</div>
-<div>
-curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE);</div>
-<div>
-curl_setopt($ch, CURLOPT_USERPWD, ":");</div>
-<div>
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);</div>
-<div>
-<br /></div>
-<div>
-$page = curl_exec($ch);</div>
-<div>
-curl_close($ch);</div>
+    <br />
 </div>
 <div>
-<br /></div>
+    And finally in PHP:<br />
+    <br />
+</div>
+<div>
+    <div>
+        $ch = curl_init();</div>
+    <div>
+        <br />
+    </div>
+    <div>
+        curl_setopt($ch, CURLOPT_URL, "https://your-secure-url/path/query?param=1&amp;value=2");</div>
+    <div>
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE);</div>
+    <div>
+        curl_setopt($ch, CURLOPT_USERPWD, ":");</div>
+    <div>
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);</div>
+    <div>
+        <br />
+    </div>
+    <div>
+        $page = curl_exec($ch);</div>
+    <div>
+        curl_close($ch);</div>
+</div>
+<div>
+    <br />
+</div>

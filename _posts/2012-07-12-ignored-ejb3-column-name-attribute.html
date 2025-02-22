@@ -14,7 +14,8 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-77852103217605247
 blogger_orig_url: https://www.deplication.net/2012/07/ignored-ejb3-column-name-attribute.html
 ---
 
-I am working on an EJB3 project after a few months on other work and I ran into a small issue with the EJB3 @Column name attribute. The attribute is meant to allow the mapping of a column to a different name in an entity. If your database table has an unusable (or just unfriendly) column name you can map it to a more logical field name in the entity.<br />
+<p>I am working on an EJB3 project after a few months on other work and I ran into a small issue with the EJB3 @Column name attribute. The attribute is meant to allow the mapping of a column to a different name in an entity. If your database table has an unusable (or just unfriendly) column name you can map it to a more logical field name in the entity.</p>
+
 <br />
 In my case the table is a mapping table that I am creating an object model against and I wanted to map the "sub_account_name" column to "name". My initial implementation was as follows:<br />
 <br />

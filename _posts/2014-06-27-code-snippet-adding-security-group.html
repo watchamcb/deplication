@@ -12,10 +12,12 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-61979872813909512
 blogger_orig_url: https://www.deplication.net/2014/06/code-snippet-adding-security-group.html
 ---
 
-Quick example of adding an egress rule to an existing security group (turns out cidr_ip is actually required). Assumes you have&nbsp;<a href="https://github.com/boto/boto">boto</a>&nbsp;installed and your AWS credentials configured:<br />
+Quick example of adding an egress rule to an existing security group (turns out cidr_ip is actually required). Assumes
+you have&nbsp;<a href="https://github.com/boto/boto">boto</a>&nbsp;installed and your AWS credentials configured:<br />
 <br />
 import boto<br />
 c = boto.connect_ec2()<br />
 c.authorize_security_group_egress('sg-xxxxxxx', 'tcp', from_port=1024, to_port=1024, cidr_ip='0.0.0.0/0')<br />
 <div>
-<br /></div>
+    <br />
+</div>

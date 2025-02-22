@@ -1,7 +1,6 @@
 ---
 layout: post
-title: AWS in the weeds - S3 CloudWatch metrics and lifecycle actions that are in
-  progress
+title: AWS in the weeds - S3 CloudWatch metrics and lifecycle actions that are in progress
 date: '2019-09-07T12:56:00.002+01:00'
 author: Craig Watcham
 tags:
@@ -9,33 +8,64 @@ tags:
 - S3
 - aws
 modified_time: '2019-09-07T12:58:01.849+01:00'
-thumbnail: https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhk1PVB1gYCpJbcVqjEVr83jdZ_ILHPb5BeSvgjmoG6b6bs2EeqgLdwrkoqRYIjiLe-lVs9ffabtTWfpq26GKB_U0GTsprZBPI3Pd4XR2pykEr8KZl5_b9l-4dPXDr0H5zaUoYMxdjojSA/s72-c/mistaken.png
-blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-5186693663818606795
-blogger_orig_url: https://www.deplication.net/2019/09/aws-in-weeds-s3-cloudwatch-metrics-and.html
 ---
 
-<p>I was recently working with a customer on an issue that highlighted a poorly explained side effect of the reversibility of lifecycle actions. The purpose of this post is to explain this behaviour with the hope that it will save S3 customers unexpected costs. TLDR: S3 CloudWatch metrics don't accurately display metrics about lifecycle actions that are still in progress.</p>
+<p>I was recently working with a customer on an issue that highlighted a poorly explained side effect of the
+  reversibility of lifecycle actions. The purpose of this post is to explain this behaviour with the hope that it will
+  save S3 customers unexpected costs. TLDR: S3 CloudWatch metrics don't accurately display metrics about lifecycle
+  actions that are still in progress.</p>
 
-The customer use case was fairly simple, they had a bucket with a large amount of data that needed to be deleted. They added a <a href="https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#intro-lifecycle-rules-actions">lifecycle expiration action</a> to the bucket and the following day noticed that the CloudWatch bucket size metric showed the bucket size to have reduced by the expected amount. An example of how this looks in CloudWatch is below, this graph is a reproduction in my own account, the customer had a significantly larger amount of data to delete (petabytes rather than terabytes):<br />
+The customer use case was fairly simple, they had a bucket with a large amount of data that needed to be deleted. They
+added a <a
+  href="https://docs.aws.amazon.com/AmazonS3/latest/dev/intro-lifecycle-rules.html#intro-lifecycle-rules-actions">lifecycle
+  expiration action</a> to the bucket and the following day noticed that the CloudWatch bucket size metric showed the
+bucket size to have reduced by the expected amount. An example of how this looks in CloudWatch is below, this graph is a
+reproduction in my own account, the customer had a significantly larger amount of data to delete (petabytes rather than
+terabytes):<br />
 <br />
 <div class="separator" style="clear: both; text-align: center;">
-<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhk1PVB1gYCpJbcVqjEVr83jdZ_ILHPb5BeSvgjmoG6b6bs2EeqgLdwrkoqRYIjiLe-lVs9ffabtTWfpq26GKB_U0GTsprZBPI3Pd4XR2pykEr8KZl5_b9l-4dPXDr0H5zaUoYMxdjojSA/s1600/mistaken.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="495" data-original-width="493" height="320" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhk1PVB1gYCpJbcVqjEVr83jdZ_ILHPb5BeSvgjmoG6b6bs2EeqgLdwrkoqRYIjiLe-lVs9ffabtTWfpq26GKB_U0GTsprZBPI3Pd4XR2pykEr8KZl5_b9l-4dPXDr0H5zaUoYMxdjojSA/s320/mistaken.png" width="318" /></a></div>
+  <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhk1PVB1gYCpJbcVqjEVr83jdZ_ILHPb5BeSvgjmoG6b6bs2EeqgLdwrkoqRYIjiLe-lVs9ffabtTWfpq26GKB_U0GTsprZBPI3Pd4XR2pykEr8KZl5_b9l-4dPXDr0H5zaUoYMxdjojSA/s1600/mistaken.png"
+    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="495"
+      data-original-width="493" height="320"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhk1PVB1gYCpJbcVqjEVr83jdZ_ILHPb5BeSvgjmoG6b6bs2EeqgLdwrkoqRYIjiLe-lVs9ffabtTWfpq26GKB_U0GTsprZBPI3Pd4XR2pykEr8KZl5_b9l-4dPXDr0H5zaUoYMxdjojSA/s320/mistaken.png"
+      width="318" /></a>
+</div>
 <br />
-The customer assumed (logically) that the drop in the graph meant that the lifecycle action had completed and they removed the expiration lifecycle action. A couple of weeks later the customer's finance team noticed that their S3 storage costs had not reduced despite the engineering team telling them to expect a significant decrease. Looking at the relevant bucket the CloudWatch graph showed that the bucket size reduction had been reverted and most of the supposedly deleted data was still present. Example graph:<br />
+The customer assumed (logically) that the drop in the graph meant that the lifecycle action had completed and they
+removed the expiration lifecycle action. A couple of weeks later the customer's finance team noticed that their S3
+storage costs had not reduced despite the engineering team telling them to expect a significant decrease. Looking at the
+relevant bucket the CloudWatch graph showed that the bucket size reduction had been reverted and most of the supposedly
+deleted data was still present. Example graph:<br />
 <br />
 <div class="separator" style="clear: both; text-align: center;">
-<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgbicCXItjfs768KBURlA5GYrfZIpJPZBBrlXazNezP6e9et0aj0P-fh1UhgYSFsIILna1z_JGC1KTdWy4vimQZn9YK6yVoCmIFzETu41Ae1ABrWhJ-ooVckgN7FHFlmRsX2d8SGX_6Y7I/s1600/bounce.png" imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="487" data-original-width="462" height="320" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgbicCXItjfs768KBURlA5GYrfZIpJPZBBrlXazNezP6e9et0aj0P-fh1UhgYSFsIILna1z_JGC1KTdWy4vimQZn9YK6yVoCmIFzETu41Ae1ABrWhJ-ooVckgN7FHFlmRsX2d8SGX_6Y7I/s320/bounce.png" width="303" /></a></div>
+  <a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgbicCXItjfs768KBURlA5GYrfZIpJPZBBrlXazNezP6e9et0aj0P-fh1UhgYSFsIILna1z_JGC1KTdWy4vimQZn9YK6yVoCmIFzETu41Ae1ABrWhJ-ooVckgN7FHFlmRsX2d8SGX_6Y7I/s1600/bounce.png"
+    imageanchor="1" style="margin-left: 1em; margin-right: 1em;"><img border="0" data-original-height="487"
+      data-original-width="462" height="320"
+      src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgbicCXItjfs768KBURlA5GYrfZIpJPZBBrlXazNezP6e9et0aj0P-fh1UhgYSFsIILna1z_JGC1KTdWy4vimQZn9YK6yVoCmIFzETu41Ae1ABrWhJ-ooVckgN7FHFlmRsX2d8SGX_6Y7I/s320/bounce.png"
+      width="303" /></a>
+</div>
 <div class="separator" style="clear: both; text-align: center;">
 </div>
 <br />
-After investigating with the customer it became clear that this was an unintended consequence of the way S3 lifecycle actions are <a href="https://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-set-lifecycle-configuration-intro.html">implemented</a>, specifically that:<br />
+After investigating with the customer it became clear that this was an unintended consequence of the way S3 lifecycle
+actions are <a
+  href="https://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-set-lifecycle-configuration-intro.html">implemented</a>,
+specifically that:<br />
 <br />
-"When you disable or delete a lifecycle rule, after a small delay Amazon S3 stops scheduling new objects for deletion or transition. Any objects that were already scheduled will be unscheduled and they won't be deleted or transitioned."<br />
+"When you disable or delete a lifecycle rule, after a small delay Amazon S3 stops scheduling new objects for deletion or
+transition. Any objects that were already scheduled will be unscheduled and they won't be deleted or
+transitioned."<br />
 <br />
-The documentation unfortunately neglects to mention that the CloudWatch bucket metrics will update immediately even when the lifecycle action has not actually completed processing. There is currently no way to view progress on the lifecycle action and in this case it took the better part of 2 weeks for the action to complete. This was a fairly expensive lesson for the customer as S3 was 'operating as designed' and the customer was charged for the data storage costs from the time they removed the lifecycle action until they added it back when they noticed the issue.<br />
+The documentation unfortunately neglects to mention that the CloudWatch bucket metrics will update immediately even when
+the lifecycle action has not actually completed processing. There is currently no way to view progress on the lifecycle
+action and in this case it took the better part of 2 weeks for the action to complete. This was a fairly expensive
+lesson for the customer as S3 was 'operating as designed' and the customer was charged for the data storage costs from
+the time they removed the lifecycle action until they added it back when they noticed the issue.<br />
 <br />
 Takeaways to help avoid this problem:<br />
 1. Lifecycle actions can take a long time to complete, potentially weeks for large (petabyte) volumes of data.<br />
 2. Don't used CloudWatch bucket metrics as an indicator of lifecycle action progress or completion.<br />
-3. After removing or disabling a lifecycle action make sure you check the CloudWatch metrics the next day or two to confirm there is no unexpected reversion of the action.<br />
-4. You will be charged for data costs if the removal of the lifecycle action results in the action being reverted for some objects.
+3. After removing or disabling a lifecycle action make sure you check the CloudWatch metrics the next day or two to
+confirm there is no unexpected reversion of the action.<br />
+4. You will be charged for data costs if the removal of the lifecycle action results in the action being reverted for
+some objects.

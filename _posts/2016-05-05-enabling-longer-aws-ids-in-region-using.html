@@ -12,13 +12,22 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-70633234664078026
 blogger_orig_url: https://www.deplication.net/2016/05/enabling-longer-aws-ids-in-region-using.html
 ---
 
-AWS is moving towards longer EC2 and EBS IDs and you can enable them for an IAM user or at an account level using the root credentials. You can avoid using the root credentials by using an IAM role instead. This is a quick post to explain the steps needed to use an IAM role on an instance to enable the longer IDs at an account level.<br />
+<p>
+AWS is moving towards longer EC2 and EBS IDs and you can enable them for an IAM user or at an account level using the
+root credentials. You can avoid using the root credentials by using an IAM role instead. This is a quick post to explain
+the steps needed to use an IAM role on an instance to enable the longer IDs at an account level.<br />
+</p>
+
 <br />
-<b>Update: </b>You can now use the --principal-arn argument to to make this change to the root account, see the AWS support post <a href="https://aws.amazon.com/premiumsupport/knowledge-center/enable-long-id/">here</a>.<br />
+<b>Update: </b>You can now use the --principal-arn argument to to make this change to the root account, see the AWS
+support post <a href="https://aws.amazon.com/premiumsupport/knowledge-center/enable-long-id/">here</a>.<br />
 <br />
-<b>Update 2:</b>&nbsp;Another alternative, using this <a href="https://github.com/awslabs/ec2-migrate-longer-id/blob/master/migratelongerids.py">script</a>.<br />
+<b>Update 2:</b>&nbsp;Another alternative, using this <a
+    href="https://github.com/awslabs/ec2-migrate-longer-id/blob/master/migratelongerids.py">script</a>.<br />
 <br />
-<b>1. Create a policy allowing modify and describe of ID format</b> (IAM console -&gt; Policies -&gt; Create Policy -&gt; Create Your Own Policy). The following policy document (originally from here with the Deny changed to Allow) provides the necessary permissions,<br />
+<b>1. Create a policy allowing modify and describe of ID format</b> (IAM console -&gt; Policies -&gt; Create Policy
+-&gt; Create Your Own Policy). The following policy document (originally from here with the Deny changed to Allow)
+provides the necessary permissions,<br />
 <br />
 {<br />
 &nbsp; "Version": "2012-10-17",<br />
@@ -33,14 +42,18 @@ AWS is moving towards longer EC2 and EBS IDs and you can enable them for an IAM 
 &nbsp; ]<br />
 }<br />
 <br />
-<b>2. Create an EC2 role</b> (IAM console -&gt; Roles -&gt; Create New Role -&gt; [Pick a name] -&gt; Amazon EC2). Select the policy name you created in step 1 and attach it to the role.<br />
+<b>2. Create an EC2 role</b> (IAM console -&gt; Roles -&gt; Create New Role -&gt; [Pick a name] -&gt; Amazon EC2).
+Select the policy name you created in step 1 and attach it to the role.<br />
 <br />
-<b>3. Launch an instance with the role</b>. It is probably easiest to use an Amazon Linux AMI as the AWS CLI is installed by default. Instance size and region don't really matter.<br />
+<b>3. Launch an instance with the role</b>. It is probably easiest to use an Amazon Linux AMI as the AWS CLI is
+installed by default. Instance size and region don't really matter.<br />
 <br />
-<b>4. SSH to the instance and use the CLI to enable the longer IDs</b> in the region that you would like to test against:<br />
+<b>4. SSH to the instance and use the CLI to enable the longer IDs</b> in the region that you would like to test
+against:<br />
 $ aws --region eu-west-1 ec2 modify-id-format --resource instance --use-long-ids<br />
 <br />
-If you don't specify a region the CLI will prompt you to run 'aws configure' to set a default. To check the status of the ID format you can use describe-id-format:<br />
+If you don't specify a region the CLI will prompt you to run 'aws configure' to set a default. To check the status of
+the ID format you can use describe-id-format:<br />
 $ aws --region eu-west-1 ec2 describe-id-format<br />
 <br />
 {<br />
@@ -64,4 +77,5 @@ $ aws --region eu-west-1 ec2 describe-id-format<br />
 &nbsp; &nbsp; ]<br />
 }<br />
 <br />
-<b>5. Longer IDs are now enabled for the account. </b>Resources created by the root account (such as Auto Scaled instances) will be launched with longer IDs.
+<b>5. Longer IDs are now enabled for the account. </b>Resources created by the root account (such as Auto Scaled
+instances) will be launched with longer IDs.

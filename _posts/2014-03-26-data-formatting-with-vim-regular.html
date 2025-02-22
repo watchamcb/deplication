@@ -9,11 +9,16 @@ blogger_id: tag:blogger.com,1999:blog-8082302445306001355.post-92029819092883371
 blogger_orig_url: https://www.deplication.net/2014/03/data-formatting-with-vim-regular.html
 ---
 
-Using the right tool for a job can save massive amounts of time. This is a quick post to demonstrate a practical application of the power of regular expressions in vim. The problem is transforming the output from a SQL query into a wiki ready table format.<br />
+<p>Using the right tool for a job can save massive amounts of time. This is a quick post to demonstrate a practical
+application of the power of regular expressions in vim. The problem is transforming the output from a SQL query into a
+wiki ready table format.</p>
+
+<br />
 <br />
 Starting with the output from the query (test data for demonstration purposes):<br />
 <br />
-&nbsp;category_name &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;total &nbsp;grated &nbsp;mashed &nbsp;boiled<br />
+&nbsp;category_name &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;total &nbsp;grated &nbsp;mashed
+&nbsp;boiled<br />
 &nbsp;-----------------------------------------------------------<br />
 &nbsp; Artichoke &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;107 &nbsp; 67 &nbsp; &nbsp; 9 &nbsp; &nbsp;31<br />
 &nbsp; Pepper &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;65 &nbsp; 38 &nbsp; &nbsp; 2 &nbsp; &nbsp;25<br />
@@ -22,11 +27,13 @@ Starting with the output from the query (test data for demonstration purposes):<
 &nbsp; Spinach &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 16 &nbsp; &nbsp;8 &nbsp; &nbsp; 1 &nbsp; &nbsp; 7<br />
 &nbsp; Zuchini &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 4 &nbsp; &nbsp;4 &nbsp;NULL &nbsp;NULL<br />
 <br />
-Paste this data excluding the heading line into vim (or pipe it to an output file and then edit the file). Firstly lets get rid of those ugly null values:<br />
+Paste this data excluding the heading line into vim (or pipe it to an output file and then edit the file). Firstly lets
+get rid of those ugly null values:<br />
 <br />
 :%s/NULL/0/g<br />
 <br />
-This searches for the character sequence "NULL" and replaces it with 0 globally. The data should now look like this<br />
+This searches for the character sequence "NULL" and replaces it with 0 globally. The data should now look like
+this<br />
 <br />
 &nbsp; Artichoke &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;107 &nbsp; 67 &nbsp; &nbsp; 9 &nbsp; &nbsp;31<br />
 &nbsp; Pepper &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;65 &nbsp; 38 &nbsp; &nbsp; 2 &nbsp; &nbsp;25<br />
@@ -35,138 +42,156 @@ This searches for the character sequence "NULL" and replaces it with 0 globally.
 &nbsp; Spinach &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 16 &nbsp; &nbsp;8 &nbsp; &nbsp; 1 &nbsp; &nbsp; 7<br />
 &nbsp; Zuchini &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 4 &nbsp; &nbsp;4 &nbsp;0 &nbsp;0<br />
 <div>
-<br /></div>
-<div>
-Next lets format the lines and add separators:</div>
-<div>
-<br /></div>
-<div>
-:%s/^ /|-^M| /g</div>
-<div>
-<br /></div>
-<div>
-This one is a bit trickier, the ^M is actually a control character indicating a new line and is created by pressing Ctrl-V and the Enter. It searches for lines starting with white space (^ ) and inserts |- and a new line before prefixing the line with a |:</div>
-<div>
-<br /></div>
-<div>
-<div>
-|-</div>
-<div>
-| Artichoke &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;107 &nbsp; 67 &nbsp; &nbsp; 9 &nbsp; &nbsp;31</div>
-<div>
-|-</div>
-<div>
-| Pepper &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;65 &nbsp; 38 &nbsp; &nbsp; 2 &nbsp; &nbsp;25</div>
-<div>
-|-</div>
-<div>
-| Carrot &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 46 &nbsp; 32 &nbsp;0 &nbsp; &nbsp;14</div>
-<div>
-|-</div>
-<div>
-| Lettuce &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;24 &nbsp; 24 &nbsp;0 &nbsp;0</div>
-<div>
-|-</div>
-<div>
-| Spinach &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 16 &nbsp; &nbsp;8 &nbsp; &nbsp; 1 &nbsp; &nbsp; 7</div>
-<div>
-|-</div>
-<div>
-| Zuchini &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 4 &nbsp; &nbsp;4 &nbsp;0 &nbsp;0</div>
+    <br />
 </div>
 <div>
-<br /></div>
+    Next lets format the lines and add separators:</div>
 <div>
-<br /></div>
-<div>
-Finally we want to split each number onto a separate line. This is where the power of regular expressions really shines:</div>
-<div>
-<br /></div>
-<div>
-:%s/ \+\(\d\+\)/^M| \1/g</div>
-<div>
-<br /></div>
-<div>
-The regex is actually quite simple, it says find all instances with one or more spaces ( \+) followed by one or more digits (\d\+) and save the digits for substitution (by putting them in brackets \( and \)). Then replace the pattern with a newline, a pipe and the saved digits (\1). And viola, columns to rows:</div>
-<div>
-<br /></div>
-<div>
-<div>
-|-</div>
-<div>
-| Artichoke</div>
-<div>
-| 107</div>
-<div>
-| 67</div>
-<div>
-| 9</div>
-<div>
-| 31</div>
-<div>
-|-</div>
-<div>
-| Pepper</div>
-<div>
-| 65</div>
-<div>
-| 38</div>
-<div>
-| 2</div>
-<div>
-| 25</div>
-<div>
-|-</div>
-<div>
-| Carrot</div>
-<div>
-| 46</div>
-<div>
-| 32</div>
-<div>
-| 0</div>
-<div>
-| 14</div>
-<div>
-|-</div>
-<div>
-| Lettuce</div>
-<div>
-| 24</div>
-<div>
-| 24</div>
-<div>
-| 0</div>
-<div>
-| 0</div>
-<div>
-|-</div>
-<div>
-| Spinach</div>
-<div>
-| 16</div>
-<div>
-| 8</div>
-<div>
-| 1</div>
-<div>
-| 7</div>
-<div>
-|-</div>
-<div>
-| Zuchini</div>
-<div>
-| 4</div>
-<div>
-| 4</div>
-<div>
-| 0</div>
-<div>
-| 0</div>
+    <br />
 </div>
 <div>
-<br /></div>
+    :%s/^ /|-^M| /g</div>
 <div>
-Pretty cool.</div>
+    <br />
+</div>
 <div>
-<br /></div>
+    This one is a bit trickier, the ^M is actually a control character indicating a new line and is created by pressing
+    Ctrl-V and the Enter. It searches for lines starting with white space (^ ) and inserts |- and a new line before
+    prefixing the line with a |:</div>
+<div>
+    <br />
+</div>
+<div>
+    <div>
+        |-</div>
+    <div>
+        | Artichoke &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;107 &nbsp; 67 &nbsp; &nbsp; 9 &nbsp; &nbsp;31</div>
+    <div>
+        |-</div>
+    <div>
+        | Pepper &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;65 &nbsp; 38 &nbsp; &nbsp; 2 &nbsp; &nbsp;25
+    </div>
+    <div>
+        |-</div>
+    <div>
+        | Carrot &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 46 &nbsp; 32 &nbsp;0 &nbsp; &nbsp;14</div>
+    <div>
+        |-</div>
+    <div>
+        | Lettuce &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;24 &nbsp; 24 &nbsp;0 &nbsp;0</div>
+    <div>
+        |-</div>
+    <div>
+        | Spinach &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 16 &nbsp; &nbsp;8 &nbsp; &nbsp; 1 &nbsp; &nbsp; 7
+    </div>
+    <div>
+        |-</div>
+    <div>
+        | Zuchini &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 4 &nbsp; &nbsp;4 &nbsp;0 &nbsp;0</div>
+</div>
+<div>
+    <br />
+</div>
+<div>
+    <br />
+</div>
+<div>
+    Finally we want to split each number onto a separate line. This is where the power of regular expressions really
+    shines:</div>
+<div>
+    <br />
+</div>
+<div>
+    :%s/ \+\(\d\+\)/^M| \1/g</div>
+<div>
+    <br />
+</div>
+<div>
+    The regex is actually quite simple, it says find all instances with one or more spaces ( \+) followed by one or more
+    digits (\d\+) and save the digits for substitution (by putting them in brackets \( and \)). Then replace the pattern
+    with a newline, a pipe and the saved digits (\1). And viola, columns to rows:</div>
+<div>
+    <br />
+</div>
+<div>
+    <div>
+        |-</div>
+    <div>
+        | Artichoke</div>
+    <div>
+        | 107</div>
+    <div>
+        | 67</div>
+    <div>
+        | 9</div>
+    <div>
+        | 31</div>
+    <div>
+        |-</div>
+    <div>
+        | Pepper</div>
+    <div>
+        | 65</div>
+    <div>
+        | 38</div>
+    <div>
+        | 2</div>
+    <div>
+        | 25</div>
+    <div>
+        |-</div>
+    <div>
+        | Carrot</div>
+    <div>
+        | 46</div>
+    <div>
+        | 32</div>
+    <div>
+        | 0</div>
+    <div>
+        | 14</div>
+    <div>
+        |-</div>
+    <div>
+        | Lettuce</div>
+    <div>
+        | 24</div>
+    <div>
+        | 24</div>
+    <div>
+        | 0</div>
+    <div>
+        | 0</div>
+    <div>
+        |-</div>
+    <div>
+        | Spinach</div>
+    <div>
+        | 16</div>
+    <div>
+        | 8</div>
+    <div>
+        | 1</div>
+    <div>
+        | 7</div>
+    <div>
+        |-</div>
+    <div>
+        | Zuchini</div>
+    <div>
+        | 4</div>
+    <div>
+        | 4</div>
+    <div>
+        | 0</div>
+    <div>
+        | 0</div>
+</div>
+<div>
+    <br />
+</div>
+<div>
+    Pretty cool.</div>
+<div>
+    <br />
+</div>
