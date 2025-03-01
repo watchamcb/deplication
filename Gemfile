@@ -11,3 +11,4 @@ gem "jekyll", "~> 4.3.2"
 gem "minima", git: "https://github.com/jekyll/minima"
 gem 'jekyll-seo-tag'
 gem "kramdown-parser-gfm" 
+gem 'jekyll-paginate'

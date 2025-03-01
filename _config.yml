@@ -34,11 +34,13 @@ theme: minima
 minima:
   skin: auto
   show_excerpts: true
-  date_format: "%Y-%m-%d"
+  date_format: "%Y-%m-%d %H:%M"
+paginate: 8
+paginate_path: "/blog/page:num/"
 plugins:
   - jekyll-feed
   - jekyll-seo-tag
-
+  - jekyll-paginate
 
 # Exclude from processing.
 # The following items will not be processed, by default.
