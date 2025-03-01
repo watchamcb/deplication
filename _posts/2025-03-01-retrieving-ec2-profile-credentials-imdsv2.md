@@ -10,7 +10,8 @@ modified_time: '2025-03-01T09:13:00.000+00:00'
 ---
 
 Quick example of fetching EC2 instance profile credentials using IMDSv2.
- 
+
+
 ```
 TOKEN=`curl --no-progress-meter -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600"`
 curl --no-progress-meter -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/identity-credentials/ec2/security-credentials/ec2-instance
