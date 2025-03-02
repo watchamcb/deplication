@@ -11,7 +11,7 @@ modified_time: '2025-03-02T11:37:00.000+00:00'
 
 There is currently no Ubuntu 24.04 client for Amazon Workspaces, fortunately the 22.04 client can be installed via apt with only a minor tweak.
 
-Following the Linux install instructions [here][https://clients.amazonworkspaces.com/linux-install] will lead to a signature error when performing 'apt update':
+Following the Linux install instructions [here](https://clients.amazonworkspaces.com/linux-install) will lead to a signature error when performing 'apt update':
 ```
 Failed to fetch https://d3nt0h4h6pmmc4.cloudfront.net/ubuntu/dists/jammy/InRelease  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY 04B0588859EF5026
 ```
